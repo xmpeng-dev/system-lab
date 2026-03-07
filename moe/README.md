@@ -1,428 +1,404 @@
-# MoE 优化论文研究总览
+# 🔥 MoE 优化论文全景图 2025-2026（第二版）
 
-> **整理时间:** 2026-03-07  
-> **覆盖论文:** 7 篇（2025-2026 年 arXiv 最新）  
-> **研究方向:** MoE 训练优化 · 分布式系统 · GPU 内存管理 · AI Infra
-
----
-
-## 📚 论文目录
-
-| # | 论文 | arXiv | 核心贡献 | 阅读笔记 |
-|---|------|-------|---------|---------|
-| 1 | **MoEBlaze** | [2601.05296](https://arxiv.org/abs/2601.05296) | 内存墙突破：**4x 加速 + 50% 内存节省** | [笔记](./MoEBlaze_reading_notes.md) |
-| 2 | **LAER-MoE** | [2602.11686](https://arxiv.org/abs/2602.11686) | FSEP 动态重排：**1.69x 端到端加速** | [笔记](./LAER_MoE_FSEP_reading_notes.md) |
-| 3 | **SwiftMoE** | [2504.19925](https://arxiv.org/abs/2504.19925) | 参数解耦：**+30.5% 收敛速度** | [笔记](./SwiftMoE_reading_notes.md) |
-| 4 | **FlowMoE** | [2510.00207](https://arxiv.org/abs/2510.00207) | 流水线调度：**训练时间 -13%~57%** | [笔记](./FlowMoE_reading_notes.md) |
-| 5 | **MemFine** | [2511.21431](https://arxiv.org/abs/2511.21431) | 细粒度激活调度：**48% 内存减少** | [笔记](./MemFine_reading_notes.md) |
-| 6 | **OmniMoE** | [2602.05711](https://arxiv.org/abs/2602.05711) | 原子专家架构：**10.9x 推理加速** | [笔记](./OmniMoE_reading_notes.md) |
-| 7 | **MoE Parallel Folding** | [2504.14960](https://arxiv.org/abs/2504.14960) | 五维混合并行：**49.3% MFU / 1024 GPUs** | [笔记](./MoE_Parallel_Folding_reading_notes.md) |
+> **更新时间:** 2026-03-07  
+> **覆盖论文总数:** 100+ 篇（精选深度笔记 12 篇，分类索引全部）  
+> **研究方向:** 训练优化 · 推理系统 · 通信优化 · 架构创新 · 理论分析 · 生产部署
 
 ---
 
-## 🗺️ 优化全景图
+## 📖 深度阅读笔记目录
 
-### MoE 训练的核心挑战
+### 🔵 训练优化类（Training Optimization）
 
-```
-MoE 模型训练面临 5 大核心挑战：
+| 论文 | 发表 | 核心贡献 | 关键数字 | 笔记 |
+|------|------|---------|---------|------|
+| **MoEBlaze** | arXiv'26 | 内存墙突破：数据结构+Kernel融合+Smart AC | 4x加速，50%内存↓ | [笔记](./MoEBlaze_reading_notes.md) |
+| **LAER-MoE** | ASPLOS'26 | FSEP全分片+动态重排负载均衡 | 1.69x端到端 | [笔记](./LAER_MoE_FSEP_reading_notes.md) |
+| **SwiftMoE** | arXiv'25 | 参数-优化器解耦，动态Expert放置 | +30.5% 收敛 | [笔记](./SwiftMoE_reading_notes.md) |
+| **MemFine** | arXiv'25 | 细粒度Chunk激活调度+选择性重计算 | 48%内存↓ | [笔记](./MemFine_reading_notes.md) |
+| **MoE Parallel Folding** | arXiv'25 | 五维混合并行，Attn/MoE解耦 | 49.3% MFU | [笔记](./MoE_Parallel_Folding_reading_notes.md) |
+| **Comet** | MLSys'25 | Tile级计算-通信Overlap，Warp专用化 | 1.8x端到端 | [笔记](./Comet_reading_notes.md) |
+| **MegaScale-MoE** | EuroSys'26 | 万卡生产训练系统，容错+拓扑感知 | 42% MFU@10K GPU | [笔记](./MegaScale_MoE_reading_notes.md) |
+| **FlowMoE** | NeurIPS'25 | 统一流水线调度，Chunk优先级 | -57%训练时间 | [笔记](./FlowMoE_reading_notes.md) |
 
-          ┌─────────────────────────────────────┐
-          │         MoE 训练瓶颈                  │
-          ├──────────┬──────────┬───────────────┤
-          │  内存墙  │ 负载不均 │   调度碎片化    │
-          │          │          │                │
-          │  激活内存 │ 动态路由  │  串行通信+计算 │
-          │  中间缓冲 │ 热点专家  │  缺乏优先级    │
-          └──────────┴──────────┴───────────────┘
-                        +
-          ┌─────────────────────────────────────┐
-          │  并行策略冲突  |  路由效率低下         │
-          │  Attn vs MoE  |  O(N) 复杂度          │
-          └─────────────────────────────────────┘
-```
+### 🟠 推理系统类（Inference Systems）
 
-### 论文-问题对应关系
+| 论文 | 发表 | 核心贡献 | 关键数字 | 笔记 |
+|------|------|---------|---------|------|
+| **MegaScale-Infer** | SIGCOMM'25 | 分离式EP，Prefill/Decode/Expert解耦 | 3.2x吞吐，55%成本↓ | [笔记](./MegaScale_Infer_reading_notes.md) |
+| **KTransformers** | SOSP'25 | CPU+GPU异构推理，消费级硬件跑671B | $5K跑DeepSeek-V3 | [笔记](./KTransformers_reading_notes.md) |
 
-```
-问题                    解决论文
-────────────────────────────────────────────────────────
-内存墙（激活+缓冲区）  → MoEBlaze   [2601.05296] ████████░░
-激活内存峰值           → MemFine    [2511.21431] ██████░░░░
-负载不均衡（分片）      → LAER-MoE  [2602.11686] ████████░░
-负载不均衡（迁移）      → SwiftMoE  [2504.19925] ██████░░░░
-通信-计算串行           → FlowMoE   [2510.00207] ███████░░░
-并行策略冲突            → Parallel  [2504.14960] █████████░
-路由效率低下            → OmniMoE   [2602.05711] ████████░░
-```
+### 🟢 架构创新类（Architecture）
+
+| 论文 | 发表 | 核心贡献 | 关键数字 | 笔记 |
+|------|------|---------|---------|------|
+| **OmniMoE** | arXiv'26 | 原子专家+笛卡尔积路由O(√N) | 10.9x推理加速 | [笔记](./OmniMoE_reading_notes.md) |
 
 ---
 
-## 🏗️ 优化层次架构
+## 📋 100+ 篇论文分类索引
 
-```
-MoE 训练优化栈（从底层到顶层）：
-
-┌────────────────────────────────────────────────────────────────┐
-│ 层次 5：系统级并行策略                                            │
-│   MoE Parallel Folding [2504.14960]                            │
-│   → 五维混合并行（TP+EP+CP+DP+PP），解耦 Attention/MoE 配置      │
-│   → H100 × 1024 GPUs，MFU=49.3%，序列 128K tokens              │
-├────────────────────────────────────────────────────────────────┤
-│ 层次 4：流水线调度层                                              │
-│   FlowMoE [2510.00207]                                         │
-│   → 统一调度 MHA/Gate/Expert/All-to-All/AllReduce               │
-│   → Tensor Chunk 优先级调度，通信-计算 overlap                   │
-│   → 训练时间 -57%，能耗 -39%，内存 -32%                          │
-├────────────────────────────────────────────────────────────────┤
-│ 层次 3：负载均衡层                                                │
-│   LAER-MoE [2602.11686]                                        │
-│   → FSEP：全分片 Expert Parallel + 动态重排                      │
-│   → 1.69x 端到端加速（A100 集群）                                │
-│                                                                │
-│   SwiftMoE [2504.19925]                                        │
-│   → 参数放置与优化器状态解耦，动态专家分配                         │
-│   → vs DeepSpeed +30.5%，vs FlexMoE +25.9%                    │
-├────────────────────────────────────────────────────────────────┤
-│ 层次 2：内存管理层                                                │
-│   MoEBlaze [2601.05296]                                        │
-│   → 优化数据结构 + Kernel 融合 + 智能 AC                          │
-│   → 4x 加速，50% 内存节省                                         │
-│                                                                │
-│   MemFine [2511.21431]                                         │
-│   → Chunk 分解 token 分发 + 细粒度选择性重计算                    │
-│   → 48% 激活内存减少，+4.42% 吞吐                                │
-├────────────────────────────────────────────────────────────────┤
-│ 层次 1：通信底层                                                  │
-│   DeepEP（DeepSeek 开源）                                        │
-│   → 优化 All-to-All 通信内核（NVLink/RDMA）                      │
-│   → 所有上层系统的通信基础                                         │
-├────────────────────────────────────────────────────────────────┤
-│ 层次 0：架构重设计（独立于以上层次）                               │
-│   OmniMoE [2602.05711]                                         │
-│   → 原子专家 + 笛卡尔积路由（O(N)→O(√N)）                        │
-│   → 10.9x 推理加速（73ms→6.7ms）                                 │
-└────────────────────────────────────────────────────────────────┘
-```
+> 以下论文按方向分类，标有 ✅ 的有详细笔记，其他提供摘要导读
 
 ---
 
-## 📊 性能指标综合对比
+### 🔵 A. 训练系统优化
 
-### 训练场景
+#### A1. 通信优化（Communication）
 
-| 论文 | 优化目标 | 关键指标 | 对比基线 | GPU 规模 | 模型规模 |
-|------|---------|---------|---------|---------|---------|
-| **MoEBlaze** | 内存+速度 | 4x 加速，50% 内存↓ | PyTorch/DeepSpeed | 单机~8 GPUs | 10~100B |
-| **LAER-MoE** | 端到端吞吐 | **1.69x** 加速 | Megatron-LM | A100 集群 | 任意 MoE |
-| **SwiftMoE** | 收敛效率 | **+30.5%** 速度 | DeepSpeed MoE | 中等规模 | 10~100B |
-| **FlowMoE** | 训练时间 | **-13%~57%** | 传统串行调度 | 任意 | 任意 MoE |
-| **MemFine** | 激活内存 | **-48%** 内存 | 标准训练 | 单机~多机 | 任意 MoE |
-| **MoE Parallel Folding** | MFU | **49.3% MFU** | 传统并行方案 | **1024 H100** | Mixtral 8x22B |
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **MegaScale-MoE** | EuroSys'26 | 万卡拓扑感知路由+分层EP | 45% A2A延迟↓ |
+| **Comet** | MLSys'25 | Tile级计算-通信Overlap | 90%+ Overlap率 |
+| **FlowMoE** | NeurIPS'25 | Chunk级流水线调度 | -57%训练时间 |
+| **ScaleMoE** | PACT'25 | 大规模可扩展训练框架 | — |
+| **FUSCO** | arXiv'25 | 数据shuffle通信-变换融合 | — |
+| **UCCL-EP** | arXiv'25 | 可移植的Expert并行通信库 | — |
+| **FarSkip-Collective** | arXiv'25 | 解除MoE中阻塞通信的限制 | — |
+| **HybridEP** | arXiv'25 | 跨数据中心的混合EP/DP传输 | — |
+| **MixNet** | SIGCOMM'25 | 可重构光电混合网络用于MoE训练 | — |
+| **Optimizing All-to-All on Torus** | MICRO'25 | 环形网络中容错All-to-All | — |
+| **BigMac** | arXiv'25 | 通信高效的MoE模型结构 | — |
+| **FSMoE** | ASPLOS'25 | 灵活可扩展MoE训练系统 | — |
+| **X-MoE** | SC'25 | HPC平台MoE可扩展训练 | — |
+| **EfficientMoE** | TPDS'25 | 自适应负载均衡训练优化 | — |
 
-### 推理场景
+#### A2. 负载均衡（Load Balancing）
 
-| 论文 | 优化目标 | 关键指标 | 对比基线 |
-|------|---------|---------|---------|
-| **OmniMoE** | 推理延迟 | **6.7ms（10.9x）** | PEER（73ms） |
-| **MoEBlaze** | 推理内存 | 内存节省可转化 | 通用框架 |
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **LAER-MoE** | ASPLOS'26 | FSEP+动态重排 | 1.69x |
+| **SwiftMoE** | arXiv'25 | 参数-优化器解耦 | +30.5% |
+| **Least-Loaded EP** | arXiv'26 | 最小负载Expert并行 | — |
+| **NetMoE** | ICLR'25 | 动态Sample放置 | — |
+| **PopFetcher** | ATC'25 | 基于热度的Expert预取 | — |
+| **HierMoE** | arXiv'25 | 层次化Token去重+Expert交换 | — |
 
----
+#### A3. 内存优化（Memory）
 
-## 🔬 核心技术汇总
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **MoEBlaze** | arXiv'26 | 数据结构+Kernel+Smart AC | 4x，50%↓ |
+| **MemFine** | arXiv'25 | Chunk激活调度 | 48%↓ |
+| **Hecate** | arXiv'25 | 全分片稀疏数据并行 | — |
+| **MoE-DisCo** | arXiv'26 | 低经济成本MoE训练 | — |
+| **Dense Backprop** | arXiv'25 | 稠密反向传播改善MoE训练 | — |
+| **Batch Tiling Attention** | SC Workshop'25 | Wafer-Scale处理器上MoE训练 | — |
 
-### 技术 1：专家分片与动态重排
+#### A4. 并行策略（Parallelism）
 
-```
-背景：MoE 动态路由 → 负载不均衡 → 热点 GPU 成瓶颈
-
-解决思路对比：
-  传统 EP：固定分配，Expert i 永远在 GPU i%N
-    问题：热点 Expert 无法扩容
-  
-  LAER-MoE FSEP：专家参数完全分片，按需聚合+动态重排
-    优势：热点 Expert 自动分散，内存减少 ~50%
-    代价：实现复杂，All-to-All 通信增加
-  
-  SwiftMoE：参数动态复制，优化器状态静态
-    优势：迁移成本从 3x 降到 1x（参数，不含优化器状态）
-    代价：热点 Expert 存多份副本，内存增加 ~10%
-
-关键公式（LAER-MoE 优化目标）：
-  minimize:  max_gpu( compute_time + comm_time )
-  subject to:
-    Σ experts_on(gpu_i) = total_experts / N_gpus
-    comm_cost(relayout) ≤ compute_saving(relayout)
-```
-
-### 技术 2：激活内存细粒度管理
-
-```
-背景：MoE 反向传播需保留所有 Expert 的激活，导致内存爆炸
-
-传统 AC 的困境：
-  节省内存 ←→ 增加 33% 计算     （不可兼得？）
-
-MoEBlaze 突破：
-  重设计数据结构 → 消除中间缓冲（不需要 AC 就能节省）
-  Smart AC：内存/计算比 > 阈值时才保存激活
-    Save(op) = True  if  Memory(op) / Compute(op) > threshold
-
-MemFine 突破：
-  Chunk 分解：不是"全保存"或"全重算"，而是"按 Chunk 管理"
-  峰值内存 = 单个 Chunk 的激活（而非全部 Expert 的激活之和）
-  
-  内存节省：O(1/K)，K = chunk 数量
-  但重算开销 << K × 单次重算（因为大多数 Chunk 不需要重算）
-```
-
-### 技术 3：通信-计算流水线化
-
-```
-背景：All-to-All 通信是 MoE 的主要瓶颈，传统串行调度浪费 GPU
-
-FlowMoE 方案：
-  1. 统一任务 DAG：将 MHA/Gate/Expert/A2A/AllReduce 统一建模
-  2. Tensor Chunk 调度：大 Tensor 切成 chunk，以 chunk 为调度单位
-  3. 关键路径优先：通信任务优先发起（防止 GPU 等通信）
-  4. 跨层 overlap：Layer i 的 A2A 与 Layer i+1 的 MHA 并发
-  
-  效果：AllReduce 延迟被计算时间掩盖，GPU 利用率大幅提升
-
-关键指标：
-  串行调度：GPU 利用率 40~60%（通信期间空闲）
-  FlowMoE：GPU 利用率 70~85%（通信计算并行）
-```
-
-### 技术 4：笛卡尔积路由（OmniMoE）
-
-```
-背景：细粒度 MoE（PEER）的 O(N) 路由复杂度使推理极慢
-
-OmniMoE 核心：将 N 个原子专家分为两组（各 √N）
-  传统路由：每 token 与 N 个专家做点积 → O(N)
-  笛卡尔积：每 token 与 √N 个专家做点积 × 2 → O(√N)
-             N 个组合分数 = 两组分数之和 → O(N) 加法（很快）
-  
-  复杂度：O(√N) 主要成本（N=65536 时：256 次 vs 65536 次点积）
-
-Expert-Centric 调度：
-  多个 token 共享同一个原子专家
-  → 将 K 次随机 GEMV 转为 √N 次批量 GEMM
-  → GPU 利用率从 20% 提升到 70%+
-```
-
-### 技术 5：解耦并行策略（MoE Parallel Folding）
-
-```
-背景：Attention 和 MoE FFN 有不同的最优并行配置
-
-解决方案：在同一个 Block 内用不同并行策略
-  Attention 层：TP=4（矩阵内部分割，高 GPU 利用率）
-  MoE FFN 层：EP=16（专家分配，减少通信量）
-  
-  Fold 操作：在两层之间做布局转换（All-to-All）
-    成本：与 MoE 本来就需要的 Dispatch All-to-All 合并
-    额外通信开销：< 1%
-
-五维并行 = TP + EP + CP + DP + PP
-  CP（上下文并行）：支持 128K token 的长序列训练
-  PP（流水线并行）：跨 PP Stage 的并行配置独立
-```
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **MoE Parallel Folding** | arXiv'25 | 5D并行+Attn/MoE解耦 | 49.3% MFU |
+| **FOLDMOE** | ACL'25 | Attention-MoE流水线，长序列 | — |
+| **Dense Training, Sparse Inference** | arXiv'25 | 训练稠密推理稀疏的新范式 | — |
 
 ---
 
-## 🛠️ 工程实践指南
+### 🟠 B. 推理系统优化
 
-### 选择适合你场景的优化方案
+#### B1. Expert 卸载与缓存（Offloading & Caching）
 
-#### 场景 A：单机 8 GPUs，训练 10~50B MoE 模型
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **KTransformers** | SOSP'25 | CPU+GPU异构，消费级硬件 | 15-20 tok/s |
+| **Taming Latency-Memory** | EuroSys'26 | 细粒度Expert卸载延迟-内存权衡 | — |
+| **Oracle-MoE** | ICML'25 | 局部路由一致性的内存约束推理 | — |
+| **FloE** | ICML'25 | 飞行中的MoE推理，内存约束GPU | — |
+| **fMoE** | arXiv'25 | 细粒度Expert卸载大规模服务 | — |
+| **HybriMoE** | DAC'25 | CPU-GPU混合调度+缓存管理 | — |
+| **eMoE** | arXiv'25 | 任务感知内存高效MoE推理 | — |
+| **MoE-Gen** | arXiv'25 | 单GPU高吞吐MoE推理，模块级批处理 | — |
+| **PreMoe** | arXiv'25 | 内存受限下的Expert剪枝+检索 | — |
+| **BuddyMoE** | arXiv'25 | 利用Expert冗余加速内存受限推理 | — |
+| **Accelerating with Speculative Decoding** | arXiv'25 | 推测解码隐藏卸载延迟 | — |
+| **MoE-SpeQ** | arXiv'25 | 推测量化解码+主动Expert预取卸载 | — |
 
-**推荐方案：MoEBlaze + MemFine**
+#### B2. Expert 预取（Prefetching）
+
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **PROBE** | arXiv'26 | 实时预测预取，计算通信共平衡 | 35-42%延迟↓ |
+| **Pre-Attention Expert Prediction** | arXiv'25 | 注意力前预测Expert | — |
+| **Efficient MoE Inference** | arXiv'25 | 分离式EP+细粒度调度 | — |
+| **MoEs Are Stronger** | arXiv'25 | 超并行推理扩展RoE | — |
+
+#### B3. 服务系统（Serving Systems）
+
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **MegaScale-Infer** | SIGCOMM'25 | 分离式EP，万卡服务 | 3.2x吞吐 |
+| **MixServe** | arXiv'26 | 自动分布式MoE服务，融合通信 | — |
+| **Janus** | arXiv'25 | 分离Attention和Expert | — |
+| **Tarragon** | arXiv'26 | MoE推理弹性容错 | — |
+| **GRACE-MoE** | arXiv'25 | 局部感知路由+分组复制推理 | — |
+| **HAP** | arXiv'25 | 混合自适应并行高效MoE推理 | — |
+| **MoETuner** | arXiv'25 | 均衡Expert放置+Token路由 | — |
+| **Samoyeds** | EuroSys'25 | 结构化稀疏+稀疏Tensor Core | — |
+| **Priority Scheduling** | EuroMLSys'25 | 混合优先级MoE推理抢占调度 | — |
+| **Expert Sharding** | EuroMLSys'25 | 推理中的Expert分片加速 | — |
+| **MoE-Prism** | arXiv'25 | 弹性MoE服务，模型-系统协设计 | — |
+| **BrownoutServe** | arXiv'25 | SLO感知的MoE突发负载服务 | — |
+
+#### B4. 负载均衡推理（Inference Load Balancing）
+
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **Efficient MoE Serving** | arXiv'25 | 均衡激活Expert数而非Token | — |
+| **MicroMoE** | arXiv'25 | 细粒度负载均衡Token调度 | — |
+| **Capacity-Aware Inference** | arXiv'25 | 缓解Straggler效应 | — |
+| **Opportunistic Expert Activation** | arXiv'25 | 批次感知Expert路由加速 | — |
+| **Speculative MoE** | arXiv'25 | 推测Token+Expert预调度 | — |
+
+---
+
+### 🟢 C. 模型架构与路由
+
+#### C1. 路由创新（Routing）
+
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **OmniMoE** | arXiv'26 | 原子专家+笛卡尔积O(√N)路由 | 10.9x推理 |
+| **Ada-K Routing** | ICLR'25 | 自适应K动态路由 | — |
+| **GatePro** | arXiv'25 | 无参数Expert选择优化 | — |
+| **Load Balancing Similarity** | arXiv'25 | 相似度保持路由器负载均衡 | — |
+| **MoE-GPS** | arXiv'25 | 动态Expert复制预测策略指南 | — |
+| **Long-Tailed Router** | arXiv'25 | 长尾分布感知的大视觉语言模型路由 | — |
+| **Steering MoE LLMs** | arXiv'25 | 通过Expert激活/去激活控制LLM | — |
+| **LExI** | arXiv'25 | 层自适应激活Expert高效推理 | — |
+| **MoDES** | arXiv'25 | 动态Expert跳过加速多模态LLM | — |
+| **Context-Aware MoE** | arXiv'25 | CXL GPU-NDP系统上的上下文感知推理 | — |
+| **C3PO** | arXiv'25 | 测试时Expert重混合路径优化 | — |
+| **Not All Models Suit Offloading** | arXiv'25 | 本地路由一致性与Expert卸载分析 | — |
+
+#### C2. 稀疏性与压缩（Sparsity & Compression）
+
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **LatentMoE** | arXiv'26 | 最优精度/FLOP/参数比 | — |
+| **Parameters vs FLOPs** | arXiv'25 | 最优稀疏性缩放律 | — |
+| **DualSparse-MoE** | arXiv'25 | 张量/神经元级稀疏+Expert分区重建 | — |
+| **PuzzleMoE** | arXiv'25 | 稀疏Expert合并+位压缩推理 | — |
+| **DSMoE** | arXiv'25 | 矩阵分区Expert+动态路由Dense转MoE | — |
+| **DiEP** | arXiv'25 | 可微Expert剪枝自适应压缩 | — |
+| **Sub-MoE** | arXiv'25 | 子空间Expert合并压缩 | — |
+| **MergeMoE** | arXiv'25 | Expert输出合并压缩 | — |
+| **ReXMoE** | arXiv'25 | 最小开销的Expert复用 | — |
+| **MoEQuant** | arXiv'25 | Expert均衡采样+亲和性引导量化 | — |
+| **MoE-Compression** | SC'25 | Expert压缩误差与推理精度分析 | — |
+| **Compression Error Sensitivity** | SC Workshop'25 | 不同Expert的压缩误差敏感性 | — |
+| **EAC-MoE** | ACL'25 | Expert选择感知压缩 | — |
+
+---
+
+### 🟣 D. 动态 Expert / 共享（Dynamic Expert Sharing）
+
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **Dynamic Expert Sharing** | arXiv'26 | 扩散LLM中解耦内存与并行性 | 40%内存↓ |
+| **ElasticMoE** | arXiv'25 | MoE模型高效自动扩缩 | — |
+| **MoE-Prism** | arXiv'25 | 解构单体Expert弹性服务 | — |
+| **HD-MoE** | arXiv'25 | 3D近存处理的混合动态并行 | — |
+| **Mixture of Lookup Experts** | arXiv'25 | 查找表Expert设计 | — |
+| **Stratum** | MICRO'25 | 分层3D堆叠DRAM系统硬件协设计 | — |
+| **BrainMoE** | NeurIPS'25 | 认知联合嵌入脑基础模型 | — |
+
+---
+
+### 🔴 E. 参数高效微调（PEFT with MoE）
+
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **S'MoRE** | NeurIPS'25 | 残差Expert结构混合参数高效微调 | — |
+| **MoLA** | NAACL'25 | LoRA层次Expert分配 | — |
+| **FlyLoRA** | NeurIPS'25 | 隐式秩级混合Expert LoRA | — |
+| **PT-MoE** | arXiv'25 | Prompt Tuning集成MoE框架 | — |
+| **CoMoE** | arXiv'25 | 对比表示PEFT MoE | — |
+| **SimSMoE** | NAACL'25 | 表示崩溃感知MoE高效训练 | — |
+| **MoLA** | NAACL'25 | LoRA Expert分配层 | — |
+
+---
+
+### ⚫ F. 理论与缩放律（Theory & Scaling）
+
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **Parameters vs FLOPs** | arXiv'25 | 最优稀疏性的缩放律 | — |
+| **Towards Greater Leverage** | arXiv'25 | MoE高效模型缩放律 | — |
+| **Joint MoE Scaling Laws** | arXiv'25 | MoE可以内存高效 | — |
+| **A Survey on MoE** | TKDE'25 | MoE综述 | — |
+| **Every FLOP Counts** | arXiv'25 | 300B MoE无高端GPU训练 | — |
+| **The New LLM Bottleneck** | arXiv'25 | 系统视角的潜在注意力和MoE | — |
+| **Muon is Scalable** | arXiv'25 | LLM训练的Muon优化器可扩展性 | — |
+
+---
+
+### 🔵 G. 多模态与特殊场景
+
+| 论文 | 发表 | 核心思路 | 关键数字 |
+|------|------|---------|---------|
+| **MoE-Inference-Bench** | arXiv'25 | MoE大模型推理性能评测基准 | — |
+| **I2MoE** | ICML'25 | 可解释多模态交互MoE | — |
+| **Efficient Mixture-of-Agents** | arXiv'25 | 树结构路由+自适应剪枝 | — |
+| **EvoMoE** | arXiv'25 | 多模态LLM Expert进化 | — |
+| **SonicMoE** | arXiv'25 | IO和Tile感知MoE加速 | — |
+| **MoES Are Stronger** | arXiv'25 | 超并行推理扩展 | — |
+
+---
+
+## 🗺️ 技术优化全景图
+
+### 核心优化维度总结
 
 ```
-优先级：
-  1. MoEBlaze：解决内存墙，4x 加速，50% 内存节省
-     → 最先集成，收益最大且实现相对简单
-  2. MemFine：进一步减少激活内存
-     → 与 MoEBlaze 互补叠加
+MoE 系统优化维度（2025-2026）：
 
-不推荐：
-  - MoE Parallel Folding（需要 1000+ GPUs）
-  - LAER-MoE（实现复杂，单机效果有限）
+                    【训练阶段】
+    ┌──────────────────────────────────────────────────┐
+    │                                                   │
+    │  内存维度                                          │
+    │  ├─ 激活内存：MoEBlaze, MemFine                    │
+    │  └─ 参数内存：LAER-MoE (FSEP), SwiftMoE           │
+    │                                                   │
+    │  通信维度                                          │
+    │  ├─ 单节点：Comet, FlowMoE                         │
+    │  ├─ 跨节点：MegaScale-MoE, ScaleMoE, FUSCO        │
+    │  └─ 跨数据中心：HybridEP, MixNet                  │
+    │                                                   │
+    │  并行策略                                          │
+    │  ├─ 5D并行：MoE Parallel Folding                   │
+    │  └─ 生产级：MegaScale-MoE (万卡)                   │
+    │                                                   │
+    └──────────────────────────────────────────────────┘
 
-预期效果：内存减少 60%+，训练速度 2~3x
-```
+                    【推理阶段】
+    ┌──────────────────────────────────────────────────┐
+    │                                                   │
+    │  系统架构                                          │
+    │  ├─ 分离式：MegaScale-Infer, Janus                │
+    │  └─ 异构：KTransformers, HybriMoE                 │
+    │                                                   │
+    │  Expert 管理                                       │
+    │  ├─ 卸载缓存：KTransformers, FloE, fMoE           │
+    │  ├─ 预取：PROBE, PopFetcher, Pre-Attn Pred        │
+    │  └─ 负载均衡：MicroMoE, Capacity-Aware            │
+    │                                                   │
+    │  服务框架                                          │
+    │  ├─ 大规模：MegaScale-Infer, MixServe             │
+    │  └─ 边缘：D2MoE, Remoe (Serverless)              │
+    │                                                   │
+    └──────────────────────────────────────────────────┘
 
-#### 场景 B：多机多卡（32~256 GPUs），训练 100B+ MoE 模型
-
-**推荐方案：LAER-MoE 或 SwiftMoE + FlowMoE**
-
-```
-优先级：
-  1. SwiftMoE：最容易集成的负载均衡方案
-     → 与现有 DeepSpeed 框架兼容性最好
-     → 2~4 周工程量，30% 收益
-  
-  2. FlowMoE：调度层优化
-     → 在 SwiftMoE 基础上叠加
-     → 3~6 周工程量，额外 15~30% 提升
-  
-  3. LAER-MoE（如果有更多工程资源）：
-     → 2~3 月工程量，但 1.69x 端到端收益
-     → 需要从 Hetu-Galvatron 移植适配
-
-预期效果：训练速度 1.5~2x，收敛时间 30% 减少
-```
-
-#### 场景 C：超大规模（512~4096 GPUs），训练 300B+ MoE 模型
-
-**推荐方案：MoE Parallel Folding（基于 Megatron-Core）**
-
-```
-优先级：
-  1. MoE Parallel Folding：必须的，否则 MFU 会极低
-     → 基于 Megatron-Core，深度集成
-     → 配置：TP=4, EP=尽量大, CP=序列/8K, PP=模型层数/8
-  
-  2. DeepEP：通信底层优化
-     → 与 MoE Parallel Folding 搭配
-  
-  3. 叠加 MoEBlaze/MemFine 的内存优化
-
-目标：MFU > 45%（接近 Dense 模型水平）
-```
-
-#### 场景 D：推理服务（高 QPS、低延迟需求）
-
-**推荐方案：OmniMoE（如果可以修改架构）或 MoEBlaze（不改架构）**
-
-```
-OmniMoE（架构级优化）：
-  → 需要重新训练，但推理延迟 10.9x 改善
-  → 适合新模型设计阶段
-
-MoEBlaze（系统级优化）：
-  → 现有模型直接受益
-  → 内存节省 → 更大 KV Cache → 更高并发
-
-FlowMoE：
-  → 推理 batch 较大时有效
-  → 通信-计算 overlap 在推理服务中同样有价值
+                    【架构层面】
+    ┌──────────────────────────────────────────────────┐
+    │  路由优化：OmniMoE, Ada-K, GatePro               │
+    │  稀疏压缩：DualSparse, PuzzleMoE, MoEQuant       │
+    │  动态共享：Dynamic Expert Sharing, ElasticMoE    │
+    │  PEFT：S'MoRE, MoLA, FlyLoRA                    │
+    └──────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🔗 技术关联图
+## 🎯 场景化选型指南（更新版）
 
-```
-论文关联关系：
+### 按场景快速选型
 
-    MoE Parallel Folding ─── 提供并行框架 ───> 所有其他论文可在框架内实现
-             │
-             ├── 通信层: DeepEP (All-to-All 内核)
-             │
-             ├── 负载层: LAER-MoE (FSEP 重排) ◄── 与 SwiftMoE 互补
-             │           SwiftMoE (参数解耦)
-             │
-             ├── 调度层: FlowMoE (流水线) ◄── 可包含 MoEBlaze 和 MemFine 的 Chunk 思想
-             │
-             └── 内存层: MoEBlaze (数据结构+Kernel)
-                          MemFine (激活分块调度)
-
-独立路径：
-    OmniMoE ────── 架构重设计 ────── 与所有上述论文正交（可叠加）
-```
+| 你的场景 | 第一选择 | 第二选择 | 第三选择 |
+|---------|---------|---------|---------|
+| **个人/小团队跑 671B MoE** | **KTransformers** | llama.cpp | — |
+| **公司 GPU 集群训练 100B MoE** | **SwiftMoE** | **FlowMoE** | LAER-MoE |
+| **万卡生产训练** | **MegaScale-MoE** | MoE Parallel Folding | — |
+| **高并发推理服务** | **MegaScale-Infer** | Janus | MixServe |
+| **单机多卡推理** | **KTransformers** | vLLM+Expert Sharding | — |
+| **降低训练内存** | **MoEBlaze** | MemFine | — |
+| **消除训练通信瓶颈** | **Comet** | FlowMoE | MegaScale-MoE |
+| **新模型架构设计** | **Parameters vs FLOPs** | OmniMoE | LatentMoE |
+| **量化/压缩部署** | **MoEQuant** | PuzzleMoE | Sub-MoE |
 
 ---
 
-## 📈 关键指标速查表
+## 📊 深度笔记论文性能速查
 
-| 指标 | MoEBlaze | LAER-MoE | SwiftMoE | FlowMoE | MemFine | OmniMoE | Parallel Folding |
-|------|---------|---------|---------|---------|---------|---------|-----------------|
-| **训练加速** | 4x(kernel) | 1.69x | +30.5% | -57% time | +4.42% | N/A | 49.3% MFU |
-| **内存节省** | **50%+** | ~50% | ~10% | 7~32% | **48%** | N/A | N/A |
-| **推理加速** | 部分 | N/A | N/A | N/A | N/A | **10.9x** | N/A |
-| **实现难度** | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **框架依赖** | 通用 | Hetu-Galvatron | DeepSpeed 兼容 | 通用 | 通用 | 通用 | **Megatron-Core** |
-| **论文时间** | 2026.01 | 2026.02 | 2025.04 | 2025.10 | 2025.11 | 2026.02 | 2025.04 |
-
----
-
-## 📖 推荐阅读顺序
-
-### 入门路径（理解 MoE 优化全貌）
-
-```
-① MoEBlaze（最直观的内存优化）
-   → 理解：MoE 内存瓶颈的本质
-   → 技术：数据结构优化、Kernel 融合、Smart AC
-
-② MemFine（理解细粒度调度）
-   → 理解：激活内存管理的精细化
-   → 技术：Chunk 分解、选择性重计算
-
-③ SwiftMoE（理解负载均衡）
-   → 理解：为什么动态路由导致不均衡
-   → 技术：参数与优化器解耦
-
-④ FlowMoE（理解系统级调度）
-   → 理解：通信计算 overlap 的重要性
-   → 技术：DAG 任务调度、Chunk 流水线
-```
-
-### 进阶路径（深度优化实践）
-
-```
-⑤ LAER-MoE（深入负载均衡）
-   → 理解：FSEP 架构设计思想
-   → 技术：All-to-All 细粒度调度、Load Planner
-
-⑥ MoE Parallel Folding（大规模系统设计）
-   → 理解：5D 并行的协调方式
-   → 技术：Fold/Unfold 操作、并行配置最优化
-```
-
-### 架构研究路径
-
-```
-⑦ OmniMoE（MoE 架构的未来方向）
-   → 理解：专家粒度对系统效率的影响
-   → 技术：笛卡尔积路由、Expert-Centric 调度
-```
+| 论文 | 场景 | 最重要指标 | vs 基线 |
+|------|------|---------|--------|
+| MoEBlaze | 训练 | 速度 + 内存 | 4x 快，50% 内存↓ |
+| LAER-MoE | 训练 | 端到端吞吐 | 1.69x |
+| SwiftMoE | 训练 | 收敛速度 | +30.5% vs DeepSpeed |
+| MemFine | 训练 | 激活内存 | -48% |
+| FlowMoE | 训练 | 训练时间 | -57% |
+| MoE Parallel Folding | 训练 | MFU | 49.3% @ H100 |
+| Comet | 训练 | 吞吐量 | 2.3x, 90%+ overlap |
+| MegaScale-MoE | 训练(生产) | 万卡 MFU | ~42% @ 10K GPU |
+| OmniMoE | 推理 | 延迟 | 10.9x vs PEER |
+| MegaScale-Infer | 推理(服务) | 吞吐+成本 | 3.2x 吞吐, 55% 成本↓ |
+| KTransformers | 推理(个人) | 可行性 | $5K 跑 671B 模型 |
 
 ---
 
-## 🚀 开源代码与复现
+## 📚 推荐阅读路径（更新版）
 
-| 论文 | 开源状态 | 链接 |
-|------|---------|------|
-| **LAER-MoE** | ✅ 开源 | [GitHub](https://github.com/PKUDAIR/Hetu-Galvatron/tree/laer-moe) |
-| **MoE Parallel Folding** | ✅ 基于 Megatron-Core | [GitHub](https://github.com/NVIDIA/Megatron-LM) |
-| **MoEBlaze** | ⚠️ 待开源 | 关注 arXiv 主页 |
-| **SwiftMoE** | ⚠️ 待开源 | 关注 arXiv 主页 |
-| **FlowMoE** | ⚠️ 待开源 | 关注 arXiv 主页 |
-| **MemFine** | ⚠️ 待开源 | 关注 arXiv 主页 |
-| **OmniMoE** | ⚠️ 待开源 | 关注 arXiv 主页 |
+### 路径 A：全栈 AI Infra 工程师（4 周）
+
+**第 1 周：理解 MoE 基础和问题**
+1. `Parameters vs FLOPs` — 理解 MoE 的理论基础
+2. `MoEBlaze` — 训练内存问题本质
+3. `MemFine` — 激活内存精细管理
+
+**第 2 周：训练系统优化**
+4. `LAER-MoE` — 负载均衡的系统设计
+5. `SwiftMoE` — 参数解耦思想
+6. `Comet` — 计算通信 Overlap 的极致
+7. `FlowMoE` — 调度层面的优化
+
+**第 3 周：大规模系统**
+8. `MoE Parallel Folding` — 并行策略设计
+9. `MegaScale-MoE` — 工业实践（万卡）
+
+**第 4 周：推理系统**
+10. `OmniMoE` — 架构级推理优化
+11. `MegaScale-Infer` — 分离式推理架构
+12. `KTransformers` — 异构推理的落地
+
+### 路径 B：专注推理系统（2 周）
+
+1. `KTransformers` — 异构推理基础
+2. `OmniMoE` — 架构创新
+3. `PROBE` — 预取策略
+4. `MegaScale-Infer` — 生产系统
+5. 选读：`Janus`, `MixServe`, `FloE`
+
+### 路径 C：专注训练优化（2 周）
+
+1. `MoEBlaze` + `MemFine` — 内存优化
+2. `Comet` + `FlowMoE` — 通信优化
+3. `LAER-MoE` + `SwiftMoE` — 负载均衡
+4. `MoE Parallel Folding` — 并行策略
+5. `MegaScale-MoE` — 生产落地
 
 ---
 
-## 🔮 未来研究方向
+## 🔮 2025-2026 研究趋势总结
 
-### 已明确的空白
+### 主流热点（高关注度）
 
-1. **OmniMoE 的训练效率**：当前工作聚焦推理，训练侧的收敛分析欠缺
-2. **LAER-MoE × MoE Parallel Folding**：FSEP 与 5D 并行的联合优化
-3. **MoEBlaze × FSDP2**：底层 Kernel 优化与 PyTorch 原生 FSDP2 的集成
-4. **FlowMoE × DeepEP**：统一调度框架与优化通信内核的联合优化
+1. **推理-训练分离架构** ← MegaScale-Infer, Janus 代表
+2. **CPU+GPU 异构推理** ← KTransformers 代表
+3. **万卡生产系统** ← MegaScale-MoE 代表
+4. **细粒度计算-通信 Overlap** ← Comet 代表
 
-### 值得关注的新方向
+### 新兴方向（快速增长）
 
-1. **MoE + 量化**：INT8/FP8 训练与动态路由的协同（DeepSeek-V3 已采用 FP8）
-2. **异构 MoE**：在不同算力 GPU 上动态分配专家（H100+H20 混合集群）
-3. **MoE 推理服务化**：OmniMoE + vLLM PagedAttention 的推理框架集成
-4. **连续训练 MoE**：在线学习场景下的动态专家增减
+5. **Expert 智能缓存/卸载** ← 大量 arXiv 论文
+6. **MoE 量化与压缩** ← MoEQuant, PuzzleMoE 等
+7. **MoE PEFT 微调** ← S'MoRE, MoLA 等
+8. **路由架构创新** ← OmniMoE, Ada-K 等
+
+### 相对成熟（研究放缓）
+
+- 简单负载均衡 loss（已有 Auxiliary Loss 标准方案）
+- 基础 Expert Parallel（已集成进主流框架）
 
 ---
 
-*总览整理于 2026-03-07 | AIInfra-Book*
+*总览更新于 2026-03-07 | 覆盖 100+ 篇 MoE 优化论文 | AIInfra-Book*
