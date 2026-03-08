@@ -14,6 +14,13 @@
 | [Axion_Architecture_Design_v2.md](./Axion_Architecture_Design_v2.md) | **核心架构文档（推荐首读）**：融合 Axon + LAER-MoE + veScale-FSDP 三套理念的完整设计 | ✅ 完成 |
 | [ModelSpec_Design.md](./ModelSpec_Design.md) | Model Spec 三层设计：ModelShape + Parallelism + ExpertPlacement | ✅ 完成 |
 
+### 路线规划
+
+| 文档 | 内容摘要 | 状态 |
+|------|---------|------|
+| [Roadmap_Research.md](./Roadmap_Research.md) | 研究路线：4 篇顶会论文，18~24 个月，分阶段发表策略 | ✅ 完成 |
+| [Roadmap_Industry.md](./Roadmap_Industry.md) | 工业落地路线：3 级递进，3 个月可见 ROI，插件优先 | ✅ 完成 |
+
 ### IR 设计系列
 
 | 文档 | 内容摘要 | 状态 |
