@@ -11,7 +11,7 @@
 
 | 文档 | 内容摘要 | 状态 |
 |------|---------|------|
-| [Axion_Architecture_Design.md](./Axion_Architecture_Design.md) | 系统整体架构、设计理念、为什么选择自定义 IR | ✅ 完成 |
+| [Axion_Architecture_Design_v2.md](./Axion_Architecture_Design_v2.md) | **核心架构文档（推荐首读）**：融合 Axon + LAER-MoE + veScale-FSDP 三套理念的完整设计 | ✅ 完成 |
 | [ModelSpec_Design.md](./ModelSpec_Design.md) | Model Spec 三层设计：ModelShape + Parallelism + ExpertPlacement | ✅ 完成 |
 
 ### IR 设计系列
@@ -34,17 +34,22 @@
 
 ## 核心设计决策记录
 
-### ADR-001：为什么不用 FX Graph，而是自定义 IR
+### ADR-001：为什么不用 FX Graph，而是自定义 IR（采用 Axon 的 ModelGraph 设计理念）
 
-**决策:** 自定义 Axion IR，不基于 torch.compile / FX Graph
+**决策:** 自定义 Axion IR（`ModelGraph` + `OpSpec`），理念来自 Axon，不基于 torch.compile / FX Graph
 
 **理由:**
-- FX Graph 的语义粒度 = 单个张量算子，通信是黑盒
-- Axion 需要通信和计算的联合调度，类型系统必须原生支持 `CommTensor`、`ExpertShard`
-- FX Graph 补丁方案在 Pass 分析时信息严重不足，是死路
+- FX Graph 的语义粒度 = 单个张量算子，通信是黑盒，编译器看不穿
+- Axion 需要通信和计算的联合调度，类型系统必须原生支持 `CommOpSpec`、`ExpertShard`
+- Axon 的 `ModelGraph`（immutable + hashable + Pure Python）是正确的设计方向，Axion 采用相同设计理念
 
-**代价:** IR Parser 需要从零实现，冷启动成本高  
-**缓解:** Bootstrap 阶段用 FX Graph 有损转换验证 IR 正确性，不作终态
+**Axon 设计理念的具体采纳:**
+- `frozen=True` dataclass → 所有 `OpSpec` 子类（包括 `CommOpSpec`）都 hashable
+- Pass immutable 变换约定 → Axion 的 4 个 Comm Pass 全部遵守
+- hash 追踪 + Compile Report → 通信 Pass 也记录 hash before/after
+
+**代价:** IR 从零设计，冷启动成本高  
+**缓解:** Phase 1 用 Simulate Driver（no-op CommFabric）在单机验证编译逻辑，不需要多 GPU
 
 ---
 
