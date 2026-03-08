@@ -1,654 +1,806 @@
 # Axion 整体规划：长期系统路线图
 
-> **定位:** AMD AI Infra 内部长期训练系统，工业收益驱动，技术影响力为辅  
-> **版本:** v0.2 | 2026-03-08  
-> **背景:** AMD 员工，ROCm + MI300X 硬件，有生产训练任务，无学术约束  
-> **时间跨度:** 36 个月（3 年），分 4 个 Stage
+> **定位:** AMD AI Infra 员工的个人长期技术投入，以现有系统（Primus/Megatron）为验证平台  
+> **版本:** v0.3 | 2026-03-08  
+> **核心策略:** Feature-by-Feature 在现有系统验证 → 有收益才继续 → 最终重写 Axion  
+> **时间跨度:** 不设硬性终点，由每个 Feature 的收益数据驱动决策
 
 ---
 
-## 0. 背景与核心思路
+## 0. 核心思路：验证优先，Axion 是终点不是起点
 
-### 0.1 AMD AI Infra 视角下的优先级
-
-```
-与学术视角的关键差异：
-
-  学术：论文是一等公民，工业收益是配菜
-  AMD AI Infra：工业收益是一等公民，技术影响力（论文/开源）是加分项
-
-具体意味着：
-  ✅ 每个 Stage 必须有可量化的内部训练收益
-  ✅ ROCm/MI300X 原生支持是一等需求，不是"后续适配"
-  ✅ 与 AMD 内部框架（ROCm Megatron、内部 MoE 实现）的兼容是前提
-  ✅ 技术影响力（博客/论文/开源）作为 Stage 2+ 的额外目标
-  ❌ 不为了发论文而延迟工业交付
-  ❌ 不做只有学术价值、无法在 AMD 生产环境运行的功能
-```
-
-### 0.2 AMD 特有的硬件优势与约束
+### 0.1 为什么不直接开发 Axion
 
 ```
-MI300X 的独特性（相比 H100）：
-
-  优势：
-    192 GB HBM3 统一内存（远超 H100 的 80 GB）
-    → FSEP Expert 分片的内存压力更小
-    → 可以支持更大的 Expert 参数量在单卡上
-
-    HBM3 内存带宽 5.3 TB/s（vs H100 的 3.35 TB/s）
-    → CommTensor zero-copy 的收益在 MI300X 上更显著
-    → pack/unpack 消除的绝对时间节省更大
-
-    CPU-GPU 统一内存寻址（XGMI/Infinity Fabric）
-    → Expert 迁移的 P2P 带宽更高（节点内 896 GB/s）
-
-  约束：
-    RCCL（ROCm 版 NCCL）与 NCCL 有细微差异
-    → CommFabric 的 RCCL Driver 需要专门适配
-    → aiter（AMD 的 flash attention 实现）替代 flash_attn
-    → hipcc 替代 nvcc，CUDA Stream → HIP Stream
-
-  机会：
-    MI300X 的高内存带宽让 CommTensor zero-copy 收益更大
-    这是 AMD 硬件上做这个系统的独特优势，值得在技术报告中突出
-```
-
-### 0.3 长期系统的核心思路
-
-```
-工业收益和技术积累螺旋驱动：
-
-  生产训练任务 → CommReport 暴露真实瓶颈
-        ↓
-  真实瓶颈 → 驱动针对性的技术改进
-        ↓
-  技术改进 → 提升 MI300X 训练效率
-        ↓
-  效率数据 → 支撑 AMD 对外的技术影响力（博客/论文/开源）
-        ↓
-  技术影响力 → 吸引外部贡献者，加速系统演进
-        ↓
-  回到顶部（下一轮）
-```
-
-### 0.4 统一决策原则
-
-```
-原则 1：MI300X 原生，不是事后适配
-  CommFabric 的 RCCL/HIP 实现与 CUDA/NCCL 实现同步开发
-  任何 CUDA-only 的设计决策，都要先确认 HIP 等价实现存在
-
-原则 2：生产收益优先
-  任何功能，先问："这能让内部 MoE 训练加速多少？"
-  无法量化收益的功能，推迟到 Stage 3+
-
-原则 3：单机可验证（来自 Axon 设计哲学）
-  每个新功能必须能用 Simulate Driver 在单机验证正确性
-  不允许"必须上 64 GPU 集群才能发现的 bug"
-
-原则 4：数据驱动决策
-  每个 Stage 结束时，用 CommReport 的真实数据决定下一步重点
-  不靠直觉，靠 profiling
-
-原则 5：收敛性红线
-  任何路由干预（routing bias、Expert 迁移）必须先过收敛实验
-  loss 差异 > 1% → 立即停止，不上生产
-```
-
----
-
-## 1. Stage 1：立足（月 1~6）
-
-### 核心目标
-
-```
-工业：CommReport 接入内部训练任务，AxionFastRouter 吞吐提升 ≥ 10%
-技术：ModelGraph + 6 个 Pass 设计完成，CommTensor 类型系统验证
-硬件：MI300X 单机跑通，ROCm/aiter 适配完成
-```
-
-### 时间线
-
-```
-Month 1：ModelGraph 基础设施（MI300X 单机）
-─────────────────────────────────────────────────────────
-  工程任务：
-    □ Wire、OpNode、ModelGraph（frozen dataclass + SHA-256 hash）
-    □ OpSpec 类型层次（MatMulSpec、AttentionSpec、RMSNormSpec、SwiGLUSpec）
-    □ Pass 基类 + PassManager + CompileReport
-    □ AnalysisPass（FLOPs/params 估算）
-    □ FusionPass（RMSNorm+QKV+RoPE，SwiGLU 融合）
-    □ Attention backends：sdpa / aiter（MI300X fmha_v3）/ reference
-
-  ROCm 适配：
-    □ HIP Stream 替代 CUDA Stream（执行引擎底层）
-    □ aiter fmha_v3 接入 AttentionSpec backend
-    □ MI300X 单机跑通 Llama 3.1 8B（数值误差 < 1e-3）
-
-  技术任务：
-    □ CommLayout 枚举设计（5种）
-    □ CommTensor 数据结构草案（物理布局 + index map 概念）
-
-  验收：
-    □ MI300X 单机 Llama 3.1 8B 对齐参考实现
-    □ aiter vs sdpa 性能基线对比（tok/s）
-    □ Compile Report 正确输出 FLOPs、fusion 数量
-
-─────────────────────────────────────────────────────────
-Month 2：通信感知编译（CommInferencePass + Simulate Driver）
-─────────────────────────────────────────────────────────
-  工程任务：
-    □ CommOpSpec 类型层次（A2ASpec、AllGatherSpec、ReduceScatterSpec）
-    □ WireType 扩展（COMM、EXPERT_SHARD、ROUTING_TABLE）
-    □ CommInferencePass：ExpertGateSpec/FFNSpec → 自动标注 A2ASpec
-    □ CommTensorLayoutPass：layout_hint → physical_layout 决策
-    □ CommFabric 接口定义
-    □ Simulate Driver（no-op，单机验证用）
-    □ 扩展 Compile Report：通信拓扑、CommLayout 分布
-
-  技术任务：
-    □ Layout 状态机正确性验证（手写 MoE layer IR 验证 5 个场景）
-    □ 编译期错误检测：人工注入 7 类 layout 错误 → 验证全部捕获
-    □ pack/unpack 消除的理论分析（MI300X HBM3 带宽节省估算）
-
-  验收：
-    □ CommInferencePass 正确标注 MoE 模型所有通信点
-    □ Simulate Driver 单机跑通完整编译流程（无 GPU 集群）
-    □ 7 类 layout 错误全部在编译期捕获（不需要运行）
-
-─────────────────────────────────────────────────────────
-Month 3：AxionCommProfiler 接入内部训练任务
-─────────────────────────────────────────────────────────
-  工程任务：
-    □ AxionCommProfiler（hook 方式接入内部 MoE 训练框架）
-    □ CommReport HTML 可视化
-      - Expert 负载热力图（256 experts × N steps）
-      - A2A 时序图（overlap 率、暴露时间）
-      - MI300X HBM 带宽利用率
-    □ 接入内部 MI300X 集群训练任务（目标：DSv3-like 或内部 MoE 模型）
-    □ 接入开销 < 0.5% 验证（hipperf 测量）
-    □ RCCL 通信统计接入（rccl-trace 或自定义 hook）
-
-  技术产出：
-    □ 内部技术报告：MI300X 上 MoE 训练通信瓶颈分析
-      （这是后续所有优化工作的数据基础）
-    □ 关键发现记录：
-      - 实际负载不均衡系数（预期：1.5~4x）
-      - A2A 时间占总 step time 比例
-      - 当前 overlap 率 vs 理论最大值
-      - 跨节点通信占比
-
-  验收：
-    □ CommReport 数据与手动 RCCL profiling 结果误差 < 5%
-    □ 至少接入 1 个内部生产训练任务
-
-─────────────────────────────────────────────────────────
-Month 4~5：AxionFastRouter + 收敛实验
-─────────────────────────────────────────────────────────
-  工程任务：
-    □ AxionFastRouter 实现
-      gate_logits_adjusted[i] = gate_logits[i] - α · load_penalty[i]
-      load_penalty[i] = (tokens_on_expert_i / avg) ^ β × gpu_util[i]
-    □ 一行接入：在 MoE Gate TopK 之前插入 adjust_gate_logits()
-    □ 收敛实验设计：
-      - 模型：内部 2B MoE（快速验证）
-      - 对比：Baseline vs FastRouter（α=0.1, β=2.0）
-      - 步数：1000 steps（loss curve + perplexity）
-    □ 红线验证：loss 差异 < 0.5%，梯度 norm 无异常
-    □ 通过后：接入内部训练任务，测量 MI300X 吞吐提升
-
-  ROCm 适配：
-    □ 验证 hipblaslt 在 load_penalty 计算中的正确性
-    □ 确认 HIP atomic 操作在 ExpertLoadStats 更新中无竞争
-
-  技术产出：
-    □ 超参分析：α, β 对吞吐和收敛的影响（MI300X 实测）
-    □ Expert 激活分布变化分析（是否影响 Expert 专业化）
-
-─────────────────────────────────────────────────────────
-Month 6：FSEPShardingPass + Stage 1 总结
-─────────────────────────────────────────────────────────
-  工程任务：
-    □ CommGraph 构建（从 CommAnnotation 构建通信依赖有向图）
-    □ FSEPShardingPass 贪心算法
-      - 目标：minimize max_gpu(compute + comm_time)
-      - 约束：内存均衡（MI300X 192GB 更宽裕）、跨节点通信最小化
-    □ ExpertShardRegistry（Expert 分片注册表）
-    □ 2~8 MI300X 验证 Expert dispatch/combine 正确性（RCCL）
-    □ Slow Planner 基础版（只做初始分配，不做迁移）
-
-  Stage 1 总结（数据驱动决策）：
-    □ CommReport 数据：负载不均衡系数 → 决定 FSEP 优先级
-    □ FastRouter 吞吐提升：决定是否继续激进均衡策略
-    □ MI300X HBM 带宽利用率：决定 CommTensor zero-copy 的投入
-    □ 内部团队反馈：CommReport 是否真正有助于 debug
-```
-
-### Stage 1 交付物
-
-| 交付物 | 时间 | 价值 |
-|--------|------|------|
-| AxionCommProfiler（内部 pip 包） | Month 3 | 第一次看清 MI300X 上的通信瓶颈 |
-| CommReport HTML 可视化 | Month 3 | 内部工程师 debug 工具 |
-| 内部技术报告：MI300X MoE 通信分析 | Month 3 | 数据基础，指导后续优化方向 |
-| AxionFastRouter（内部 pip 包） | Month 5 | 预期 ≥ 10% 吞吐提升 |
-| 收敛实验报告 | Month 5 | 证明路由干预安全性 |
-| ModelGraph + 6 Pass 完整实现 | Month 6 | 系统基础设施 |
-
----
-
-## 2. Stage 2：扩展（月 7~14）
-
-### 核心目标
-
-```
-工业：Expert 物理迁移生产部署，MI300X 64 GPU 吞吐提升 ≥ 20%
-技术：StaticSchedule + OverlapInsertionPass，对比 LAER-MoE
-硬件：RCCL All-to-All 完整接入，Infinity Fabric P2P 迁移
-```
-
-### 时间线
-
-```
-Month 7~8：OverlapInsertionPass + StaticSchedule
-─────────────────────────────────────────────────────────
-  工程任务：
-    □ 数据依赖分析算法（Compute ↔ Comm 依赖图构建）
-    □ OverlapInsertionPass（插入 OverlapSpec 节点）
-      策略：AGGRESSIVE（默认）/ CONSERVATIVE / DISABLED
-    □ StaticSchedule 数据结构 + 执行引擎
-      HIP Stream 绑定：Compute Stream / Comm Stream 分离
-    □ 正确性验证：overlap 结果 == 非 overlap 结果（8 MI300X）
-
-  ROCm 适配：
-    □ RCCL all_to_all_async 接口封装
-    □ HIP Event 用于 Stream 同步（替代 CUDA Event）
-    □ 验证 hipStreamWaitEvent 的语义与 cudaStreamWaitEvent 一致
-
-  技术任务：
-    □ 依赖分析算法正确性：形式化定义充分条件
-    □ overlap 率理论上界 vs 实际值的 gap 分析
-
-─────────────────────────────────────────────────────────
-Month 9~10：CommFabric RCCL Driver + DistributedExecutablePlan
-─────────────────────────────────────────────────────────
-  工程任务：
-    □ CommFabric RCCL Driver（完整实现）
-      - all_to_all_async（分 chunk 支持）
-      - all_gather_async（BLOCKED_BY_EXPERT 输出）
-      - reduce_scatter（节点内 → 节点间分层）
-      - p2p_async（Infinity Fabric，Expert 迁移用）
-    □ DistributedExecutablePlan
-      （compute_steps + comm_steps + static_schedule + expert_registry）
-    □ 16 MI300X 端到端训练（MoE 模型，完整前向+反向+优化器）
-    □ 对比实验：StaticSchedule vs 无 Overlap（step time 方差分析）
-
-  ROCm 特有优化：
-    □ MI300X Infinity Fabric P2P 直接传输（比 RDMA 更快的节点内路径）
-    □ 验证 XGMI 带宽（896 GB/s 节点内）是否被充分利用
-    □ RCCL 分层 All-to-All（节点内走 XGMI，节点间走 ROCEv2）
-
-─────────────────────────────────────────────────────────
-Month 11~12：AxionSlowPlanner（Expert 物理迁移）
-─────────────────────────────────────────────────────────
-  工程任务：
-    □ double buffer 机制（MIGRATING / SHADOW 状态机）
-    □ 异步 P2P 迁移（借鉴 LAER-MoE，与反向传播重叠）
-      MI300X：Infinity Fabric P2P（节点内），ROCEv2 RDMA（跨节点）
-    □ 迁移期间梯度正确性保证（shadow buffer 生命周期管理）
-    □ 迁移触发条件校准（基于 Stage 1 CommReport 的实测数据）
-    □ 64 MI300X 生产部署验证
-
-  收敛实验（必做）：
-    □ 内部 7B MoE 模型，2000 steps
-    □ 对比：Baseline vs Slow Planner（imbalance_threshold 扫描）
-    □ 红线：loss 差异 < 0.5%，无 loss spike
-
-  技术产出：
-    □ MI300X 上 Expert 迁移的通信开销实测
-      （Infinity Fabric vs ROCEv2 的 P2P 延迟对比）
-    □ 迁移 ROI 分析（计算节省 / 迁移通信成本）
-
-─────────────────────────────────────────────────────────
-Month 13~14：对外技术影响力 + Stage 2 总结
-─────────────────────────────────────────────────────────
-  技术影响力任务（可选但推荐）：
-    □ AMD 技术博客：
-      "Load-Balanced MoE Training on MI300X with FSEP"
-      （数据：Stage 1+2 的真实吞吐数据，对比 H100 基线）
-    □ 考虑投稿 MLSys 2027 或 SC 2026
-      核心贡献：MI300X 上的 FSEP + 静态调度，ROCm 原生实现
-    □ 开源 AxionCommProfiler（低风险，高影响力）
-
-  工程任务：
-    □ 64 MI300X 稳定性验证（连续训练 72 小时无中断）
-    □ CommReport 自动化（接入内部 MLOps 平台，每次训练自动生成）
-    □ 内部吞吐提升报告（对比 Stage 1 基线，目标 ≥ 20%）
-
-  Stage 2 总结（数据驱动决策）：
-    □ A2A 时间占比（决定 Stage 3 CommTensor 投入是否值得）
-    □ Expert 迁移稳定性数据（决定 Stage 3 迁移频率策略）
-    □ MI300X HBM 带宽利用率（决定 CommTensor 的预期收益）
-    □ 内部用户反馈（谁在用 CommReport？有没有改变工作方式？）
-```
-
-### Stage 2 交付物
-
-| 交付物 | 时间 | 价值 |
-|--------|------|------|
-| CommFabric RCCL Driver | Month 10 | ROCm 原生通信底层 |
-| DistributedExecutablePlan + StaticSchedule | Month 10 | 编译期确定执行计划 |
-| AxionSlowPlanner 生产部署（64 MI300X） | Month 12 | 预期总计 ≥ 20% 吞吐提升 |
-| CommReport 自动化集成（MLOps） | Month 14 | 通信可观测性常态化 |
-| 技术博客 / MLSys 投稿（可选） | Month 13 | AMD 对外技术影响力 |
-
----
-
-## 3. Stage 3：深化（月 15~24）
-
-### 核心目标
-
-```
-工业：CommTensor zero-copy 替换 Expert 通信路径
-     256 MI300X 支持，系统自治（自动调参），稳定性 7 天
-技术：完整 FSEP 系统 vs LAER-MoE 直接对比（MI300X vs A100）
-硬件：ROCEv2 RDMA 跨节点，分层 Reduce-Scatter
-```
-
-### 时间线
-
-```
-Month 15~17：CommTensor zero-copy 生产实现
-─────────────────────────────────────────────────────────
-  工程任务：
-    □ index map 生成算法（CommTensorLayoutPass → 物理 index 计算）
-    □ 迁移后 index map 原子更新（HIP atomic，MI300X SRAM 存储）
-    □ Step 3a：消除 dispatch pack copy
-    □ Step 3b：消除 combine unpack copy（完整版）
-    □ 微基准：MI300X HBM3 5.3 TB/s 下 index map vs memcpy 开销
-
-  MI300X 特有优化：
-    □ 利用 MI300X 大 HBM（192 GB）允许更大的 CommTensor buffer
-    □ HBM3 高带宽（5.3 TB/s）使 zero-copy 绝对收益更大
-    □ LDS（Local Data Share）用于高频访问的 index map 缓存
-
-  技术产出：
-    □ CommTensor zero-copy 在 MI300X vs H100 的对比分析
-      （HBM3 带宽优势是否转化为更大的相对收益？）
-
-─────────────────────────────────────────────────────────
-Month 18~19：ROCEv2 RDMA + 跨节点通信优化
-─────────────────────────────────────────────────────────
-  工程任务：
-    □ CommFabric ROCEv2 RDMA Driver（跨节点 All-to-All）
-    □ 分层 Reduce-Scatter（节点内 XGMI → 节点间 ROCEv2）
-    □ 128~256 MI300X 端到端验证
-    □ FSEPShardingPass 增加跨节点感知（优先节点内 Expert 分配）
-
-  ROCm 适配：
-    □ rccl_comm_t 的跨节点组管理
-    □ MI300X 节点间：400G ROCEv2（8×50G）或 AMD Instinct HGX 配置
-    □ 验证 GPUDirect RDMA 在 ROCm 下的 Expert P2P 迁移路径
-
-─────────────────────────────────────────────────────────
-Month 20~21：系统自治（自动调参）
-─────────────────────────────────────────────────────────
-  工程任务：
-    □ 自适应 chunk_size
-      根据 MI300X HBM 带宽和 RCCL 延迟特性自动选择最优 chunk 大小
-    □ 自适应迁移阈值
-      imbalance_threshold 根据历史 CommReport 数据自动校准
-    □ 自适应 α, β
-      Fast Router 超参根据实测负载分布自动调整
-    □ 目标：新 MI300X 集群部署 Axion → 零手动调参，开箱即用
-
-  技术产出：
-    □ 自适应调参算法 vs 手动调参的 A/B 测试报告
-
-─────────────────────────────────────────────────────────
-Month 22~24：对外技术影响力 + Stage 3 总结
-─────────────────────────────────────────────────────────
-  技术影响力任务：
-    □ 投稿 MLSys 2027 / OSDI 2027（重点）
-      标题方向：
-        "Axion: Communication-Native MoE Training on AMD MI300X"
-      核心数据：
-        - MI300X 256 GPU vs LAER-MoE（A100）的吞吐对比
-        - CommTensor zero-copy 在 HBM3 下的绝对收益
-        - StaticSchedule 的 overlap 率数据
-    □ AMD 开发者博客系列（3 篇）：
-        1. "MI300X 上的 MoE 通信瓶颈分析"（Stage 1 数据）
-        2. "FSEP + 静态调度在 MI300X 上的实现"（Stage 2 数据）
-        3. "CommTensor：消除 MoE 训练中的 pack/unpack 开销"（Stage 3 数据）
-    □ 考虑开源 AxionCommProfiler + CommReport（低风险，高影响力）
-
-  工程任务：
-    □ 256 MI300X 稳定性验证（连续训练 7 天）
-    □ RaggedShard 支持（Shampoo/Muon 优化器，对接 veScale-FSDP 理念）
-    □ 全面性能报告（内部分发）
-
-  Stage 3 总结（数据驱动决策）：
-    □ 系统稳定性是否支持 1000+ GPU 扩展？
-    □ 开源 ROI：技术影响力 vs 维护成本，值不值得？
-    □ Stage 4 重点：新架构（Mamba/多模态）vs 超大规模扩展？
-```
-
-### Stage 3 交付物
-
-| 交付物 | 时间 | 价值 |
-|--------|------|------|
-| CommTensor zero-copy（256 MI300X 生产级） | Month 19 | 额外 5~15% 吞吐提升 |
-| CommFabric ROCEv2 RDMA Driver | Month 19 | 跨节点通信 ROCm 原生 |
-| 系统自治（零调参） | Month 21 | 降低 MI300X 部署门槛 |
-| 256 MI300X 7 天稳定性报告 | Month 23 | 生产可用证明 |
-| 论文投稿（MLSys/OSDI）+ 技术博客系列 | Month 22 | AMD 外部技术影响力 |
-
----
-
-## 4. Stage 4：系统化（月 25~36）
-
-### 核心目标
-
-```
-工业：支持新架构（Mamba、多模态 MoE），成为 AMD 内部标准训练框架
-     1000+ MI300X 超大规模支持
-技术：完整系统论文，考虑开源（评估 AMD IP 约束）
-硬件：AMD 下一代硬件（MI350X？）的前瞻性支持
-```
-
-### 时间线
-
-```
-Month 25~28：通用化 + 新架构
-─────────────────────────────────────────────────────────
-  工程任务：
-    □ ModelArch 扩展：Mamba/SSM 支持（状态空间模型）
-    □ 多模态 MoE 支持（视觉 + 语言 Expert 混合路由）
-    □ Pipeline Parallelism 支持（Comm.Send/Recv Op）
-    □ 1000+ MI300X 扩展性测试（通信拓扑感知的 Expert 分配）
-
-  AMD 前瞻：
-    □ 与 AMD 硬件团队对齐：MI350X 的内存/带宽规格变化
-    □ CommFabric 抽象是否需要适配新的 Infinity Fabric 拓扑
-
-─────────────────────────────────────────────────────────
-Month 29~32：开源评估 + 社区建设
-─────────────────────────────────────────────────────────
-  决策：评估哪些部分可以开源（AMD IP 和竞争因素）
-    □ 可开源（高影响力，低 IP 风险）：
-        AxionCommProfiler + CommReport
-        Simulate Driver
-        ModelGraph + PassManager（通用框架）
-    □ 内部保留（核心竞争力）：
-        MI300X 特化的 CommFabric RCCL 优化细节
-        内部训练任务的具体 profiling 数据
-
-  若决定开源：
-    □ 公开 API 设计（隐藏 AMD 内部特化细节）
-    □ 文档系统（用户文档 + ROCm 快速入门）
-    □ CI/CD（基于 Simulate Driver，不需要真实 GPU）
-    □ HuggingFace 权重加载/导出
-
-─────────────────────────────────────────────────────────
-Month 33~36：完整系统论文 + 对外影响力峰值
-─────────────────────────────────────────────────────────
-  技术影响力：
-    □ Paper 4（完整系统论文）
-      目标：OSDI 2028 或 SC 2027
-      内容：1000+ MI300X，多架构，完整系统演进故事
-    □ 开源发布（如果 AMD 批准）
-    □ 与 ROCm 生态的深度集成（作为官方推荐的 MoE 训练框架）
-```
-
----
-
-## 5. 关键决策门
-
-```
-Stage 1 结束（Month 6）：
-  数据：负载不均衡系数（CommReport）
-  数据：FastRouter 吞吐提升（MI300X 实测）
-  数据：A2A 时间占总 step time 比例
+错误路径（之前的计划）：
+  直接开发 Axion 全套系统
+  → 18 个月后才能看到收益
+  → 如果某个技术点不 work，整个投入打水漂
+  → 个人业余项目，无法承受这个风险
+
+正确路径（本文档）：
+  在 Primus/Megatron 上逐个验证技术点（Feature）
+  每个 Feature 独立可交付，有明确的收益指标
   
-  if 吞吐提升 < 5%：
-    → 检查根因：是计算瓶颈？还是 RCCL 配置问题？
-    → 可能需要先解决 ROCm/aiter kernel 性能问题
-    → 调整 Stage 2：减少 FSEP，增加 MI300X kernel 优化
-    
-  if 吞吐提升 5~15%：
-    → 继续 Stage 2，但 FastRouter 需要更多收敛验证
-    
-  if 吞吐提升 ≥ 15%：
-    → 全速推进 Stage 2，Expert 迁移是最高优先级
-
-─────────────────────────────────────────────────────────
-
-Stage 2 结束（Month 14）：
-  数据：64 MI300X 吞吐提升 vs 内部 baseline
-  数据：Expert 迁移 loss spike 频率
-  数据：A2A 时间占比（决定 CommTensor 投入）
+  Feature 通过验证（有收益）→ 继续下一个 Feature
+  Feature 未通过验证（无收益）→ 停止，不浪费更多时间
   
-  if A2A 占比 < 15%：
-    → CommTensor zero-copy 投入产出比低
-    → Stage 3 重点转向：更大规模 + 系统稳定性
-    
-  if A2A 占比 ≥ 15%：
-    → CommTensor 是 Stage 3 最高优先级
-    
-  if 迁移 loss spike > 2 次/1000 steps：
-    → Slow Planner 触发条件需要收紧
-    → Stage 3 增加迁移平滑机制
+  所有核心 Feature 验证完成 → 用这些已验证的设计重写 Axion
+  Axion 不是起点，是终点：一个已经被数据证明的设计的干净实现
+```
 
-─────────────────────────────────────────────────────────
+### 0.2 整体结构
 
-Stage 3 结束（Month 24）：
-  数据：256 MI300X 稳定性（7 天连续训练）
-  数据：vs LAER-MoE/Megatron 的端到端吞吐对比
-  决策：是否开源？（AMD IP 审查 + 技术影响力评估）
-  
-  if 开源 ROI 高（技术差异化 > 维护成本）：
-    → Stage 4 重点：开源 + 社区 + 新架构
-    
-  if 开源 ROI 低（内部价值 > 外部影响力）：
-    → Stage 4 重点：新架构支持 + 1000+ GPU 扩展
-    → 对外以技术博客 + 论文为主
+```
+验证阶段（Feature 0 ~ Feature N）：
+  在 Primus/Megatron 上以 patch/hook/plugin 形式实现
+  每个 Feature 有独立的：
+    - 实现方案（最小改动接入）
+    - 收益假设（预期提升 X%）
+    - 验证实验（实测数据）
+    - 决策门（通过 → 继续，不通过 → 停止或调整）
+    - 技术产出（内部报告 / 博客 / 论文）
+
+  ┌──────────────────────────────────────────────────────┐
+  │  Feature 0：通信可观测性（CommProfiler）              │
+  │  Feature 1：路由负载均衡（FastRouter）               │
+  │  Feature 2：Expert 物理迁移（SlowPlanner）           │
+  │  Feature 3：静态 Overlap 调度（OverlapScheduler）    │
+  │  Feature 4：CommTensor zero-copy                    │
+  │  Feature 5：...（由前序数据驱动）                    │
+  └──────────────────────────────────────────────────────┘
+                          │
+              每个 Feature 通过验证
+                          │
+                          ▼
+  构建阶段（Axion 重写）：
+    用已验证的设计，在干净的 Axion IR + Pass 框架中重实现
+    此时 Axion 的每个设计决策都有数据背书
+    不是"希望它 work"，而是"已经证明它 work"
+
+```
+
+### 0.3 验证 vs 构建的判断标准
+
+```
+什么时候从"验证阶段"进入"构建阶段"（开始 Axion 重写）？
+
+触发条件（需要同时满足）：
+  □ ≥ 3 个 Feature 已通过验证，且累计收益 ≥ 20%
+  □ 这些 Feature 在 Primus/Megatron 上的 patch 开始出现相互耦合
+    （说明继续在现有系统上叠加已经比重写更麻烦了）
+  □ 有足够时间投入（不再是业余项目，或获得了内部支持）
+
+如果上述条件始终不满足：
+  → Axion 的"验证阶段"成果本身就足够有价值
+  → 这些 Feature 作为 Primus/Megatron 的改进 patch 独立存在
+  → 不强求进入构建阶段
 ```
 
 ---
 
-## 6. 资源规划（AMD 内部视角）
+## 1. Feature 0：通信可观测性（CommProfiler）
+
+### 背景与假设
 
 ```
-Stage 1（月 1~6）：1 名工程师（你自己），业余时间 or 20% 项目
-  GPU：1×MI300X（单机开发），内部集群访问权限（64 MI300X 测试）
-  工具：ROCm stack，hipcc，rccl-trace，rocprof
+假设：MoE 训练中存在显著的 Expert 负载不均衡和通信瓶颈，
+      但工程师目前无法直接看到这些问题，导致优化方向不清晰。
 
-Stage 2（月 7~14）：1 名主力 + 1 名临时合作者（RCCL/kernel 背景）
-  GPU：64 MI300X 集群（持续使用）
-  协作：可能需要 AMD ROCm 团队的 RCCL 支持
+验证目标：在 MI300X 上跑 Primus/Megatron，
+          用 CommProfiler 量化以下数据：
+            - Expert 负载不均衡系数（max_load / avg_load）
+            - A2A 时间占总 step time 的比例
+            - 当前 Overlap 率 vs 理论上界
+            - 跨节点 A2A 占比
 
-Stage 3（月 15~24）：2 名全职（需要争取内部 headcount / 20% 项目合并）
-  GPU：256 MI300X 集群（实验期集中使用）
-  协作：AMD 硬件团队（MI300X 拓扑信息）
+这些数据决定后续所有 Feature 的优先级。
+```
 
-Stage 4（月 25~36）：视开源决策和 AMD 内部推广情况
-  GPU：1000+ MI300X（AMD 内部资源）
+### 实现方案（最小侵入）
 
-最小可行路径（个人项目）：
-  Stage 1 完整 + Stage 2 的 Month 7~10：
-    1 名工程师，业余 / 20% 时间，约 10 个月
-    MI300X 单机 + 小规模集群访问
-    产出：CommProfiler + 技术报告 + FastRouter
-    这已经足够作为内部 proposal 争取更多资源
+```python
+# 接入方式：在现有 MoE Gate / dispatch / combine 前后挂 hook
+# 不改任何计算逻辑，纯观测
+
+class CommProfiler:
+    def attach(self, model):
+        """挂在现有 Primus/Megatron MoE 层上，无需改模型代码"""
+        for layer in model.moe_layers():
+            layer.register_forward_pre_hook(self._before_dispatch)
+            layer.register_forward_hook(self._after_combine)
+
+    def report(self) -> CommReport:
+        return CommReport(
+            expert_load_imbalance = ...,  # max/avg token 数
+            a2a_time_fraction     = ...,  # A2A 时间 / step time
+            actual_overlap_ratio  = ...,  # 实测 compute/comm 重叠率
+            cross_node_fraction   = ...,  # 跨节点 A2A 占比
+            hot_experts           = ...,  # top-K 热点 expert
+        )
+```
+
+### 收益假设与验证
+
+```
+预期：能生成 CommReport，可视化 MI300X 上的通信热点
+量化指标：
+  □ CommReport 数据与手动 RCCL profiling 误差 < 5%
+  □ 接入开销 < 0.5%（profiling 本身不拖慢训练）
+
+这个 Feature 没有"吞吐提升"，收益是"信息价值"——
+  通过数据确认：负载不均衡是否真实？A2A 是否是瓶颈？
+  这直接决定 Feature 1~4 是否值得做。
+```
+
+### 决策门
+
+```
+Feature 0 完成后，根据 CommReport 数据做出判断：
+
+  if Expert 负载不均衡 < 1.3x：
+    → 负载均衡收益有限，Feature 1/2 优先级降低
+    → 优先看 A2A 时间占比，决定是否做 Feature 3/4
+
+  if Expert 负载不均衡 ≥ 2x：
+    → Feature 1（FastRouter）和 Feature 2（SlowPlanner）是高优
+    → 立即开始 Feature 1
+
+  if A2A 时间占比 < 10%：
+    → Feature 3/4 的 overlap 和 zero-copy 收益有限
+    → 重新评估整个路线
+
+  if A2A 时间占比 ≥ 20%：
+    → Feature 3/4 高优先级
+```
+
+### 技术产出
+
+```
+□ AxionCommProfiler（内部 Python 包，pip install）
+□ CommReport HTML 可视化（Expert 热力图 + A2A 时序图）
+□ 内部技术报告：MI300X MoE 训练通信瓶颈分析
+  （这是后续所有 Feature 的立项依据）
+□ 可选：AMD 技术博客 "Profiling MoE Communication on MI300X"
+```
+
+### 时间估计
+**2~3 周**（业余时间 4~6 周）
+
+---
+
+## 2. Feature 1：路由负载均衡（FastRouter）
+
+### 背景与假设
+
+```
+假设：通过调整 gate logits，可以软性引导 token 远离过载 Expert，
+      在不改变 Expert 物理位置的情况下减轻负载不均衡。
+
+前提：Feature 0 CommReport 显示负载不均衡系数 ≥ 1.5x
+
+实现方式：在 Primus/Megatron 的 MoE Gate 模块，
+          在 softmax/topk 之前插入一行偏置调整：
+          gate_logits -= α * load_penalty
+```
+
+### 实现方案
+
+```python
+# 接入方式：在现有 MoE Gate forward 中插入一行
+# Primus/Megatron 的 MoE Gate 通常是：
+#   scores = gate_logits.softmax(-1)
+#   topk_scores, topk_indices = scores.topk(k)
+#
+# 改为：
+#   gate_logits = self.fast_router.adjust(gate_logits)  # ← 只加这一行
+#   scores = gate_logits.softmax(-1)
+#   topk_scores, topk_indices = scores.topk(k)
+
+class FastRouter:
+    def __init__(self, alpha=0.1, beta=2.0, ema_decay=0.9):
+        self.alpha = alpha
+        self.beta  = beta
+        self.load_ema = None  # 指数移动平均，平滑负载统计
+
+    def adjust(self, gate_logits: Tensor) -> Tensor:
+        if self.load_ema is None:
+            return gate_logits  # 第一个 step 无统计，跳过
+        penalty = (self.load_ema / self.load_ema.mean()) ** self.beta
+        return gate_logits - self.alpha * penalty.log()
+
+    @torch.no_grad()
+    def update(self, expert_counts: Tensor):
+        """每个 step dispatch 后更新负载统计"""
+        if self.load_ema is None:
+            self.load_ema = expert_counts.float()
+        else:
+            self.load_ema = self.ema_decay * self.load_ema \
+                          + (1 - self.ema_decay) * expert_counts.float()
+```
+
+### 收益假设与验证
+
+```
+预期吞吐提升：5~15%（通过减少过载 GPU 的等待时间）
+
+必做实验（按顺序）：
+
+  实验 A：收敛性验证（红线）
+    设置：内部 2B MoE，1000 steps
+    对比：Baseline vs FastRouter (α=0.1, β=2.0)
+    指标：loss curve、final perplexity
+    红线：loss 差异 > 1% → 停止，不做任何生产部署
+
+  实验 B：负载均衡效果
+    设置：CommProfiler 在启用 FastRouter 前后各跑 100 steps
+    指标：Expert 负载不均衡系数变化（预期从 Xb 降到 Xa）
+
+  实验 C：吞吐测量
+    设置：相同模型相同数据，64 MI300X
+    指标：tok/s 提升百分比
+```
+
+### 决策门
+
+```
+if 实验 A 红线触发（loss 差异 > 1%）：
+  → 停止 FastRouter，直接跳 Feature 2（SlowPlanner，物理迁移）
+  → 物理迁移不改路由语义，收敛风险更低
+
+if 实验 C 吞吐提升 < 3%：
+  → FastRouter 收益不显著（负载均衡不是主要瓶颈）
+  → 查看 CommReport：A2A 时间占比是否更高？
+  → 如果 A2A 占比高 → 跳到 Feature 3（Overlap 调度）
+
+if 实验 C 吞吐提升 ≥ 5%：
+  → 继续 Feature 2（叠加 SlowPlanner 物理迁移）
+```
+
+### 技术产出
+
+```
+□ FastRouter patch（Primus/Megatron PR 或内部 patch）
+□ 收敛实验报告（内部文档）
+□ 超参分析：α, β 对均衡效果和收敛的 trade-off
+□ 可选：结合 Feature 0 数据，整合进一篇 paper（通信优化 + 可观测性）
+```
+
+### 时间估计
+**实现：1 周 | 收敛实验：2 周 | 总计 3~4 周**（业余 6~8 周）
+
+---
+
+## 3. Feature 2：Expert 物理迁移（SlowPlanner）
+
+### 背景与假设
+
+```
+假设：每隔 K 个 step，根据历史路由统计，将过载 Expert 的参数
+      迁移到负载较轻的 GPU，从根本上消除负载不均衡。
+
+前提：Feature 0 CommReport 显示负载不均衡系数 ≥ 1.5x
+      （Feature 1 可选，SlowPlanner 可以单独做）
+
+参考：LAER-MoE 论文的核心方案，已有公开实现可参考
+      (https://github.com/PKUDAIR/Hetu-Galvatron/tree/laer-moe)
+```
+
+### 实现方案
+
+```python
+# 接入方式：在 Primus/Megatron 的训练循环中增加 hook
+#
+# 原始训练循环：
+#   for step in range(max_steps):
+#       loss = model(batch)
+#       loss.backward()
+#       optimizer.step()
+#
+# 增加 SlowPlanner：
+#   for step in range(max_steps):
+#       loss = model(batch)
+#       loss.backward()
+#       optimizer.step()
+#       planner.maybe_migrate(step, model)  # ← 只加这一行
+
+class SlowPlanner:
+    def __init__(self, check_interval=50, imbalance_threshold=1.3):
+        self.check_interval      = check_interval
+        self.imbalance_threshold = imbalance_threshold
+        self.load_history        = []
+
+    def maybe_migrate(self, step, model):
+        self.load_history.append(collect_expert_loads(model))
+
+        if step % self.check_interval != 0:
+            return
+
+        imbalance = compute_imbalance(self.load_history[-self.check_interval:])
+        if imbalance < self.imbalance_threshold:
+            return  # 不需要迁移
+
+        plan = self._greedy_plan(self.load_history)
+        self._execute_migration(model, plan)  # 异步 P2P（与下一个 step 重叠）
+
+    def _greedy_plan(self, history):
+        """贪心：把热点 Expert 迁移到冷点 GPU"""
+        # 简单贪心，不需要 ILP
+        ...
+
+    def _execute_migration(self, model, plan):
+        """
+        Primus/Megatron 中：直接用 dist.isend/irecv 做异步 P2P
+        MI300X：走 Infinity Fabric（节点内高带宽）
+        """
+        for src_rank, dst_rank, expert_param in plan:
+            dist.isend(expert_param, dst=dst_rank)  # 异步，不阻塞训练
+```
+
+### 收益假设与验证
+
+```
+预期吞吐提升：10~25%（在 FastRouter 基础上额外，或单独使用）
+
+必做实验：
+
+  实验 A：收敛性验证（红线）
+    设置：内部 7B MoE，2000 steps
+    对比：Baseline vs SlowPlanner
+    指标：loss curve，关注迁移时刻是否有 loss spike
+    红线：loss spike 幅度 > 5% of moving average → 收紧触发条件
+
+  实验 B：迁移开销 vs 收益
+    指标：单次迁移耗时（MI300X P2P 带宽实测）
+          迁移后 step time 降低持续时间
+          ROI = 节省计算时间 / 迁移通信时间（预期 > 5x）
+
+  实验 C：与 Feature 1 叠加效果
+    对比：Baseline / FastRouter only / SlowPlanner only / 两者叠加
+    指标：吞吐、负载均衡系数
+
+  实验 D：规模效果
+    设置：8 / 16 / 32 / 64 MI300X
+    指标：提升比例是否随规模增大（不均衡问题在大规模下更严重）
+```
+
+### 决策门
+
+```
+if 实验 A 出现持续 loss spike（不可接受）：
+  → 提高 imbalance_threshold（更保守触发）
+  → 降低 max_experts_per_migration（每次迁更少）
+  → 如果问题依然存在，停止 SlowPlanner
+  → 转向 Feature 3（Overlap 调度，不改物理分布，无收敛风险）
+
+if 实验 B ROI < 2x（迁移成本太高）：
+  → 减少迁移频率（check_interval 从 50 增加到 100）
+  → 或限制到节点内迁移（走 XGMI，不走 ROCEv2）
+
+if 实验 C/D 吞吐提升 ≥ 10%：
+  → Feature 1+2 组合有明确收益
+  → 继续 Feature 3（Overlap 调度叠加）
+```
+
+### 技术产出
+
+```
+□ SlowPlanner patch（Primus/Megatron，最小改动）
+□ 收敛实验报告 + 迁移 ROI 分析
+□ MI300X P2P 带宽实测数据（Infinity Fabric vs ROCEv2）
+□ 论文方向：Feature 0+1+2 数据足够支撑一篇 paper
+  "Load-Adaptive Expert Parallelism on MI300X"
+  对比 LAER-MoE（A100），突出 MI300X 的独特优势
+```
+
+### 时间估计
+**实现：2~3 周 | 实验：3 周 | 总计 5~6 周**（业余 10~12 周）
+
+---
+
+## 4. Feature 3：静态 Overlap 调度（OverlapScheduler）
+
+### 背景与假设
+
+```
+假设：目前 Primus/Megatron 中 A2A 和 Expert FFN 的 overlap 不充分，
+      存在通信等待计算或计算等待通信的空泡。
+      通过静态分析通信/计算的依赖关系，可以精确找到所有安全的 overlap 点，
+      显著提升 GPU 利用率。
+
+前提：Feature 0 CommReport 显示实际 overlap 率 < 理论上界 × 80%
+      （说明当前调度有优化空间）
+
+参考：FlowMoE（arXiv:2510.00207）的流水线调度思路，
+      但 Axion 的设计是静态生成，FlowMoE 是动态的
+```
+
+### 实现方案
+
+```python
+# 接入方式：替换 Primus/Megatron 的 MoE dispatch/combine 调用方式
+#
+# 原始（串行）：
+#   dispatched = all_to_all(tokens, routing)      # 阻塞等待
+#   output = expert_ffn(dispatched, experts)
+#   combined = all_to_all(output, routing)        # 阻塞等待
+#
+# OverlapScheduler（流水线，分 chunk）：
+#   with overlap_scheduler as sched:
+#       for i, chunk in enumerate(split_chunks(tokens, N_CHUNKS)):
+#           dispatched_i = sched.async_a2a(chunk, routing)     # 非阻塞
+#           if i > 0:
+#               output_i_minus_1 = expert_ffn(dispatched[i-1]) # 与 A2A 重叠
+#           dispatched.append(dispatched_i.wait())
+
+class OverlapScheduler:
+    """
+    静态 chunk 流水线调度器。
+    直接在 Primus/Megatron 的 MoE 前向中使用，
+    不需要改 IR 或 Pass 系统。
+    """
+    def __init__(self, num_chunks=4, stream_mode='rccl'):
+        self.num_chunks = num_chunks
+        self.compute_stream = torch.cuda.Stream()
+        self.comm_stream    = torch.cuda.Stream()
+
+    def dispatch_with_overlap(self, tokens, routing, expert_fn):
+        chunks = tokens.chunk(self.num_chunks, dim=0)
+        results = []
+        pending_comm = None
+
+        for i, chunk in enumerate(chunks):
+            # 发出本 chunk 的 A2A（在 comm stream 上，非阻塞）
+            with torch.cuda.stream(self.comm_stream):
+                next_comm = rccl_a2a_async(chunk, routing)
+
+            # 计算上一个 chunk 的 Expert FFN（与本 chunk A2A 重叠）
+            if pending_comm is not None:
+                with torch.cuda.stream(self.compute_stream):
+                    dispatched = pending_comm.wait()
+                    results.append(expert_fn(dispatched))
+
+            pending_comm = next_comm
+
+        # 处理最后一个 chunk
+        if pending_comm is not None:
+            results.append(expert_fn(pending_comm.wait()))
+
+        return torch.cat(results, dim=0)
+```
+
+### 收益假设与验证
+
+```
+预期吞吐提升：5~15%（取决于当前 A2A 时间占比和现有 overlap 率）
+
+必做实验：
+
+  实验 A：overlap 率对比
+    设置：CommProfiler 在启用前后各跑 100 steps
+    指标：实际 overlap 率（A2A 时间中有多少被 Expert FFN 覆盖）
+    预期：overlap 率从当前值提升到 ≥ 80%
+
+  实验 B：chunk 数量的影响
+    设置：num_chunks = 1（关闭）/ 2 / 4 / 8
+    指标：step time vs overlap 率
+    预期：存在最优 chunk 数（太多 chunk 增加调度开销）
+
+  实验 C：与 Feature 1+2 叠加
+    对比：累计收益 vs 单独各自的收益（是否有叠加效果）
+
+  实验 D：正确性验证
+    对比：overlap 版本 vs 非 overlap 版本的输出（数值一致性）
+    这是最重要的验证：chunk 拆分不能改变计算结果
+```
+
+### 决策门
+
+```
+if 实验 A overlap 率提升 < 5%（绝对值）：
+  → 当前系统的 A2A 和 FFN 已经有较好 overlap
+  → Feature 3 收益边际效应低
+  → 评估是否值得继续 Feature 4（CommTensor zero-copy）
+
+if 实验 C 三个 Feature 叠加后总提升 ≥ 20%：
+  → 技术路线验证充分，可以开始考虑 Axion 构建阶段
+  → 这是"进入 Axion 重写"的关键判断点之一
+
+if 实验 D 发现数值不一致：
+  → 立即停止，找 chunk 拆分的边界条件 bug
+  → 不上生产，不做更多实验
+```
+
+### 技术产出
+
+```
+□ OverlapScheduler（Primus/Megatron 的 MoE 层替换方案）
+□ chunk 大小自动选择（基于 MI300X 带宽参数的启发式规则）
+□ 重叠调度的正确性证明（依赖关系分析文档）
+□ 论文方向：Feature 3 是 Paper 2 的核心贡献
+  "Static Communication-Computation Overlap for MoE on MI300X"
+  关键差异：与 FlowMoE 对比（静态 vs 动态调度）
+```
+
+### 时间估计
+**实现：2 周 | 实验：2~3 周 | 总计 4~5 周**（业余 8~10 周）
+
+---
+
+## 5. Feature 4：CommTensor zero-copy
+
+### 背景与假设
+
+```
+假设：Expert dispatch/combine 的 pack/unpack 操作消耗了显著的内存带宽，
+      通过在 A2A 之前直接使用通信友好的物理布局，可以消除这两次拷贝。
+
+前提：Feature 0 CommReport 显示 A2A 时间中有明显的 pack/unpack 开销
+      （在 MI300X 上：seq_len × hidden × 2 bytes × 2 = 约 58 MB per A2A for S=4096,H=7168）
+
+注意：这个 Feature 不需要完整的 CommTensor 类型系统，
+      在 Primus/Megatron 中只需要改内存分配策略即可验证核心假设。
+```
+
+### 实现方案
+
+```python
+# 核心思路：
+# 传统：hidden [S, H]（按 token 顺序）→ pack（重排）→ A2A → unpack
+# zero-copy：直接分配按目标 GPU 分组的内存 → A2A（直接 DMA）→ index map 访问
+#
+# 在 Primus/Megatron 中不需要完整 CommTensor 系统，
+# 只需要在 dispatch 前改内存分配方式：
+
+def dispatch_zero_copy(hidden, routing_table):
+    # 直接分配按目标 rank 分组的 buffer
+    # 物理内存：[rank0_tokens | rank1_tokens | ... | rankN_tokens]
+    sorted_hidden, index_map = sort_by_dst_rank(hidden, routing_table)
+    # sort_by_dst_rank 就是原来的 pack 操作，但直接输出到目标 buffer
+
+    # A2A：direct DMA，无需额外 copy
+    dispatched = rccl_a2a(sorted_hidden, routing_table.send_counts)
+
+    # 返回 dispatched + index_map（供后续 combine 使用）
+    return dispatched, index_map
+
+def combine_zero_copy(expert_output, index_map, routing_table):
+    # A2A combine：direct DMA
+    combined_sorted = rccl_a2a(expert_output, routing_table.recv_counts)
+
+    # 用 index_map 恢复原始顺序（index_select，仍然是一次 copy）
+    # 这一步暂时无法完全消除，但比 unpack 高效
+    return combined_sorted[index_map]
+```
+
+### 收益假设与验证
+
+```
+预期：在高 seq_len（S ≥ 4096）场景下，A2A 端到端时间降低 10~20%
+      MI300X HBM3（5.3 TB/s）比 H100（3.35 TB/s）收益更大
+
+必做实验：
+
+  实验 A：pack/unpack 单独开销
+    设置：隔离 pack 操作，用 hipperf 测量
+    指标：pack 耗时（按 seq_len 扫描：1024/2048/4096/8192）
+    预期：seq_len=4096，pack 约占 A2A 总时间 15~25%
+
+  实验 B：zero-copy vs 原始的 A2A 端到端时间
+    设置：相同 routing，对比两种实现的 A2A 总时间
+    排除变量：使用相同 RCCL 配置
+
+  实验 C：端到端 step time 提升
+    设置：64 MI300X，接入 Primus/Megatron
+    指标：tok/s 提升百分比
+
+  实验 D：正确性验证
+    对比：zero-copy 版本 vs 原始版本的 dispatch/combine 输出
+```
+
+### 决策门
+
+```
+if 实验 A pack 开销 < 5% of A2A 时间：
+  → pack/unpack 不是显著瓶颈
+  → Feature 4 的绝对收益有限（< 2% 端到端）
+  → 不在 Primus/Megatron 上继续推进
+  → 记录这个结论（CommTensor 的价值在 MI300X 上有限制条件）
+
+if 实验 C 端到端提升 ≥ 3%：
+  → 有增量价值，继续
+  → 但注意：这个 Feature 实现复杂度高，需要 ROI 合理
+
+重要认知：
+  CommTensor 最大的价值不一定是 zero-copy 的绝对性能，
+  而是它的类型系统设计（编译期保证 layout 正确性）。
+  如果 zero-copy 性能收益不显著，这个 Feature 的价值
+  主要体现在 Axion 构建阶段的设计严谨性，而非现在的性能。
+```
+
+### 技术产出
+
+```
+□ zero-copy dispatch/combine patch（Primus/Megatron）
+□ MI300X pack/unpack 开销的精确量化（hipperf 数据）
+□ CommTensor 设计的性能验证报告
+  （证明或证伪：zero-copy 在 MI300X 上是否有显著价值）
+□ 论文方向：作为 Paper 3 或 Feature 1~3 的一个 section
+```
+
+### 时间估计
+**实现：2~3 周 | 实验：2 周 | 总计 4~5 周**（业余 8~10 周）
+
+---
+
+## 6. 后续 Feature（由前序数据驱动）
+
+```
+目前还没有足够数据来设计 Feature 5+。
+根据 Feature 0~4 的结果，可能的方向：
+
+  方向 A：RaggedShard（Dense 参数分片灵活化）
+    适用条件：内部开始使用 Shampoo/Muon 优化器
+    参考：veScale-FSDP 的核心贡献
+
+  方向 B：FSEP 热点 Expert 分裂（一个 Expert 分片到多 GPU）
+    适用条件：256+ GPU 场景，单个 Expert 参数量大
+    参考：LAER-MoE FSEP 的完整版
+
+  方向 C：跨节点通信拓扑优化
+    适用条件：Feature 0 显示跨节点 A2A 占比 > 60%
+    方案：Expert 初始分配拓扑感知，优先节点内路由
+
+  方向 D：Sequence Parallelism 与 EP 的联合优化
+    适用条件：长序列训练（S > 8192）成为主要场景
+
+具体做哪个，等 Feature 0~4 的数据说话。
 ```
 
 ---
 
-## 7. 风险与应对
+## 7. Axion 构建阶段（条件触发）
 
-| 风险 | 阶段 | 概率 | 影响 | 应对 |
-|------|------|------|------|------|
-| ROCm RCCL 与设计不兼容 | Stage 2 | 20% | CommFabric 延期 | 提前做 RCCL API 兼容性调研（Stage 1 Month 2）|
-| FastRouter 影响收敛 | Stage 1 | 40% | 吞吐提升不达预期 | 直接跳 FastRouter，只用 Slow Planner |
-| Slow Planner 触发 loss spike | Stage 2 | 25% | 生产部署受阻 | 收紧触发条件，imbalance_threshold 从 2.0 开始（保守）|
-| MI300X kernel 性能不达预期 | Stage 1 | 30% | 基线吞吐偏低 | 提前对齐 aiter vs flash_attn，确认 fmha_v3 优化到位 |
-| AMD 内部 IP 限制开源 | Stage 4 | 35% | 社区影响力受限 | 以论文 + 博客代替开源，开源工具层（CommProfiler）|
-| 个人 20% 项目时间不足 | Stage 1+ | 35% | 进度滞后 | Stage 1 Month 3 产出 CommReport 作为内部立项材料，争取 headcount |
+### 触发条件
+
+```
+同时满足以下条件，才开始 Axion 重写：
+
+  □ Feature 0~3 中至少 3 个通过验证（有 ≥ 5% 各自收益）
+  □ 累计端到端吞吐提升 ≥ 20%（对比 Primus/Megatron baseline）
+  □ Feature 之间的 patch 开始出现耦合（维护成本上升）
+  □ 有时间投入（不再是纯业余项目，或获得内部支持）
+
+如果条件始终不满足：
+  → Axion 构建阶段无限期推迟
+  → 验证阶段的成果（各个 Feature patch）本身已有足够价值
+```
+
+### 构建阶段的意义
+
+```
+进入 Axion 构建阶段时，每个设计决策都有数据背书：
+
+  ModelGraph + CommInferencePass：
+    因为 Feature 0 证明了"通信可见性"有价值
+    → 我们知道这个 Pass 应该分析什么
+
+  CommTensor + CommTensorLayoutPass：
+    因为 Feature 4 量化了 zero-copy 的收益
+    → 我们知道 CommLayout 枚举是否需要 SPARSE_CSR
+
+  OverlapInsertionPass：
+    因为 Feature 3 证明了静态 chunk 调度有效
+    → 我们知道 num_chunks 的合理范围
+
+  FSEPShardingPass：
+    因为 Feature 2 验证了 Expert 迁移的 ROI
+    → 我们知道 imbalance_threshold 的合理值
+
+  这些不是猜测，而是从真实 MI300X 训练数据中得到的参数。
+  Axion 的设计是"基于证据的设计"，而非"基于直觉的设计"。
+```
+
+### 构建阶段概要（仅供参考，届时重新规划）
+
+```
+Stage A（约 3 个月）：
+  ModelGraph + PassManager + AnalysisPass + FusionPass
+  单机 MI300X 跑通 Llama 3.1 8B + DSv3-like MoE
+
+Stage B（约 3 个月）：
+  CommInferencePass + FSEPShardingPass
+  OverlapInsertionPass + CommTensorLayoutPass
+  DistributedExecutablePlan
+
+Stage C（约 3 个月）：
+  CommFabric RCCL Driver（完整版）
+  CommTensor 运行时（zero-copy，index map）
+  FSEP Slow/Fast Planner（用验证阶段的参数）
+
+Stage D（按需）：
+  新架构支持、更大规模、开源评估
+```
 
 ---
 
-## 8. 最小可行路径（MVP，适合从个人项目启动）
+## 8. 总时间线与里程碑
 
 ```
-如果只有个人业余 / 20% 时间，优先做这些：
+时间线（业余时间，假设每周 5~10 小时）：
 
-  Week 1~4（Month 1）：
-    □ ModelGraph + PassManager（单机基础设施）
-    □ MI300X 单机 Llama 3.1 8B 跑通（aiter backend）
-    → 产出：可工作的 Compile-First 基础设施
+Week 1~4    Feature 0：CommProfiler + CommReport
+               ↓ 数据：确认瓶颈类型和优先级
 
-  Week 5~8（Month 2）：
-    □ CommInferencePass + Simulate Driver
-    □ Layout 状态机验证
-    → 产出：单机可验证的通信图分析
+Week 5~8    Feature 1：FastRouter（+收敛实验）
+               ↓ 数据：路由均衡是否安全有效？
 
-  Week 9~12（Month 3）：
-    □ AxionCommProfiler（接入内部框架）
-    □ CommReport 可视化
-    → 产出：真实的 MI300X 通信瓶颈数据报告
+Week 9~16   Feature 2：SlowPlanner（+收敛实验）
+               ↓ 数据：物理迁移 ROI？
 
-此时停下来，用这份报告向内部展示：
-  "我们的 MI300X MoE 训练有 X 倍负载不均衡，A2A 占 Y% 的 step time"
-  "我有一个方案可以解决这个问题，需要 N 个 GPU 和 M 个月"
+Week 17~22  Feature 3：OverlapScheduler
+               ↓ 数据：静态调度提升多少？
 
-如果内部认可，争取资源继续 Stage 1 Month 4~6 和 Stage 2。
-如果不认可，Stage 1 已经产出了有价值的工具和分析报告。
-```
+Week 23~28  Feature 4：CommTensor zero-copy
+               ↓ 数据：pack/unpack 开销是否显著？
 
----
-
-## 9. 成功标准（3 年后）
-
-```
-工业维度（AMD 内部）：
-  □ 256+ MI300X 训练任务使用 Axion（至少 2 个内部产品团队）
-  □ 端到端吞吐 vs 内部 baseline 提升 ≥ 20%
-  □ 通信相关 debug 时间减少 ≥ 50%（基于内部反馈）
-  □ 稳定性：7 天连续训练无通信相关中断
-
-技术影响力（AMD 外部）：
-  □ 1~2 篇顶会论文（MLSys / OSDI / SC）
-  □ AMD 技术博客系列（3 篇以上，有外部引用）
-  □ GitHub 开源项目（如果 AMD 批准）≥ 300 Stars
-
-技术维度：
-  □ CommTensor 类型系统在 AMD 内部被其他项目引用
-  □ 支持 Transformer / MoE / Mamba 三类主流架构
-  □ ROCm 原生实现，与 AMD 硬件演进保持同步
+Week 28 后  决策点：
+               □ 累计收益是否 ≥ 20%？
+               □ Patch 是否开始耦合？
+               □ 是否有内部支持？
+               → Yes × 3：进入 Axion 构建阶段
+               → 否则：停留在验证阶段，持续迭代
 ```
 
 ---
 
-*Axion 整体规划 v0.2 | 2026-03-08*  
-*背景：AMD AI Infra 员工 | ROCm + MI300X | 工业收益驱动，技术影响力为辅*
+## 9. 技术产出规划
+
+```
+Feature 0~2 完成后（约 Week 16）：
+  → 内部技术报告：MI300X MoE 训练的通信优化实践
+  → 可选：AMD 技术博客（Feature 0+1+2 的数据）
+  → 论文方向：MLSys 2027 投稿窗口（约 Week 20）
+    "Load-Balanced MoE Training on MI300X: Observations and Optimizations"
+
+Feature 3~4 完成后（约 Week 28）：
+  → 内部报告：完整 Feature 0~4 收益拆分
+  → 论文方向：OSDI/EuroSys 2027 投稿窗口
+    "Towards Communication-Efficient MoE Training on AMD GPUs"
+
+Axion 构建完成后（如果触发）：
+  → 完整系统论文：OSDI/SOSP 2028
+  → 开源评估（AMD IP 审查）
+```
+
+---
+
+## 10. 每个 Feature 的独立可交付性
+
+```
+每个 Feature 是独立的——即使后续 Feature 不做，已完成的 Feature 也有价值：
+
+  仅 Feature 0：
+    → 内部工程师第一次能看清 MI300X MoE 通信瓶颈
+    → 这本身就是有价值的工具
+
+  Feature 0 + 1：
+    → 5~15% 吞吐提升（如果收敛实验通过）
+    → 一份有数据的内部技术报告
+
+  Feature 0 + 1 + 2：
+    → 预期 15~30% 累计吞吐提升
+    → 有充分数据支撑一篇 paper
+
+  Feature 0 + 1 + 2 + 3：
+    → 预期 20~40% 累计吞吐提升
+    → 足够支撑顶会投稿
+
+  所有 Feature 完成 → 进入 Axion 构建阶段
+  或者：所有 Feature 完成但不构建 Axion → 已经足够有价值
+```
+
+---
+
+*Axion 整体规划 v0.3 | 2026-03-08*  
+*核心思路：Feature-by-Feature 验证 → 数据驱动决策 → 有收益才继续 → Axion 是终点不是起点*
