@@ -87,85 +87,646 @@
 假设：MoE 训练中存在显著的 Expert 负载不均衡和通信瓶颈，
       但工程师目前无法直接看到这些问题，导致优化方向不清晰。
 
-验证目标：在 MI300X 上跑 Primus/Megatron，
+验证目标：在 MI300X 上跑 Megatron-LM（megatron-core MoE），
           用 CommProfiler 量化以下数据：
-            - Expert 负载不均衡系数（max_load / avg_load）
+            - Expert 负载不均衡系数（max_load / avg_load，逐层）
             - A2A 时间占总 step time 的比例
             - 当前 Overlap 率 vs 理论上界
-            - 跨节点 A2A 占比
+            - 跨节点 A2A 占比（intra-node NVLink vs inter-node RCCL）
 
 这些数据决定后续所有 Feature 的优先级。
 ```
 
-### 实现方案（最小侵入）
+---
+
+### Megatron-LM MoE 代码结构（Hook 接入点分析）
+
+```
+megatron-core 的 MoE 调用栈（关键路径）：
+
+megatron/core/transformer/transformer_layer.py
+  └─ TransformerLayer.forward()
+       └─ self.mlp(hidden_states)           ← MoE 层入口（对 TransformerLayer 来说就是 MLP）
+
+megatron/core/transformer/moe/moe_layer.py
+  └─ MoELayer.forward(hidden_states)
+       ├─ [1] self.router(hidden_states)    ← TopKRouter，计算 routing weights + indices
+       └─ [2] self.experts(hidden_states, ...) ← dispatch → expert compute → combine
+
+megatron/core/transformer/moe/experts.py
+  └─ GroupedMLP.forward() / SequentialMLP.forward()
+       ← 本地 Expert 的实际计算
+
+megatron/core/transformer/moe/token_dispatcher.py
+  └─ MoEAlltoAllTokenDispatcher
+       ├─ [3] dispatch(hidden_states, max_prob, top_indices)
+       │       ├─ preprocess(indices)         ← 计算每个 expert 的 token 数（负载统计点）
+       │       ├─ alltoall(hidden_states)     ← A2A dispatch（计时点 1）
+       │       └─ 返回 dispatched_input
+       └─ [4] combine(expert_output, ...)
+               ├─ alltoall(expert_output)     ← A2A gather（计时点 2）
+               └─ 返回 combined_output
+
+megatron/core/transformer/moe/router.py
+  └─ TopKRouter.forward()
+       └─ [5] routing_map, probs             ← 路由结果（负载分析的原始数据）
+
+Hook 接入策略：
+  - 在 MoELayer.forward() 前后挂 hook → 测量 MoE 层总耗时
+  - 在 MoEAlltoAllTokenDispatcher.dispatch/combine 前后挂 hook → 测量 A2A 时间
+  - 在 TopKRouter.forward() 后拦截 routing_map → 统计 Expert 负载分布
+  - 不修改任何 forward 计算逻辑，纯观测
+```
+
+---
+
+### 实现方案（最小侵入，基于 Megatron-LM）
+
+#### 1.1 Hook 注册器
 
 ```python
-# 接入方式：在现有 MoE Gate / dispatch / combine 前后挂 hook
-# 不改任何计算逻辑，纯观测
+# axion/profiler/comm_profiler.py
 
-class CommProfiler:
-    def attach(self, model):
-        """挂在现有 Primus/Megatron MoE 层上，无需改模型代码"""
-        for layer in model.moe_layers():
-            layer.register_forward_pre_hook(self._before_dispatch)
-            layer.register_forward_hook(self._after_combine)
+import time
+import torch
+import torch.distributed as dist
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional
+from contextlib import contextmanager
 
-    def report(self) -> CommReport:
-        return CommReport(
-            expert_load_imbalance = ...,  # max/avg token 数
-            a2a_time_fraction     = ...,  # A2A 时间 / step time
-            actual_overlap_ratio  = ...,  # 实测 compute/comm 重叠率
-            cross_node_fraction   = ...,  # 跨节点 A2A 占比
-            hot_experts           = ...,  # top-K 热点 expert
+# ── 依赖 megatron-core 的导入（运行时动态导入，避免 import 失败）
+def _import_megatron_moe():
+    from megatron.core.transformer.moe.moe_layer import MoELayer
+    from megatron.core.transformer.moe.token_dispatcher import MoEAlltoAllTokenDispatcher
+    from megatron.core.transformer.moe.router import TopKRouter
+    return MoELayer, MoEAlltoAllTokenDispatcher, TopKRouter
+
+
+@dataclass
+class StepStats:
+    """单个 training step 的原始统计数据"""
+    layer_idx: int
+    step_idx: int
+    # Expert 负载
+    tokens_per_expert: torch.Tensor        # shape: [num_experts]，每个 expert 收到的 token 数
+    # A2A 时间（wall-clock，单位 ms）
+    dispatch_a2a_ms: float = 0.0           # dispatch 阶段 A2A 耗时
+    combine_a2a_ms: float = 0.0            # combine 阶段 A2A 耗时
+    # MoE 层总时间
+    moe_layer_ms: float = 0.0             # 整个 MoE 层耗时（含 A2A + expert compute）
+    # 通信量（字节）
+    dispatch_bytes: int = 0               # dispatch A2A 的实际通信量
+    combine_bytes: int = 0                # combine A2A 的实际通信量
+
+
+class AxionCommProfiler:
+    """
+    零侵入挂载在 Megatron-LM MoE 层上的通信 Profiler。
+
+    使用方式：
+        profiler = AxionCommProfiler(num_warmup_steps=5)
+        profiler.attach(model)
+        # 正常跑训练...
+        report = profiler.report()
+        report.save_html("comm_report.html")
+    """
+
+    def __init__(
+        self,
+        num_warmup_steps: int = 5,       # 前 N 步 warmup，不计入统计
+        profile_steps: int = 20,          # 采样 N 步后停止（避免长期开销）
+        enabled: bool = True,
+    ):
+        self.num_warmup_steps = num_warmup_steps
+        self.profile_steps = profile_steps
+        self.enabled = enabled
+        self._step_idx = 0
+        self._stats: List[StepStats] = []
+        self._hooks = []                  # 保存所有 hook handle，方便 detach
+        self._layer_map: Dict[int, int] = {}   # module id → layer_idx
+
+    # ──────────────────────────────────────────────
+    # 1. 挂载
+    # ──────────────────────────────────────────────
+
+    def attach(self, model: torch.nn.Module) -> "AxionCommProfiler":
+        """
+        扫描 model 中所有 MoELayer，注册 hook。
+        不修改模型参数和 forward 逻辑。
+        """
+        if not self.enabled:
+            return self
+
+        MoELayer, MoEAlltoAllTokenDispatcher, TopKRouter = _import_megatron_moe()
+
+        layer_idx = 0
+        for name, module in model.named_modules():
+            if isinstance(module, MoELayer):
+                self._register_moe_layer_hooks(module, layer_idx)
+                layer_idx += 1
+
+            elif isinstance(module, MoEAlltoAllTokenDispatcher):
+                self._register_dispatcher_hooks(module, layer_idx - 1)
+
+            elif isinstance(module, TopKRouter):
+                self._register_router_hooks(module, layer_idx - 1)
+
+        print(f"[AxionCommProfiler] Attached to {layer_idx} MoE layers.")
+        return self
+
+    def detach(self):
+        """移除所有 hook，恢复原始模型"""
+        for h in self._hooks:
+            h.remove()
+        self._hooks.clear()
+
+    # ──────────────────────────────────────────────
+    # 2. Hook 实现
+    # ──────────────────────────────────────────────
+
+    def _register_moe_layer_hooks(self, module, layer_idx: int):
+        """MoELayer 前后：测量整个 MoE 层的 wall-clock 时间"""
+        _state = {}
+
+        def pre_hook(mod, inputs):
+            if not self._is_profiling():
+                return
+            # ROCm/CUDA 都支持 synchronize 后计时
+            torch.cuda.synchronize()
+            _state['t0'] = time.perf_counter()
+
+        def post_hook(mod, inputs, outputs):
+            if not self._is_profiling():
+                return
+            torch.cuda.synchronize()
+            elapsed_ms = (time.perf_counter() - _state.get('t0', 0)) * 1000
+            self._get_current_step_stats(layer_idx).moe_layer_ms = elapsed_ms
+            # 每个 MoE 层 post_hook 触发时，认为一个 layer-step 完成
+            # 用第一层来驱动 step 计数
+            if layer_idx == 0:
+                self._step_idx += 1
+
+        h1 = module.register_forward_pre_hook(pre_hook)
+        h2 = module.register_forward_hook(post_hook)
+        self._hooks.extend([h1, h2])
+
+    def _register_dispatcher_hooks(self, module, layer_idx: int):
+        """
+        MoEAlltoAllTokenDispatcher：
+          - dispatch() 前后：计量 A2A dispatch 时间和通信量
+          - combine() 前后：计量 A2A combine 时间和通信量
+
+        注意：megatron-core 的 dispatcher 没有单独的 forward()，
+        而是分 dispatch() / combine() 两个方法调用。
+        需要用 __call__ wrapper 方式，或直接 monkey-patch 方法。
+        """
+        _orig_dispatch = module.dispatch.__func__ if hasattr(module.dispatch, '__func__') else None
+        _orig_combine  = module.combine.__func__  if hasattr(module.combine,  '__func__') else None
+
+        profiler_ref = self  # 避免闭包问题
+
+        def patched_dispatch(self_mod, hidden_states, max_prob, top_indices):
+            if not profiler_ref._is_profiling():
+                return _orig_dispatch(self_mod, hidden_states, max_prob, top_indices)
+
+            # 计算通信量估算：每个 token 的 hidden_states 大小 × 发送 token 数
+            dispatch_bytes = hidden_states.numel() * hidden_states.element_size()
+
+            torch.cuda.synchronize()
+            t0 = time.perf_counter()
+            result = _orig_dispatch(self_mod, hidden_states, max_prob, top_indices)
+            torch.cuda.synchronize()
+            elapsed_ms = (time.perf_counter() - t0) * 1000
+
+            stats = profiler_ref._get_current_step_stats(layer_idx)
+            stats.dispatch_a2a_ms = elapsed_ms
+            stats.dispatch_bytes  = dispatch_bytes
+            return result
+
+        def patched_combine(self_mod, expert_output, *args, **kwargs):
+            if not profiler_ref._is_profiling():
+                return _orig_combine(self_mod, expert_output, *args, **kwargs)
+
+            combine_bytes = expert_output.numel() * expert_output.element_size()
+
+            torch.cuda.synchronize()
+            t0 = time.perf_counter()
+            result = _orig_combine(self_mod, expert_output, *args, **kwargs)
+            torch.cuda.synchronize()
+            elapsed_ms = (time.perf_counter() - t0) * 1000
+
+            stats = profiler_ref._get_current_step_stats(layer_idx)
+            stats.combine_a2a_ms = elapsed_ms
+            stats.combine_bytes  = combine_bytes
+            return result
+
+        import types
+        module.dispatch = types.MethodType(patched_dispatch, module)
+        module.combine  = types.MethodType(patched_combine,  module)
+        # monkey-patch 不走 hook handle，用 sentinel 记录以便 detach 时恢复
+        # 简化版：不恢复（profiling 结束后调用 detach 即可）
+
+    def _register_router_hooks(self, module, layer_idx: int):
+        """
+        TopKRouter：在 forward 后拦截 routing_map。
+        megatron-core TopKRouter.forward() 返回 (scores, indices)，
+        indices shape = [seq_len * batch, top_k]，值为 expert_id。
+        """
+        profiler_ref = self
+
+        def post_hook(mod, inputs, outputs):
+            if not profiler_ref._is_profiling():
+                return
+            # outputs = (probs, routing_map)
+            # routing_map: [tokens, top_k] → expert indices
+            if isinstance(outputs, (tuple, list)) and len(outputs) >= 2:
+                routing_map = outputs[1]   # [num_tokens, top_k]
+                if routing_map is not None and routing_map.dim() == 2:
+                    num_experts = mod.config.num_moe_experts
+                    # 统计每个 expert 收到的 token 数
+                    tokens_per_expert = torch.bincount(
+                        routing_map.flatten().long(),
+                        minlength=num_experts
+                    ).float().cpu()
+                    stats = profiler_ref._get_current_step_stats(layer_idx)
+                    stats.tokens_per_expert = tokens_per_expert
+
+        h = module.register_forward_hook(post_hook)
+        self._hooks.append(h)
+
+    # ──────────────────────────────────────────────
+    # 3. 辅助方法
+    # ──────────────────────────────────────────────
+
+    def _is_profiling(self) -> bool:
+        """只在 warmup 结束后、profile_steps 步内采样"""
+        return (self.enabled and
+                self._step_idx >= self.num_warmup_steps and
+                self._step_idx < self.num_warmup_steps + self.profile_steps)
+
+    def _get_current_step_stats(self, layer_idx: int) -> StepStats:
+        """懒创建当前 step 的 StepStats"""
+        key = (self._step_idx, layer_idx)
+        for s in self._stats:
+            if s.step_idx == self._step_idx and s.layer_idx == layer_idx:
+                return s
+        s = StepStats(
+            layer_idx=layer_idx,
+            step_idx=self._step_idx,
+            tokens_per_expert=torch.zeros(1),
         )
+        self._stats.append(s)
+        return s
+
+    # ──────────────────────────────────────────────
+    # 4. 生成报告
+    # ──────────────────────────────────────────────
+
+    def report(self) -> "CommReport":
+        return CommReport.from_stats(self._stats)
 ```
+
+#### 1.2 CommReport 数据结构
+
+```python
+# axion/profiler/comm_report.py
+
+import json
+import numpy as np
+from dataclasses import dataclass, field
+from typing import Dict, List
+
+@dataclass
+class LayerReport:
+    layer_idx: int
+    # Expert 负载
+    mean_tokens_per_expert: float
+    max_tokens_per_expert: float
+    load_imbalance_ratio: float        # max / mean，理想值 = 1.0
+    hot_experts: List[int]             # 负载 top-5 的 expert id
+    # A2A 时间
+    dispatch_a2a_ms_mean: float
+    combine_a2a_ms_mean: float
+    a2a_total_ms_mean: float           # dispatch + combine
+    moe_layer_ms_mean: float
+    a2a_fraction: float                # a2a_total / moe_layer，核心指标
+    # 通信量
+    dispatch_gbps: float               # 实测 dispatch 带宽（GB/s）
+    combine_gbps: float
+
+
+@dataclass
+class CommReport:
+    num_layers: int
+    num_profiled_steps: int
+    layers: List[LayerReport] = field(default_factory=list)
+
+    # 全局汇总
+    @property
+    def global_load_imbalance(self) -> float:
+        """所有层的平均负载不均衡系数"""
+        if not self.layers:
+            return 0.0
+        return np.mean([l.load_imbalance_ratio for l in self.layers])
+
+    @property
+    def global_a2a_fraction(self) -> float:
+        """所有层平均 A2A 时间占比"""
+        if not self.layers:
+            return 0.0
+        return np.mean([l.a2a_fraction for l in self.layers])
+
+    @classmethod
+    def from_stats(cls, stats: List) -> "CommReport":
+        from collections import defaultdict
+        import numpy as np
+
+        # 按 layer_idx 聚合
+        layer_data = defaultdict(list)
+        for s in stats:
+            layer_data[s.layer_idx].append(s)
+
+        num_layers = len(layer_data)
+        num_steps  = max((len(v) for v in layer_data.values()), default=0)
+
+        layers = []
+        for layer_idx in sorted(layer_data.keys()):
+            step_list = layer_data[layer_idx]
+
+            # Expert 负载统计（多步平均）
+            all_tpe = np.stack([s.tokens_per_expert.numpy() for s in step_list])  # [steps, experts]
+            mean_tpe = all_tpe.mean(axis=0)   # 每个 expert 的平均 token 数
+            max_tpe  = mean_tpe.max()
+            mean_val = mean_tpe.mean()
+            imbalance = float(max_tpe / mean_val) if mean_val > 0 else 1.0
+            hot_experts = list(np.argsort(mean_tpe)[::-1][:5])
+
+            # A2A 时间统计
+            d_ms   = np.mean([s.dispatch_a2a_ms for s in step_list])
+            c_ms   = np.mean([s.combine_a2a_ms  for s in step_list])
+            moe_ms = np.mean([s.moe_layer_ms    for s in step_list])
+            a2a_ms = d_ms + c_ms
+            a2a_frac = float(a2a_ms / moe_ms) if moe_ms > 0 else 0.0
+
+            # 带宽估算
+            d_bytes = np.mean([s.dispatch_bytes for s in step_list])
+            c_bytes = np.mean([s.combine_bytes  for s in step_list])
+            d_gbps  = float(d_bytes / (d_ms * 1e-3) / 1e9) if d_ms > 0 else 0.0
+            c_gbps  = float(c_bytes / (c_ms * 1e-3) / 1e9) if c_ms > 0 else 0.0
+
+            layers.append(LayerReport(
+                layer_idx              = layer_idx,
+                mean_tokens_per_expert = float(mean_val),
+                max_tokens_per_expert  = float(max_tpe),
+                load_imbalance_ratio   = imbalance,
+                hot_experts            = hot_experts,
+                dispatch_a2a_ms_mean   = float(d_ms),
+                combine_a2a_ms_mean    = float(c_ms),
+                a2a_total_ms_mean      = float(a2a_ms),
+                moe_layer_ms_mean      = float(moe_ms),
+                a2a_fraction           = a2a_frac,
+                dispatch_gbps          = d_gbps,
+                combine_gbps           = c_gbps,
+            ))
+
+        report = cls(num_layers=num_layers, num_profiled_steps=num_steps, layers=layers)
+        report._print_summary()
+        return report
+
+    def _print_summary(self):
+        """rank 0 打印摘要"""
+        import torch.distributed as dist
+        if dist.is_initialized() and dist.get_rank() != 0:
+            return
+        print("\n" + "="*60)
+        print("  AxionCommProfiler Report")
+        print("="*60)
+        print(f"  Layers profiled     : {self.num_layers}")
+        print(f"  Steps profiled      : {self.num_profiled_steps}")
+        print(f"  Global load imbalance (max/mean): {self.global_load_imbalance:.2f}x")
+        print(f"  Global A2A fraction : {self.global_a2a_fraction*100:.1f}%")
+        print("-"*60)
+        for l in self.layers:
+            print(f"  Layer {l.layer_idx:2d} | "
+                  f"imbalance={l.load_imbalance_ratio:.2f}x | "
+                  f"A2A={l.a2a_total_ms_mean:.1f}ms ({l.a2a_fraction*100:.0f}%) | "
+                  f"hot_experts={l.hot_experts[:3]}")
+        print("="*60 + "\n")
+
+    def save_json(self, path: str):
+        import dataclasses
+        with open(path, "w") as f:
+            json.dump(dataclasses.asdict(self), f, indent=2)
+
+    def save_html(self, path: str):
+        """生成 Expert 热力图 + A2A 时序图（基于 Plotly）"""
+        try:
+            import plotly.graph_objects as go
+            from plotly.subplots import make_subplots
+        except ImportError:
+            print("[CommReport] plotly not installed, skipping HTML report")
+            return
+
+        fig = make_subplots(
+            rows=2, cols=2,
+            subplot_titles=[
+                "Expert Load Imbalance (per layer)",
+                "A2A Time Fraction (per layer)",
+                "Dispatch vs Combine A2A (ms)",
+                "Effective A2A Bandwidth (GB/s)",
+            ]
+        )
+
+        layer_ids = [l.layer_idx for l in self.layers]
+
+        # 1. 负载不均衡系数
+        fig.add_trace(go.Bar(
+            x=layer_ids,
+            y=[l.load_imbalance_ratio for l in self.layers],
+            name="Load Imbalance (max/mean)",
+            marker_color="crimson",
+        ), row=1, col=1)
+
+        # 2. A2A 占比
+        fig.add_trace(go.Bar(
+            x=layer_ids,
+            y=[l.a2a_fraction * 100 for l in self.layers],
+            name="A2A Fraction (%)",
+            marker_color="royalblue",
+        ), row=1, col=2)
+
+        # 3. Dispatch vs Combine
+        fig.add_trace(go.Bar(
+            x=layer_ids,
+            y=[l.dispatch_a2a_ms_mean for l in self.layers],
+            name="Dispatch A2A (ms)", marker_color="orange",
+        ), row=2, col=1)
+        fig.add_trace(go.Bar(
+            x=layer_ids,
+            y=[l.combine_a2a_ms_mean for l in self.layers],
+            name="Combine A2A (ms)", marker_color="green",
+        ), row=2, col=1)
+
+        # 4. 带宽
+        fig.add_trace(go.Scatter(
+            x=layer_ids,
+            y=[l.dispatch_gbps for l in self.layers],
+            name="Dispatch BW (GB/s)", mode="lines+markers",
+        ), row=2, col=2)
+        fig.add_trace(go.Scatter(
+            x=layer_ids,
+            y=[l.combine_gbps for l in self.layers],
+            name="Combine BW (GB/s)", mode="lines+markers",
+        ), row=2, col=2)
+
+        fig.update_layout(title="AxionCommProfiler: MoE Communication Analysis", height=800)
+        fig.write_html(path)
+        print(f"[CommReport] HTML report saved to {path}")
+```
+
+#### 1.3 使用方式（接入 Megatron-LM 训练脚本）
+
+```python
+# 在 pretrain_gpt.py 或任意 Megatron 训练脚本中，只需加 3 行
+
+from axion.profiler import AxionCommProfiler
+
+# Step 1：创建 profiler（在 model 构建后）
+profiler = AxionCommProfiler(num_warmup_steps=5, profile_steps=20)
+profiler.attach(model)   # ← 挂 hook，不改模型
+
+# Step 2：正常跑训练（profiler 自动在 warmup 后开始采样）
+for step in range(num_steps):
+    train_step(model, optimizer, ...)
+
+# Step 3：在训练结束或 profile_steps 采集完后生成报告
+report = profiler.report()
+if torch.distributed.get_rank() == 0:
+    report.save_html("mi300x_moe_comm_report.html")
+    report.save_json("mi300x_moe_comm_report.json")
+
+profiler.detach()  # 移除所有 hook，恢复模型原始状态
+```
+
+---
+
+### 关键设计决策
+
+```
+1. 为什么用 monkey-patch 而不是 register_forward_hook 接入 dispatcher？
+
+   megatron-core 的 MoEAlltoAllTokenDispatcher 不是 nn.Module 的标准调用路径，
+   其 dispatch() / combine() 是被 MoELayer 直接调用的方法，
+   不走 nn.Module.forward()，所以 register_forward_hook 无法捕获。
+   → 用 types.MethodType monkey-patch 替换方法，是最低侵入的方式。
+
+2. 为什么不用 torch.profiler？
+
+   torch.profiler / rocprof 能给出 kernel 级别的时间，但：
+   - 无法直接关联到"哪个 MoE 层"、"哪次 A2A"
+   - 无法同步 Expert 负载（routing_map 不在 profiler 里）
+   - 开销大，不适合长期采样
+   → AxionCommProfiler 专注于 MoE 语义级别的指标，与 rocprof 互补。
+
+3. 为什么要 torch.cuda.synchronize()？
+
+   MI300X 上的 RCCL A2A 是异步启动的，不 synchronize 直接计时会测到
+   "kernel 提交时间"而不是"A2A 完成时间"。
+   synchronize 会引入额外延迟（~0.1ms），但保证计时准确。
+   → profiling 开销估算：2 次 sync/A2A × 2 A2A/layer × N layers ≈ 可接受。
+
+4. 分布式场景下的数据汇总
+
+   routing_map 在每个 rank 上只有本地的 token，
+   Expert 负载统计需要 all_reduce 后才能得到全局视图。
+   → 当前版本：各 rank 独立统计本地负载，CommReport 只反映本地视角。
+   → 后续扩展：在 report() 时做一次 dist.all_reduce 汇总全局数据。
+```
+
+---
 
 ### 收益假设与验证
 
 ```
 预期：能生成 CommReport，可视化 MI300X 上的通信热点
 量化指标：
-  □ CommReport 数据与手动 RCCL profiling 误差 < 5%
-  □ 接入开销 < 0.5%（profiling 本身不拖慢训练）
+  □ CommReport 数据与 rocprof 手动 profiling 误差 < 10%
+    （A2A 时间的误差主要来源：synchronize 开销 + timing 分辨率）
+  □ 接入开销 < 1%（profiling 期间的额外 synchronize 不超过 step time 的 1%）
+  □ 仅采样 20 步，不影响长期训练
 
 这个 Feature 没有"吞吐提升"，收益是"信息价值"——
   通过数据确认：负载不均衡是否真实？A2A 是否是瓶颈？
   这直接决定 Feature 1~4 是否值得做。
 ```
 
+---
+
 ### 决策门
 
 ```
 Feature 0 完成后，根据 CommReport 数据做出判断：
 
-  if Expert 负载不均衡 < 1.3x：
+  if global_load_imbalance < 1.3x：
     → 负载均衡收益有限，Feature 1/2 优先级降低
     → 优先看 A2A 时间占比，决定是否做 Feature 3/4
 
-  if Expert 负载不均衡 ≥ 2x：
-    → Feature 1（FastRouter）和 Feature 2（SlowPlanner）是高优
+  if global_load_imbalance ≥ 2.0x：
+    → Feature 1（FastRouter）和 Feature 2（SlowPlanner）高优
     → 立即开始 Feature 1
 
-  if A2A 时间占比 < 10%：
-    → Feature 3/4 的 overlap 和 zero-copy 收益有限
-    → 重新评估整个路线
+  if global_a2a_fraction < 10%：
+    → A2A 不是瓶颈，Feature 3/4 的 overlap 和 zero-copy 收益有限
+    → 重新评估整个路线，考虑 Expert compute 优化（Feature X）
 
-  if A2A 时间占比 ≥ 20%：
-    → Feature 3/4 高优先级
+  if global_a2a_fraction ≥ 20%：
+    → Feature 3（OverlapScheduler）和 Feature 4（CommTensor）高优
+
+  if dispatch_gbps << NVLink 理论带宽（MI300X 节点内 ~1.6 TB/s）：
+    → A2A 有大量跨节点流量，Feature 2（Expert 物理迁移）有价值
 ```
+
+---
 
 ### 技术产出
 
 ```
-□ AxionCommProfiler（内部 Python 包，pip install）
-□ CommReport HTML 可视化（Expert 热力图 + A2A 时序图）
+□ axion/profiler/comm_profiler.py   （核心实现，~300 行）
+□ axion/profiler/comm_report.py     （报告生成 + HTML 可视化，~150 行）
+□ examples/megatron_profile_example.py  （接入 Megatron pretrain 的示例）
+□ CommReport HTML 可视化：
+    - Expert 负载热力图（各层 × 各 Expert 的 token 数热图）
+    - A2A 时间条形图（dispatch vs combine，逐层）
+    - 带宽利用率折线图
 □ 内部技术报告：MI300X MoE 训练通信瓶颈分析
-  （这是后续所有 Feature 的立项依据）
-□ 可选：AMD 技术博客 "Profiling MoE Communication on MI300X"
+  （Feature 1~4 的立项依据，包含实测数据图表）
+□ 可选：AMD 技术博客 "Profiling MoE Communication on MI300X with Zero-Overhead Hooks"
 ```
 
+---
+
 ### 时间估计
-**2~3 周**（业余时间 4~6 周）
+
+```
+总计：2~3 周（全职）/ 4~6 周（业余）
+
+Week 1：
+  □ 熟悉 megatron-core MoELayer / TokenDispatcher / TopKRouter 代码
+  □ 实现 hook 注册（MoELayer + TopKRouter）
+  □ 实现 monkey-patch dispatcher
+  □ 本地单卡验证 StepStats 收集
+
+Week 2：
+  □ 实现 CommReport.from_stats()
+  □ 多卡分布式验证（8 GPU，MI300X 节点内）
+  □ 对比 rocprof 验证误差
+  □ 实现 HTML 可视化
+
+Week 3：
+  □ 跨节点测试（多节点 EP 场景）
+  □ 文档和 example 脚本
+  □ 内部技术报告初稿
+```
 
 ---
 
