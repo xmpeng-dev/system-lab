@@ -12,6 +12,7 @@
 | 文档 | 内容摘要 | 状态 |
 |------|---------|------|
 | [Axion_Architecture_Design.md](./Axion_Architecture_Design.md) | 系统整体架构、设计理念、为什么选择自定义 IR | ✅ 完成 |
+| [ModelSpec_Design.md](./ModelSpec_Design.md) | Model Spec 三层设计：ModelShape + Parallelism + ExpertPlacement | ✅ 完成 |
 
 ### IR 设计系列
 
