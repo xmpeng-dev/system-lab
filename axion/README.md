@@ -18,8 +18,9 @@
 
 | 文档 | 内容摘要 | 状态 |
 |------|---------|------|
-| [Roadmap_Research.md](./Roadmap_Research.md) | 研究路线：4 篇顶会论文，18~24 个月，分阶段发表策略 | ✅ 完成 |
-| [Roadmap_Industry.md](./Roadmap_Industry.md) | 工业落地路线：3 级递进，3 个月可见 ROI，插件优先 | ✅ 完成 |
+| [Roadmap_Unified.md](./Roadmap_Unified.md) | **统一路线（推荐）**：4 个 Stage，工业收益与研究产出螺旋驱动，36 个月 | ✅ 完成 |
+| [Roadmap_Research.md](./Roadmap_Research.md) | 研究路线（归档）：4 篇顶会论文，分阶段发表策略 | ✅ 归档 |
+| [Roadmap_Industry.md](./Roadmap_Industry.md) | 工业落地路线（归档）：3 级递进，插件优先 | ✅ 归档 |
 
 ### IR 设计系列
 
