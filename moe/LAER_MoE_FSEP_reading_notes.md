@@ -343,3 +343,286 @@ total_loss = task_loss + α * load_balance_loss
 ---
 
 *笔记整理于 2026-03-07，基于 arXiv 摘要及相关资料。完整 PDF：https://arxiv.org/pdf/2602.11686*
+
+---
+
+## 附录：FSEP 完整计算过程推导
+
+> *本节从第一原理出发，完整还原 FSEP 的前向/反向计算流，并分析其通信代价与性能收益的权衡关系。*
+
+### A.1 符号定义
+
+| 符号 | 含义 |
+|------|------|
+| `N_GPU` | EP 组内 GPU 数量（示例取 4） |
+| `N_E` | Expert 总数（示例取 8） |
+| `T` | 本地 batch 的 token 总数 |
+| `H` | hidden_dim |
+| `F` | ffn_hidden_dim（Expert 中间维度） |
+| `K` | Top-K 路由数（每 token 激活 K 个 Expert） |
+
+---
+
+### A.2 对比基准：传统 EP 前向流程
+
+设 `N_GPU=4`，`N_E=8`，每卡持有 2 个**完整** Expert：
+
+```
+传统 EP Forward（4 GPU，每卡 2 个 Expert）：
+
+参数布局：
+  GPU0: weight_E0[H, F],  weight_E1[H, F]   ← 完整参数
+  GPU1: weight_E2[H, F],  weight_E3[H, F]
+  GPU2: weight_E4[H, F],  weight_E5[H, F]
+  GPU3: weight_E6[H, F],  weight_E7[H, F]
+
+Step 1 - Gate 计算（各卡独立，无通信）：
+  gate_logits = tokens @ W_gate    # [T, N_E]
+  routing     = TopK(softmax(gate_logits), k=K)
+  → 得到每个 token 的目标 Expert ID 和路由权重
+
+Step 2 - All-to-All Dispatch（通信）：
+  按 Expert 所在 GPU 重新分发 token
+  通信量 = T × H per GPU send/recv
+
+Step 3 - Expert GEMM（各卡本地计算）：
+  output_Ei = act(tokens_Ei @ W_Ei_up) @ W_Ei_down   # [T_i, H]
+  负载取决于路由：T_i 可能严重不均
+
+Step 4 - All-to-All Gather（通信）：
+  Expert 输出送回 token 原始所在 GPU
+  通信量 = T × H per GPU send/recv
+
+Step 5 - 加权合并：
+  output = Σ_k (routing_weight_k × expert_output_k)
+
+总通信量 = 2 × T × H
+核心问题：Step 3 的 T_i 由动态路由决定，极易出现 3~5x 不均衡
+```
+
+---
+
+### A.3 FSEP 的参数分片方式
+
+FSEP 将每个 Expert 的参数按 **FFN 中间维度** 均匀切分，分布到所有 EP GPU：
+
+```
+FSEP 参数布局（N_GPU=4，每个 Expert 分 4 片）：
+
+Expert E0 的参数：
+  W_E0_up   = [H, F]     → 按列切分 → 每卡 [H, F/4]
+  W_E0_down = [F, H]     → 按行切分 → 每卡 [F/4, H]
+
+  GPU0: W_E0_up_s0[H, F/4],  W_E0_down_s0[F/4, H]
+  GPU1: W_E0_up_s1[H, F/4],  W_E0_down_s1[F/4, H]
+  GPU2: W_E0_up_s2[H, F/4],  W_E0_down_s2[F/4, H]
+  GPU3: W_E0_up_s3[H, F/4],  W_E0_down_s3[F/4, H]
+
+内存节省：每卡只存 1/N_GPU 的 Expert 参数
+  → 传统 EP：每卡存 N_E/N_GPU 个完整 Expert = N_E/N_GPU × H×F×2 参数
+  → FSEP：   每卡存所有 Expert 的 1/N_GPU 分片 = N_E × H×F×2/N_GPU 参数
+  → 参数内存相同，但 FSEP 不存在某 GPU OOM 而其他 GPU 空闲的问题
+```
+
+---
+
+### A.4 FSEP 前向传播完整流程
+
+```
+FSEP Forward Pass（4 GPU，EP=4）：
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 1 - Gate 计算（与传统 EP 相同，无通信）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  各卡本地计算路由方案，得到 token → Expert 映射
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 2 - All-to-All Dispatch（通信，与传统 EP 类似）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  按路由方案把 token 分发出去
+  区别：由于每块 GPU 持有所有 Expert 的分片，
+        目标 GPU 的语义变为「持有该 Expert 某个分片的 GPU」
+  通信量 = T × H（与传统 EP 相同）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 3 - 分片 GEMM（FSEP 核心，各卡并行，无通信）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  设某 Expert E0 收到 T_E0 个 token，4 块 GPU 各持有其 1/4 参数：
+
+  Up-proj（各 GPU 独立计算）：
+    GPU_i: partial_up_i = tokens @ W_E0_up_si    # [T_E0, F/4]
+
+  激活函数（在分片维度独立施加）：
+    GPU_i: partial_act_i = SiLU(partial_up_i)    # [T_E0, F/4]
+
+  Down-proj（各 GPU 独立计算）：
+    GPU_i: partial_out_i = partial_act_i @ W_E0_down_si  # [T_E0, H]
+
+  数学关系（矩阵乘分配律）：
+    full_output = Σ_i partial_out_i               # 各片求和 = 完整 Expert 输出
+
+  关键：T_E0 个 token 的计算被均摊到 4 块 GPU，每卡计算 T_E0/4 等效工作量
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 4 - ReduceScatter（FSEP 新增通信！）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  各 GPU 的 partial_out_i 是完整 Expert 输出的部分和，需聚合：
+
+  方案 - ReduceScatter（推荐，内存最优）：
+    输入：GPU_i 持有 partial_out_i[T_E0, H]
+    输出：GPU_i 得到 output_E0[T_E0/4, H]（完整求和，但只保留 1/4 token 的结果）
+    → 每块 GPU 持有不同 token 子集的完整 Expert 输出
+    通信量 = T_E0 × H（全局视角），单 GPU = T_E0 × H / N_GPU
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 5 - All-to-All Gather（与传统 EP 类似）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  把各 GPU 持有的 Expert 输出片段送回 token 原始所在 GPU
+  通信量 = T × H（与传统 EP 相同）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 6 - 加权合并（与传统 EP 相同）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  output = Σ_k (routing_weight_k × expert_output_k)
+```
+
+---
+
+### A.5 FSEP 反向传播完整流程
+
+```
+FSEP Backward Pass：
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bwd Step 1 - All-to-All Gather 的反向 = All-to-All Dispatch
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  d_expert_output 被重新分发回各 GPU（与前向 Step 2 互为逆操作）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bwd Step 2 - ReduceScatter 的反向 = AllGather
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  前向 ReduceScatter 把完整 output 分散到各 GPU
+  反向需要从各 GPU 的梯度片段恢复完整梯度：
+    AllGather(d_output_shards) → d_output[T_E0, H]（每卡重建完整梯度）
+  通信量 = T_E0 × H
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bwd Step 3 - 分片 GEMM 反向（各卡独立，无通信）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Down-proj 梯度（GPU_i 独立计算）：
+    dW_down_si = partial_act_i.T @ d_output       # [F/4, H]
+    d_act_i    = d_output @ W_E0_down_si.T        # [T_E0, F/4]
+
+  Up-proj 梯度（GPU_i 独立计算）：
+    dW_up_si   = tokens.T @ d_act_i               # [H, F/4]
+    d_tokens_i = d_act_i @ W_E0_up_si.T          # [T_E0, H]
+
+  各 GPU 直接得到本地分片参数的完整梯度（无需额外通信！）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bwd Step 4 - d_tokens 的 AllReduce
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  各 GPU 的 d_tokens_i 是输入梯度的部分和，需聚合：
+    AllReduce(d_tokens_0..3) → 完整 d_tokens[T_E0, H]
+  通信量 = T_E0 × H
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bwd Step 5 - All-to-All Dispatch 的反向
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  d_tokens 送回 token 原始所在 GPU（与前向 Step 2 互为逆操作）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bwd Step 6 - 参数梯度 DP AllReduce（若有数据并行）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  dW_shard_i 已在本卡完成，跨 DP 组同步梯度
+  各分片可独立 AllReduce，互不干扰
+```
+
+---
+
+### A.6 通信量对比与性能权衡
+
+```
+单个 Expert，EP=4，T 个 token，hidden=H
+
+传统 EP：
+  A2A Dispatch:   T × H
+  A2A Gather:     T × H
+  ─────────────────────
+  总计:           2 × T × H
+
+FSEP（Forward）：
+  A2A Dispatch:   T × H      （与传统 EP 相同）
+  ReduceScatter:  T × H      （新增！）
+  A2A Gather:     T × H      （与传统 EP 相同）
+  ─────────────────────────
+  总计:           3 × T × H  （前向 1.5x 通信量）
+
+FSEP（Forward + Backward）：
+  Forward  AllGather(bwd):   T × H
+  Backward AllReduce:        T × H
+  ─────────────────────────
+  总计:           5 × T × H  vs 传统 EP 的 4 × T × H
+
+FSEP 更多通信，为什么更快？
+─────────────────────────────────────────────────
+
+设不均衡比 = max_load / avg_load = r（实测 r 常为 3~5）
+
+传统 EP 耗时 ≈ r × avg_compute + 2 × comm_latency
+FSEP 耗时    ≈ avg_compute      + 3 × comm_latency（节点内 ReduceScatter 快）
+
+ReduceScatter 在 XGMI/NVLink 上带宽接近内存带宽（AMD MI300X: 896 GB/s）
+→ T × H 的 ReduceScatter 延迟 ≈ T × H × 2bytes / 896 GB/s（极低！）
+
+当 r ≥ 2 时，FSEP 几乎必然更快
+当 r = 3（典型值）：
+  传统 EP 中 GPU 利用率 ≈ 1/r = 33%
+  FSEP 中   GPU 利用率 ≈ 95%+
+```
+
+---
+
+### A.7 Re-layout 与 FSEP 的联合作用
+
+```
+静态 FSEP（不做 Re-layout）：
+  所有 Expert 的分片均匀分布
+  → 计算完全均衡，但通信固定 = 3x
+
+动态 FSEP + Re-layout（LAER-MoE 完整方案）：
+  Load Planner 观测到：Expert E2 持续过载，Expert E5 持续空闲
+
+  触发 Re-layout（每 K 个 step 检测一次）：
+    E2 的分片数量：4 → 6（占用 E5 释放的内存空间）
+    E5 的分片数量：4 → 2
+
+  效果：
+    E2 的计算由 4 GPU 分担 → 6 GPU 分担（再减少 1.5x 等待）
+    E5 的通信开销降低（参与 GPU 减少）
+
+  Re-layout 本身的代价（参数搬迁）：
+    在 Step T 的反向传播期间异步执行（利用反向传播时间隐藏开销）
+    Step T+1 开始使用新布局，无感知切换
+    临时内存峰值：+5~10%（double buffer 持续时间 < 1 step）
+```
+
+---
+
+### A.8 FSEP 计算过程总结
+
+```
+FSEP vs 传统 EP 关键差异对比：
+
+维度              传统 EP              FSEP
+────────────────────────────────────────────────────
+参数存储          完整（固定 GPU）     分片（动态分布）
+Step 3 计算       T_i 不均             T/N_GPU 均衡
+新增通信          无                   ReduceScatter（节点内）
+通信总量（前向）   2×T×H               3×T×H
+通信硬件路径       全部 A2A（跨节点）   A2A（跨节点）+ RS（节点内）
+GPU 利用率（不均）1/r ≈ 20~33%         ~95%
+适用条件          路由均衡时高效        路由不均时更优
+```
+
+*FSEP 计算过程分析由 ROCflow 框架设计讨论整理，2026-03-09*
