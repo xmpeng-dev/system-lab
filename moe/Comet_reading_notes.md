@@ -1,8 +1,10 @@
 # Comet: Fine-grained Computation-Communication Overlapping for Mixture-of-Experts
 
 > **发表:** MLSys '25  
+> **机构:** ByteDance + 上海交通大学  
+> **代码:** https://github.com/bytedance/flux  
 > **场景:** MoE 分布式训练/推理的计算通信 Overlap  
-> **核心贡献:** 细粒度 Tile 级别的计算-通信 Overlap，比 FlowMoE 更激进的融合策略
+> **核心贡献:** 细粒度 Tile 级别的计算-通信 Overlap，比 FlowMoE 更激进的融合策略。已在字节跳动万卡生产集群部署。
 
 ---
 
@@ -294,6 +296,7 @@ Comet 在 MoE 优化栈中的位置：
 
 ## 延伸阅读
 
+- 🔧 **Flux（Comet 代码）** - 本文开源实现 → https://github.com/bytedance/flux
 - 📄 **FlowMoE** - 粗粒度 Overlap → https://arxiv.org/abs/2510.00207
 - 📄 **DeepEP** - 通信内核优化 → https://github.com/deepseek-ai/DeepEP
 - 📄 **Pipe-Dream** - 流水线并行的早期工作 → https://arxiv.org/abs/1806.03377

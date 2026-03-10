@@ -87,6 +87,56 @@ RFGraph（目标）      ✓           ✓              ✓              ✓
 
 ---
 
+## 1.5 为什么叫 "MoE-Native"
+
+RFGraph 不是一个通用调度 IR 碰巧用在 MoE 上，而是从 MoE 的计算-通信模式出发**反向设计**的。它的节点类型、编译 Pass、内存复用策略都编码了 MoE 特有的结构不变量——这些优化对 Dense 模型无意义，但对 MoE 是关键性能瓶颈。
+
+```
+"MoE-Native" 具体体现在五个层面：
+
+① 节点类型系统是 MoE 语义的
+   ComputeNode.op_type ∈ {EXPERT_GEMM, ATTN_GEMM, GATE, ...}
+   CommNode.comm_op    ∈ {A2A_DISPATCH, A2A_GATHER, RELAYOUT, ...}
+   → A2A_DISPATCH 和 RELAYOUT（FSEP 重布局）只在 MoE 中存在
+   → IR 知道这些操作的语义，才能做 MoE 特有的优化
+
+② Comm Hoisting（Pass 1）利用了 MoE 的结构不变量
+   Gate 和 Attention 共享输入（x_norm），但互相不依赖
+   → Gate 通常先完成，A2A 只依赖 Gate，不依赖 Attention
+   → A2A 可以在 Attention 还在跑的时候就发出去
+   → 这个优化只对 MoE 有意义，Dense 模型没有 Gate 也没有 A2A
+
+③ 硬件路径分配（Pass 3）利用了 MoE 的通信模式
+   MoE 天然产生两类通信：节点内（TP AllReduce）+ 跨节点（A2A）
+   → 正好对应 XGMI 和 RDMA 两条独立物理路径
+   → 这种"双类通信并发"的机会来源于 MoE 的 EP+TP 架构特性
+
+④ 内存 Pass（Pass 4）有 MoE 特有的 Buffer 复用
+   A2A Dispatch 输出 → Expert GEMM → A2A Gather
+   Forward 中 A2A_D 的输出 buffer 在 Expert GEMM 后可复用为 A2A_G 的输出 buffer
+   → ExpertSlotTensor 复用模式只在 MoE 的 A2A→Expert→A2A 流水线中存在
+
+⑤ 动态路由的静态化（Section 6）完全是 MoE 问题
+   每个 Expert 收到的 token 数不固定 → 动态 shape → compile 困难
+   → Padded Static Dispatch 专为 MoE Top-K 路由设计
+   → Dense 模型 shape 完全静态，不需要这个设计
+```
+
+```
+对比总结：
+
+设计维度           通用 IR（torch.compile / XLA）     MoE-Native IR（RFGraph）
+──────────────────────────────────────────────────────────────────────────────
+All-to-All         graph break，看不见                CommNode(A2A_DISPATCH) 一等公民
+Expert 路由        动态 shape → recompile 或 break    Padded Static Dispatch 专门处理
+Expert GEMM        当普通 GEMM 处理                   ComputeNode(EXPERT_GEMM) 独立语义
+内存复用           通用 liveness analysis              ExpertSlotTensor：MoE A2A 特有复用
+跨层 overlap       不感知 MoE 层结构                  知道 Attn→Gate→A2A→Expert 固定流水线
+硬件路径           不区分通信类型                      XGMI(节点内) vs RDMA(跨节点) 分流
+```
+
+---
+
 ## 2. 核心洞察
 
 ### 2.1 三个层次的调度空白
