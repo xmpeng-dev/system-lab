@@ -112,7 +112,7 @@ class TestFullForward:
             hidden, routing_table, expert_fn=lambda x: x
         )
         assert torch.allclose(out, hidden, atol=1e-5), (
-            f"Identity dispatch-combine failed. Max diff: {(out - hidden).abs().max()}"
+            f"Identity expert round-trip failed. Max diff: {(out - hidden).abs().max()}"
         )
 
     def test_scale_expert_changes_output(self, config, hidden, routing_table):
