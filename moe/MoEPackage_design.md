@@ -4,6 +4,7 @@
 > **目标硬件：** AMD MI300X / MI325X（Instinct 系列）  
 > **对标基线：** Megatron-Core v0.16 on GB200（1,233 TFLOPS）/ H100（368 TFLOPS）  
 > **核心理念：** 不重造轮子——找到 Megatron-Core 做不到的、AMD 硬件能做到的差异化优化  
+> **原型代码：** [moepackage/code/](../moepackage/code/) — 四模块 + 融合流水线 PyTorch 原型实现  
 > **更新：** 2026-03-12
 
 ---
@@ -702,6 +703,22 @@ Phase 3：扩展 + 优化（8 周）
   约为 Megatron-Core 在 H100 上的 1.8~2.0 倍，
   约为 Megatron-Core 在 GB200 上的 0.65~0.72 倍。
 ```
+
+---
+
+## 第八部分：原型代码
+
+各核心模块的 PyTorch 原型实现位于 [moepackage/code/](../moepackage/code/)：
+
+| 模块 | 原型代码 | 说明 |
+|------|---------|------|
+| Module 1 | [`xgmi_dispatch.py`](../moepackage/code/xgmi_dispatch.py) | XGMI P2P 直写 Dispatch + Two-Phase 跨节点 |
+| Module 2 | [`p2p_buffer_pool.py`](../moepackage/code/p2p_buffer_pool.py) | 持久 IPC Handle 管理 + 零 malloc Buffer 池 |
+| Module 3 | [`dropless_gemm.py`](../moepackage/code/dropless_gemm.py) | Padded Static GEMM + valid_mask + Paged Stashing |
+| Module 4 | [`dual_channel_scheduler.py`](../moepackage/code/dual_channel_scheduler.py) | XGMI + RDMA 双通道 DAG 调度器 |
+| 整合器 | [`fused_pipeline.py`](../moepackage/code/fused_pipeline.py) | MoEPackageLayer 端到端 MoE 层 |
+
+> **注意：** 原型代码使用标准 PyTorch 操作模拟 AMD HIP 原语行为。生产实现需替换为 HIP Kernel / hipBLASLt / RCCL 原生 API。
 
 ---
 
