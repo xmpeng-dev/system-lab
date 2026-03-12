@@ -24,10 +24,13 @@ import math
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, List, Optional, Tuple
+import logging
 
 import torch
 import torch.nn as nn
 from torch import Tensor
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -180,9 +183,17 @@ class ExpertCapacityManager:
 
         overflow_list: List[int] = []
 
-        # 向量化统计每个 Expert 的 token 数
+        # 向量化统计每个 Expert 的 token 数（带越界检测）
+        clamped_ids = expert_ids.clamp(0, num_experts - 1).long()
+        if not torch.equal(clamped_ids, expert_ids.long()):
+            logger.warning(
+                "expert_ids contained out-of-bounds values (range [0, %d)); "
+                "clamped %d token(s). Check routing logic.",
+                num_experts,
+                int((clamped_ids != expert_ids.long()).sum().item()),
+            )
         counts = torch.bincount(
-            expert_ids.clamp(0, num_experts - 1).long(),
+            clamped_ids,
             minlength=num_experts,
         )
 

@@ -234,8 +234,8 @@ class MoEPackageLayer(nn.Module):
         routing_scores = torch.softmax(routing_scores, dim=-1)
 
         # 将 expert_ids 映射到 EP rank（简化：均匀映射）
-        # 确保 routing_map 值在合法范围内（防止 OOB 访问）
-        routing_map = expert_ids.clamp(0, self.config.num_ep_ranks - 1)
+        # 统一验证点：确保 expert_ids 在合法范围内
+        routing_map = expert_ids % self.config.num_ep_ranks
 
         # ─── Step 2: Fused Dispatch ───
         # AMD HIP: 单 kernel 完成 Permute + FP8 Quant + P2P Write
@@ -253,12 +253,10 @@ class MoEPackageLayer(nn.Module):
         # ─── Step 3: Expert GEMM ───
         recv_tokens, recv_expert_ids, source_info = dispatched_tokens
         if recv_tokens.shape[0] > 0:
-            # Clamp expert_ids to valid local expert range
-            clamped_eids = recv_expert_ids.clamp(
-                0, self.config.experts_per_rank - 1
-            )
+            # Map global expert_ids to local expert range
+            local_eids = recv_expert_ids % self.config.experts_per_rank
             expert_output, valid_mask = self.expert_gemm(
-                recv_tokens, clamped_eids,
+                recv_tokens, local_eids,
             )
         else:
             expert_output = recv_tokens

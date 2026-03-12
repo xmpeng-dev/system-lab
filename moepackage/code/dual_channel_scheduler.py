@@ -525,11 +525,12 @@ class DualChannelScheduler:
         amd_total_us = max(xgmi_time_us, rdma_time_us)
         amd_effective_bw = total_data_bytes / (amd_total_us * 1e-6) / 1e9
 
-        # NVIDIA 对比（NVLink + IB 共享 NCCL，近似串行）
-        nv_time_us = (
-            intra_bytes / (NVIDIA_NVLINK_BW_GBS * 1e3)
-            + inter_bytes / (NVIDIA_IB_BW_GBS * 1e3)
-        )
+        # NVIDIA 对比（NVLink + IB 共享 NCCL，近似取 max 而非简单加法）
+        # 注意：NVIDIA 的 NVLink 和 IB 虽然可以部分重叠，但受限于单一 NCCL 通信栈，
+        # 实际并发度远低于物理独立通道。此处以 max + 10% 串行化开销为保守估计。
+        nv_intra_us = intra_bytes / (NVIDIA_NVLINK_BW_GBS * 1e3)
+        nv_inter_us = inter_bytes / (NVIDIA_IB_BW_GBS * 1e3)
+        nv_time_us = max(nv_intra_us, nv_inter_us) * 1.1  # 10% 串行化开销
         nv_effective_bw = total_data_bytes / (nv_time_us * 1e-6) / 1e9
 
         return {

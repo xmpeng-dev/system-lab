@@ -79,6 +79,7 @@ class XGMIDispatchConfig:
     use_fp8_dispatch: bool = False    # Phase 1 先用 BF16
     xgmi_bw_gbs: float = MI300X_XGMI_BW_GBS
     rdma_bw_gbs: float = MI300X_RDMA_BW_GBS
+    capacity_safety_factor: float = DEFAULT_CAPACITY_SAFETY_FACTOR
 
     @property
     def num_nodes(self) -> int:
@@ -235,10 +236,10 @@ class XGMIDispatcher:
             capacity_per_rank: 每 rank 的 token 接收容量
         """
         if capacity_per_rank is None:
-            # 默认容量：均匀分配 × 2 安全系数
+            # 默认容量：均匀分配 × 配置的安全系数
             capacity_per_rank = math.ceil(
                 self.config.max_tokens_per_step * self.config.top_k
-                / self.config.num_ep_ranks * DEFAULT_CAPACITY_SAFETY_FACTOR
+                / self.config.num_ep_ranks * self.config.capacity_safety_factor
             )
 
         self.address_map = P2PAddressMap.initialize(
