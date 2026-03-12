@@ -33,6 +33,8 @@ for large-scale model training.
 - Unified training entry and tooling for multi-backend systems
 - Training performance benchmarking and diagnostics
 - Distributed training workflow design
+- [MoE Optimization Research](./moe/README.md) — 100+ paper survey & system design for MoE training
+- [MoEPackage](./moepackage/README.md) — AMD GPU native MoE training optimization package
 
 ---
 
