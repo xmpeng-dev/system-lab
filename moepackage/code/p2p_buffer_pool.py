@@ -31,6 +31,10 @@ from torch import Tensor
 # 配置
 # ---------------------------------------------------------------------------
 
+# hipIpcMemHandle_t 大小 (bytes)
+HIP_IPC_HANDLE_SIZE = 64
+
+
 # MI300X HBM3e 容量
 MI300X_HBM_CAPACITY_GB = 192
 
@@ -154,8 +158,8 @@ class BufferSlot:
         # valid mask（标记哪些 slot 有效 token）
         metadata = torch.zeros(capacity, dtype=torch.bool, device=device)
 
-        # 模拟 IPC Handle（实际为 hipIpcMemHandle_t, 64 bytes）
-        ipc_handle = bytes(64)
+        # 模拟 IPC Handle（实际为 hipIpcMemHandle_t）
+        ipc_handle = bytes(HIP_IPC_HANDLE_SIZE)
 
         return cls(
             slot_id=slot_id,

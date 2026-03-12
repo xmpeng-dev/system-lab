@@ -42,6 +42,7 @@ MI300X_RDMA_BW_GBS = 50.0         # 单端口 RoCE 400Gbps ≈ 50 GB/s
 MI300X_XGMI_LATENCY_US = 3.0     # XGMI P2P 延迟 (μs)
 MI300X_RCCL_LATENCY_US = 15.0    # RCCL 节点内延迟 (μs)
 MI300X_RDMA_LATENCY_US = 5.0     # RDMA 启动延迟 (μs)
+DEFAULT_CAPACITY_SAFETY_FACTOR = 2.0  # 默认 slot 预分配安全系数
 
 
 class DispatchMode(Enum):
@@ -237,7 +238,7 @@ class XGMIDispatcher:
             # 默认容量：均匀分配 × 2 安全系数
             capacity_per_rank = math.ceil(
                 self.config.max_tokens_per_step * self.config.top_k
-                / self.config.num_ep_ranks * 2.0
+                / self.config.num_ep_ranks * DEFAULT_CAPACITY_SAFETY_FACTOR
             )
 
         self.address_map = P2PAddressMap.initialize(
@@ -440,7 +441,8 @@ class XGMIDispatcher:
 
         # 填充 expert_ids
         n_intra = intra_tokens.shape[0]
-        recv_expert_ids[:n_intra] = intra_experts[:n_intra]
+        n_fill = min(n_intra, intra_experts.shape[0])
+        recv_expert_ids[:n_fill] = intra_experts[:n_fill]
         for i, (dst_r, eid) in enumerate(gateway_meta):
             idx = n_intra + i
             if idx < total:

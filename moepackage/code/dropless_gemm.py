@@ -39,6 +39,9 @@ MI300X_BF16_TFLOPS = 1307.0     # BF16 峰值 TFLOPS
 MI300X_FP8_TFLOPS = 2615.0      # FP8 峰值 TFLOPS
 MI300X_HBM_BW_TBS = 5.3         # HBM 带宽 TB/s
 
+# Grouped GEMM 典型利用率（hipBLASLt 在中等规模问题上的经验值）
+GROUPED_GEMM_UTILIZATION = 0.50
+
 
 class OverflowPolicy(Enum):
     """Expert 溢出处理策略"""
@@ -184,6 +187,7 @@ class ExpertCapacityManager:
         )
 
         # 分配 token 到各 Expert（保证不超过 capacity）
+        # 注：Python 循环仅用于原型验证，生产中使用 HIP Kernel 实现
         expert_offsets = torch.zeros(num_experts, dtype=torch.int64,
                                      device=self._device)
 
@@ -523,8 +527,8 @@ class DroplessGroupedGEMM(nn.Module):
         peak = (MI300X_FP8_TFLOPS if cfg.use_fp8_gemm
                 else MI300X_BF16_TFLOPS)
 
-        # 假设 GEMM 达到 50% 峰值（Grouped GEMM 典型效率）
-        gemm_util = 0.50
+        # 假设 Grouped GEMM 达到典型利用率
+        gemm_util = GROUPED_GEMM_UTILIZATION
         effective_tflops = peak * gemm_util * compute_efficiency
         gemm_time_ms = total_flops / (effective_tflops * 1e12) * 1e3
 

@@ -37,6 +37,11 @@ MI300X_XGMI_LATENCY_US = 3.0   # XGMI 启动延迟 (μs)
 MI300X_RDMA_LATENCY_US = 5.0   # RDMA 启动延迟 (μs)
 
 
+# NVIDIA 对比参数（用于带宽分析）
+NVIDIA_NVLINK_BW_GBS = 900.0    # NVLink 5 双向带宽 (GB/s)
+NVIDIA_IB_BW_GBS = 50.0         # InfiniBand NDR 400Gbps ≈ 50 GB/s
+
+
 class ChannelType(Enum):
     """通信通道类型"""
     XGMI = auto()    # 节点内 XGMI P2P（高带宽低延迟）
@@ -521,11 +526,9 @@ class DualChannelScheduler:
         amd_effective_bw = total_data_bytes / (amd_total_us * 1e-6) / 1e9
 
         # NVIDIA 对比（NVLink + IB 共享 NCCL，近似串行）
-        nvlink_bw = 900.0  # GB/s
-        ib_bw = 50.0       # GB/s
         nv_time_us = (
-            intra_bytes / (nvlink_bw * 1e3)
-            + inter_bytes / (ib_bw * 1e3)
+            intra_bytes / (NVIDIA_NVLINK_BW_GBS * 1e3)
+            + inter_bytes / (NVIDIA_IB_BW_GBS * 1e3)
         )
         nv_effective_bw = total_data_bytes / (nv_time_us * 1e-6) / 1e9
 
