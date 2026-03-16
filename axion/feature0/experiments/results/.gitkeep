@@ -1,6 +1,0 @@
-# experiments/results/.gitkeep
-# 实测数据放这里：
-#   - mi300x_8gpu_moe_comm_report.html
-#   - mi300x_8gpu_moe_comm_report.json
-#   - mi300x_64gpu_moe_comm_report.html
-#   - ...
