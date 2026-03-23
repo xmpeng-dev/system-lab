@@ -4,6 +4,9 @@ All-to-All Token Dispatcher for Expert Parallel.
 [Megatron] Implements the Permute → All-to-All → … → All-to-All → Unpermute
 data path with Memory-Efficient Permutation (routing weights applied before
 the second expert linear layer instead of at combine time).
+
+Includes custom autograd Functions so gradients flow correctly through
+All-to-All in both directions.
 """
 
 from __future__ import annotations
@@ -15,31 +18,100 @@ import torch
 import torch.distributed as dist
 
 
+# ---------------------------------------------------------------------------
+# Autograd-safe All-to-All primitives
+# ---------------------------------------------------------------------------
+
+class _AllToAllForward(torch.autograd.Function):
+    """All-to-All with correct backward (reverse All-to-All)."""
+
+    @staticmethod
+    def forward(ctx, input, send_splits, recv_splits, group):
+        ctx.group = group
+        ctx.send_splits = send_splits
+        ctx.recv_splits = recv_splits
+
+        H = input.shape[-1]
+        recv_buf = input.new_empty(sum(recv_splits), H)
+        input_list = list(input.split(send_splits, dim=0))
+        output_list = list(recv_buf.split(recv_splits, dim=0))
+        dist.all_to_all(output_list, input_list, group=group)
+        return torch.cat(output_list, dim=0)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        # Backward of All-to-All is All-to-All with swapped splits.
+        H = grad_output.shape[-1]
+        grad_input = grad_output.new_empty(sum(ctx.send_splits), H)
+        input_list = list(grad_output.split(ctx.recv_splits, dim=0))
+        output_list = list(grad_input.split(ctx.send_splits, dim=0))
+        dist.all_to_all(output_list, input_list, group=ctx.group)
+        return torch.cat(output_list, dim=0), None, None, None
+
+
+class _AllToAllBackward(torch.autograd.Function):
+    """Reverse All-to-All (combine direction) with correct backward."""
+
+    @staticmethod
+    def forward(ctx, input, send_splits, recv_splits, group):
+        ctx.group = group
+        ctx.send_splits = send_splits
+        ctx.recv_splits = recv_splits
+
+        H = input.shape[-1]
+        recv_buf = input.new_empty(sum(recv_splits), H)
+        input_list = list(input.split(send_splits, dim=0))
+        output_list = list(recv_buf.split(recv_splits, dim=0))
+        dist.all_to_all(output_list, input_list, group=group)
+        return torch.cat(output_list, dim=0)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        H = grad_output.shape[-1]
+        grad_input = grad_output.new_empty(sum(ctx.send_splits), H)
+        input_list = list(grad_output.split(ctx.recv_splits, dim=0))
+        output_list = list(grad_input.split(ctx.send_splits, dim=0))
+        dist.all_to_all(output_list, input_list, group=ctx.group)
+        return torch.cat(output_list, dim=0), None, None, None
+
+
+def all_to_all_fwd(input, send_splits, recv_splits, group):
+    """Dispatch direction: autograd-aware All-to-All."""
+    return _AllToAllForward.apply(input, send_splits, recv_splits, group)
+
+
+def all_to_all_bwd(input, send_splits, recv_splits, group):
+    """Combine direction: autograd-aware All-to-All."""
+    return _AllToAllBackward.apply(input, send_splits, recv_splits, group)
+
+
+# ---------------------------------------------------------------------------
+# DispatchMeta
+# ---------------------------------------------------------------------------
+
 @dataclass
 class DispatchMeta:
     """Book-keeping produced by ``dispatch`` and consumed by ``combine``."""
 
     permute_indices: torch.Tensor  # [T*K] int64 – original token index
-    tokens_per_expert: torch.Tensor  # [E_total] int64
+    tokens_per_expert: torch.Tensor  # [num_local_experts] int64
     send_counts: torch.Tensor  # [ep_size] int64
     recv_counts: torch.Tensor  # [ep_size] int64
     original_shape: Tuple[int, int]  # (T, H)
     num_local_experts: int
 
 
+# ---------------------------------------------------------------------------
+# Dispatcher
+# ---------------------------------------------------------------------------
+
 class AllToAllDispatcher:
     """
     [Megatron] Token dispatcher using NCCL All-to-All.
 
-    The dispatcher
-
-    1. **Permutes** tokens so that those destined for the same expert are
-       contiguous.
-    2. Applies routing weights (*memory-efficient permutation*).
-    3. Executes **All-to-All** to move tokens to the GPU that owns the
-       target expert.
-
-    ``combine`` reverses the process.
+    Uses custom autograd Functions so that gradients flow correctly:
+      Forward:  tokens → All-to-All → experts
+      Backward: grad   → reverse All-to-All → back to source GPUs
     """
 
     def __init__(
@@ -63,26 +135,11 @@ class AllToAllDispatcher:
         topk_indices: torch.Tensor,
         routing_map: torch.Tensor,
     ) -> Tuple[torch.Tensor, DispatchMeta]:
-        """
-        Parameters
-        ----------
-        hidden_states : [T, H]
-        probs : [T, K] routing weights
-        topk_indices : [T, K] expert indices
-        routing_map : [T, E] boolean mask
-
-        Returns
-        -------
-        recv_tokens : [total_recv, H]
-            Tokens ready for local expert computation.
-        meta : DispatchMeta
-        """
         T, H = hidden_states.shape
         K = topk_indices.shape[1]
         E = routing_map.shape[1]
 
         # ---- Permute: sort tokens by expert id ----
-        # Expand each token K times (one copy per selected expert).
         flat_expert_ids = topk_indices.flatten()  # [T*K]
         flat_probs = probs.flatten()  # [T*K]
         token_indices = (
@@ -92,7 +149,6 @@ class AllToAllDispatcher:
             .flatten()
         )  # [T*K]
 
-        # Sort by expert id so tokens for the same expert are contiguous.
         sort_order = torch.argsort(flat_expert_ids, stable=True)
         sorted_expert_ids = flat_expert_ids[sort_order]
         sorted_token_idx = token_indices[sort_order]
@@ -100,23 +156,34 @@ class AllToAllDispatcher:
 
         permuted_tokens = hidden_states[sorted_token_idx]  # [T*K, H]
 
-        # [Megatron] Memory-Efficient Permutation: apply routing weights now
-        # so that combine can simply sum without storing expert outputs.
+        # [Megatron] Memory-Efficient Permutation: apply routing weights now.
         permuted_tokens = permuted_tokens * sorted_probs.unsqueeze(-1)
 
-        # tokens_per_expert: how many tokens are assigned to each expert.
+        # tokens_per_expert: how many tokens go to each expert globally.
         tokens_per_expert = torch.zeros(E, dtype=torch.long, device=hidden_states.device)
         tokens_per_expert.scatter_add_(
             0, sorted_expert_ids, torch.ones_like(sorted_expert_ids)
         )
 
-        # ---- All-to-All ----
-        send_counts, recv_counts, recv_tokens = self._all_to_all_dispatch(
-            permuted_tokens, tokens_per_expert, H
+        # ---- All-to-All (autograd-safe) ----
+        send_counts = self._compute_send_counts(tokens_per_expert)
+        recv_counts = torch.empty_like(send_counts)
+        dist.all_to_all_single(recv_counts, send_counts, group=self.ep_group)
+
+        send_splits = send_counts.tolist()
+        recv_splits = recv_counts.tolist()
+
+        recv_tokens = all_to_all_fwd(
+            permuted_tokens, send_splits, recv_splits, self.ep_group
         )
 
-        # Recompute local tokens_per_expert for received data.
-        local_tpe = self._local_tokens_per_expert(recv_counts)
+        # Per-expert token counts for received data:
+        # All-reduce the local tpe to get global tpe, then extract our experts.
+        global_tpe = tokens_per_expert.clone()
+        dist.all_reduce(global_tpe, group=self.ep_group)
+        start_e = self.ep_rank * self.num_local_experts
+        end_e = start_e + self.num_local_experts
+        local_tpe = global_tpe[start_e:end_e]
 
         meta = DispatchMeta(
             permute_indices=sorted_token_idx,
@@ -137,11 +204,15 @@ class AllToAllDispatcher:
         expert_output: torch.Tensor,
         meta: DispatchMeta,
     ) -> torch.Tensor:
-        """Reverse All-to-All, unpermute, and reduce duplicated tokens."""
         T, H = meta.original_shape
 
-        # All-to-All reverse.
-        returned = self._all_to_all_combine(expert_output, meta)
+        # All-to-All reverse (autograd-safe).
+        send_splits = meta.recv_counts.tolist()
+        recv_splits = meta.send_counts.tolist()
+
+        returned = all_to_all_bwd(
+            expert_output, send_splits, recv_splits, self.ep_group
+        )
 
         # Unpermute and reduce: each original token may have K contributions.
         output = torch.zeros(T, H, dtype=expert_output.dtype,
@@ -154,81 +225,16 @@ class AllToAllDispatcher:
         return output
 
     # ------------------------------------------------------------------
-    # Internal All-to-All
+    # Helpers
     # ------------------------------------------------------------------
 
-    def _all_to_all_dispatch(
-        self,
-        permuted: torch.Tensor,
-        tokens_per_expert: torch.Tensor,
-        H: int,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        E = tokens_per_expert.shape[0]
-        experts_per_rank = self.num_local_experts
-
-        # send_counts[r] = number of tokens going to rank r.
+    def _compute_send_counts(self, tokens_per_expert: torch.Tensor) -> torch.Tensor:
         send_counts = torch.zeros(
-            self.ep_size, dtype=torch.long, device=permuted.device
+            self.ep_size, dtype=torch.long, device=tokens_per_expert.device
         )
         for r in range(self.ep_size):
-            start_e = r * experts_per_rank
-            end_e = start_e + experts_per_rank
+            start_e = r * self.num_local_experts
+            end_e = start_e + self.num_local_experts
             send_counts[r] = tokens_per_expert[start_e:end_e].sum()
+        return send_counts
 
-        recv_counts = torch.empty_like(send_counts)
-        dist.all_to_all_single(
-            recv_counts, send_counts, group=self.ep_group
-        )
-
-        send_splits = send_counts.tolist()
-        recv_splits = recv_counts.tolist()
-
-        recv_tokens = permuted.new_empty(int(recv_counts.sum()), H)
-
-        input_list = list(permuted.split(send_splits, dim=0))
-        output_list = list(recv_tokens.split(recv_splits, dim=0))
-
-        dist.all_to_all(output_list, input_list, group=self.ep_group)
-
-        recv_tokens = torch.cat(output_list, dim=0)
-        return send_counts, recv_counts, recv_tokens
-
-    def _all_to_all_combine(
-        self,
-        expert_output: torch.Tensor,
-        meta: DispatchMeta,
-    ) -> torch.Tensor:
-        H = expert_output.shape[-1]
-        send_splits = meta.recv_counts.tolist()
-        recv_splits = meta.send_counts.tolist()
-
-        recv_buf = expert_output.new_empty(int(meta.send_counts.sum()), H)
-
-        input_list = list(expert_output.split(send_splits, dim=0))
-        output_list = list(recv_buf.split(recv_splits, dim=0))
-
-        dist.all_to_all(output_list, input_list, group=self.ep_group)
-
-        return torch.cat(output_list, dim=0)
-
-    def _local_tokens_per_expert(
-        self, recv_counts: torch.Tensor
-    ) -> torch.Tensor:
-        """
-        Approximate per-expert token counts for received data.
-
-        A production implementation would send the exact per-expert counts
-        alongside the tokens; here we assume uniform distribution within
-        each rank's received batch for simplicity.
-        """
-        total = int(recv_counts.sum())
-        tpe = torch.zeros(
-            self.num_local_experts, dtype=torch.long,
-            device=recv_counts.device,
-        )
-        if self.num_local_experts > 0 and total > 0:
-            base = total // self.num_local_experts
-            rem = total % self.num_local_experts
-            tpe[:] = base
-            tpe[:rem] += 1
-        return tpe
