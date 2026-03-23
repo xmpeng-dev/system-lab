@@ -4,13 +4,14 @@ Expert MLP implementations.
 [Megatron] GroupedMLP – all local experts in a single batched GEMM call
 using the ``grouped_gemm`` library (gmm kernel).
 
-Falls back to sequential per-expert loops if the library is unavailable.
+Gate and Up projections are fused into a single weight matrix (w_gate_up)
+so that the first GEMM produces both outputs in one kernel, matching
+Megatron's ColumnParallelLinear fusion. TP=1 so no split across GPUs.
 """
 
 from __future__ import annotations
 
 import math
-from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -37,16 +38,20 @@ except ImportError:
 
 class GroupedMLP(nn.Module):
     """
-    [Megatron] Grouped GEMM expert computation.
-
-    All local experts' tokens are processed via ``grouped_gemm.ops.gmm``
-    which issues a single fused kernel call instead of looping over experts.
+    Grouped GEMM expert computation with fused gate+up projection.
 
     Architecture per expert (SwiGLU):
-        out = W_down · (SiLU(W_gate · x) ⊙ (W_up · x))
+        gate_up = x @ W_gate_up^T          ← single fused GEMM
+        gate, up = split(gate_up, 2)
+        out = (SiLU(gate) * up) @ W_down^T ← second GEMM
 
-    Weight layout: [num_experts, out_features, in_features]
-    gmm convention: gmm(a=[T,K], b=[E,K,N], batch_sizes) → [T,N]
+    Weight layout (TP=1, no split):
+        w_gate_up : [E, 2*F, H]   — gate and up concatenated along dim 0 of output
+        w_down    : [E, H, F]
+
+    This matches Megatron's ColumnParallelLinear fusion: 2 GEMMs → 1 GEMM
+    for the first projection, halving kernel launch overhead and improving
+    GPU utilisation via larger matrix dimensions.
     """
 
     def __init__(
@@ -60,16 +65,16 @@ class GroupedMLP(nn.Module):
         self.hidden_dim = hidden_dim
         self.ffn_dim = ffn_dim
 
-        # Stored as [E, out, in] so gmm(x, w) computes x @ w^T per expert.
-        self.w_gate = nn.Parameter(torch.empty(num_experts, ffn_dim, hidden_dim))
-        self.w_up = nn.Parameter(torch.empty(num_experts, ffn_dim, hidden_dim))
+        # Fused gate+up: [E, 2*F, H]
+        self.w_gate_up = nn.Parameter(torch.empty(num_experts, 2 * ffn_dim, hidden_dim))
+        # Down projection: [E, H, F]
         self.w_down = nn.Parameter(torch.empty(num_experts, hidden_dim, ffn_dim))
         self._init_weights()
 
     def _init_weights(self) -> None:
         std = 1.0 / math.sqrt(self.hidden_dim)
-        for p in [self.w_gate, self.w_up, self.w_down]:
-            nn.init.trunc_normal_(p, std=std)
+        nn.init.trunc_normal_(self.w_gate_up, std=std)
+        nn.init.trunc_normal_(self.w_down, std=std)
 
     def forward(
         self,
@@ -83,11 +88,11 @@ class GroupedMLP(nn.Module):
         tokens_per_expert : [num_local_experts] int64
         """
         if _HAS_GROUPED_GEMM and x.numel() > 0 and x.dtype == torch.bfloat16:
-            return _grouped_swiglu_gmm(
-                x, self.w_gate, self.w_up, self.w_down, tokens_per_expert
+            return _fused_swiglu_gmm(
+                x, self.w_gate_up, self.w_down, self.ffn_dim, tokens_per_expert
             )
-        return _grouped_swiglu_sequential(
-            x, self.w_gate, self.w_up, self.w_down, tokens_per_expert
+        return _fused_swiglu_sequential(
+            x, self.w_gate_up, self.w_down, self.ffn_dim, tokens_per_expert
         )
 
 
@@ -96,68 +101,68 @@ class MLP(nn.Module):
 
     def __init__(self, hidden_dim: int, ffn_dim: int) -> None:
         super().__init__()
-        self.gate_proj = nn.Linear(hidden_dim, ffn_dim, bias=False)
-        self.up_proj = nn.Linear(hidden_dim, ffn_dim, bias=False)
+        self.gate_up_proj = nn.Linear(hidden_dim, 2 * ffn_dim, bias=False)
         self.down_proj = nn.Linear(ffn_dim, hidden_dim, bias=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.down_proj(F.silu(self.gate_proj(x)) * self.up_proj(x))
+        gate_up = self.gate_up_proj(x)
+        gate, up = gate_up.chunk(2, dim=-1)
+        return self.down_proj(F.silu(gate) * up)
 
 
 # ---------------------------------------------------------------------------
-# Grouped SwiGLU: gmm kernel (preferred)
+# Fused SwiGLU: gmm kernel (preferred)
 # ---------------------------------------------------------------------------
 
-def _grouped_swiglu_gmm(
+def _fused_swiglu_gmm(
     x: torch.Tensor,
-    w_gate: torch.Tensor,
-    w_up: torch.Tensor,
+    w_gate_up: torch.Tensor,
     w_down: torch.Tensor,
+    ffn_dim: int,
     tokens_per_expert: torch.Tensor,
 ) -> torch.Tensor:
     """
-    Grouped SwiGLU using ``grouped_gemm.ops.gmm``.
+    Fused gate+up SwiGLU via grouped_gemm.
 
-    gmm(a, b, batch_sizes, trans_b) computes per-expert a_i @ b_i (or a_i @ b_i^T).
-    Weights are stored [E, out, in], so we use trans_b=True → a_i @ w_i^T.
-    batch_sizes must be a CPU int64 tensor.
+    Step 1: gate_up = gmm(x, w_gate_up, trans_b=True)   → [T, 2*F]  (1 GEMM)
+    Step 2: gate, up = split(gate_up, F)
+    Step 3: hidden = SiLU(gate) * up                     → [T, F]
+    Step 4: out = gmm(hidden, w_down, trans_b=True)      → [T, H]   (1 GEMM)
+
+    Total: 2 GEMMs instead of 3.
     """
     assert _gmm is not None
     bs = tokens_per_expert.to(dtype=torch.int64, device="cpu")
 
-    # x: [T, H]  w_gate: [E, F, H] → gmm(x, w_gate, bs, trans_b=True) → [T, F]
-    gate_out = _gmm(x, w_gate, bs, trans_b=True)
-    up_out = _gmm(x, w_up, bs, trans_b=True)
-
-    hidden = F.silu(gate_out) * up_out  # [T, F]
-
-    # hidden: [T, F]  w_down: [E, H, F] → gmm(hidden, w_down, bs, trans_b=True) → [T, H]
-    return _gmm(hidden, w_down, bs, trans_b=True)
+    gate_up = _gmm(x, w_gate_up, bs, trans_b=True)        # [T, 2*F]
+    gate, up = gate_up.split(ffn_dim, dim=-1)              # [T, F] each
+    hidden = F.silu(gate) * up                             # [T, F]
+    return _gmm(hidden, w_down, bs, trans_b=True)          # [T, H]
 
 
 # ---------------------------------------------------------------------------
-# Grouped SwiGLU: sequential fallback
+# Fused SwiGLU: sequential fallback
 # ---------------------------------------------------------------------------
 
-def _grouped_swiglu_sequential(
+def _fused_swiglu_sequential(
     x: torch.Tensor,
-    w_gate: torch.Tensor,
-    w_up: torch.Tensor,
+    w_gate_up: torch.Tensor,
     w_down: torch.Tensor,
+    ffn_dim: int,
     tokens_per_expert: torch.Tensor,
 ) -> torch.Tensor:
-    """Fallback: loops over experts one-by-one."""
+    """Fallback: loops over experts one-by-one with fused gate+up."""
     outputs: list[torch.Tensor] = []
     offset = 0
     for i, count in enumerate(tokens_per_expert.tolist()):
         count = int(count)
         if count == 0:
             continue
-        xi = x[offset : offset + count]
-        gate_out = xi @ w_gate[i].t()
-        up_out = xi @ w_up[i].t()
-        hidden = F.silu(gate_out) * up_out
-        out = hidden @ w_down[i].t()
+        xi = x[offset : offset + count]                   # [count, H]
+        gate_up = xi @ w_gate_up[i].t()                   # [count, 2*F]
+        gate, up = gate_up.split(ffn_dim, dim=-1)          # [count, F]
+        hidden = F.silu(gate) * up
+        out = hidden @ w_down[i].t()                       # [count, H]
         outputs.append(out)
         offset += count
     if not outputs:
