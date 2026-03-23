@@ -15,7 +15,7 @@ import torch.distributed as dist
 import torch.nn as nn
 
 from simple_moe.config import ClusterConfig, MoEModelConfig, TrainConfig
-from simple_moe.fsdp import RaggedFSDP
+from simple_moe.fsdp import ShardedFSDP
 from simple_moe.memory import (
     ActivationOffloader,
     configure_offloading,
@@ -117,15 +117,13 @@ class SimpleMoETrainer:
         return stage_model
 
     def _wrap_fsdp(self) -> None:
-        """[veScale] Wrap dense sub-modules with RaggedFSDP."""
-        fsdp_plan = self.plan.fsdp_plan
+        """[veScale] Wrap dense sub-modules with ShardedFSDP."""
         for layer in self.model.layers:
             if not isinstance(layer, TransformerBlock):
                 continue
-            layer.attn = RaggedFSDP(layer.attn, self.pg.fsdp_group, fsdp_plan)
-            # Norms are small; wrap together for one AG call.
-            layer.norm1 = RaggedFSDP(layer.norm1, self.pg.fsdp_group, fsdp_plan)
-            layer.norm2 = RaggedFSDP(layer.norm2, self.pg.fsdp_group, fsdp_plan)
+            layer.attn = ShardedFSDP(layer.attn, self.pg.fsdp_group)
+            layer.norm1 = ShardedFSDP(layer.norm1, self.pg.fsdp_group)
+            layer.norm2 = ShardedFSDP(layer.norm2, self.pg.fsdp_group)
 
     # ------------------------------------------------------------------
     # Optimiser
