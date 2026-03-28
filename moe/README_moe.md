@@ -295,6 +295,7 @@ MoE 训练的四大瓶颈：
   Comet           │  ██████  │            │  ███       │            │
   FlowMoE         │  █████   │            │  ██        │            │
   LAER-MoE        │  ██      │  ████████  │  ███       │            │
+  MegaBlocks      │  ██      │  ███       │  ████      │            │
   MoEBlaze        │          │            │  ████████  │            │
   MemFine         │          │            │  ███████   │            │
   MoE Par.Fold    │  ██      │            │            │  ████████  │
@@ -613,6 +614,7 @@ MoE 训练完整优化栈（从底层到顶层）：
 
   [A2A Dispatch] ──── Comet：Tile级Overlap          ─── 通信墙
   [A2A Gather]   ──── FlowMoE：跨层DAG调度           ─── 通信墙
+  [Routing+FFN]  ──── MegaBlocks：Block-Sparse dMoE ─── 丢Token/Pad开销
   [Expert FFN]   ──── LAER-MoE：FSEP+Re-layout       ─── 负载不均
   [Expert FFN]   ──── MoEBlaze：Kernel融合+SmartAC   ─── 显存压力
   [Expert FFN]   ──── MemFine：Chunk激活调度          ─── 显存压力
@@ -629,6 +631,9 @@ MoE 训练完整优化栈（从底层到顶层）：
 各论文核心性能提升（vs 对应基线）：
 
 论文               来源                        场景      关键指标              提升幅度
+────────────────────────────────────────────────────────────────────────────────────────
+MegaBlocks        🎓+🏢 Stanford/MSR/Google   训练      同等loss训练时间        1.38x~4.35x vs Tutel
+                                                       （dropless）            1.8x~2.4x vs Dense(Megatron-LM)
 ────────────────────────────────────────────────────────────────────────────────────────
 Comet             🏢 字节跳动 + 上海交大        训练      端到端吞吐             1.8x
                                                         通信-计算重叠率         90%+（传统~15%）
@@ -666,6 +671,8 @@ SwiftMoE(SYMI)    🎓 Stanford + 🏢 NVIDIA/OAI  训练      收敛速度     
 
 场景                      首选论文              关注瓶颈
 ──────────────────────────────────────────────────────
+不想 token dropping      MegaBlocks            路由动态性 + padding开销
+且减少 capacity 调参
 通信占比 > 40%            Comet + FlowMoE       通信墙
 Expert 负载不均衡严重     LAER-MoE              负载不均
 显存 OOM / batch 受限     MoEBlaze + MemFine    显存压力
