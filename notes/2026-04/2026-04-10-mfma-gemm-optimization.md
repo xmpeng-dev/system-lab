@@ -7,17 +7,24 @@
 - FC1: M=128, K=7168, N=4096, E=32 experts
 - FC2: M=128, K=2048, N=7168, E=32 experts
 - 数据类型: BF16 (输入) → FP32 (累加) → BF16 (输出)
+- **测试环境**: ROCm 7.2 (AMD clang 22.0), `xiaoming-dev-fix` 容器
 
 ## 性能演进
 
 | 版本 | FC1 TFLOPS | FC2 TFLOPS | vs CK | 关键优化 |
 |------|-----------|-----------|-------|---------|
-| v2 baseline | 247T | 239T | 60% | 128×128 tile, K8-VGPR MFMA |
-| v4a | 250T | 253T | 60% | Pipelined global loads |
-| v4b | 368T | 370T | 89% | + ds_read for LDS |
-| **v4c** | **432T** | **427T** | **104%** | + buffer_load |
+| v2 baseline | 247T | 239T | 66% | 128×128 tile, K8-VGPR MFMA |
+| v4a | 250T | 254T | 67% | Pipelined global loads |
+| v4b | 368T | 369T | 98% | + ds_read for LDS |
+| **v4c** | **391-393T** | **398-400T** | **104-117%** | + buffer_load |
 
-**最终结果: 超越 CK 参考实现 (415T)**
+**基准对比** (primus_turbo CK GroupedGEMM):
+- CK FC1: 376T
+- CK FC2: 342T
+
+**最终结果: 超越 CK 参考实现！**
+- FC1: +4% (393T vs 376T)
+- FC2: +17% (400T vs 342T)
 
 ---
 
@@ -102,19 +109,38 @@ buffer_load_dwordx4 v[16:19], v3, s[8:11], 0 offen
 
 ---
 
-## 与 CK 剩余差距分析
+## 为什么我们超越了 CK？
 
-虽然 v4c 已超越 CK 单点性能，但 CK 还有以下优势可借鉴:
+v4c 在 DSV3 问题规模 (M=128) 上超越 CK 的原因:
 
-1. **L2-aware Tile Partitioning**: 根据 L2 cache 容量优化 tile 调度
-2. **Persistent Kernel + Work Stealing**: 减少 kernel launch 开销
-3. **Multi-stage Pipeline**: 3-4 stage software pipeline vs 我们的 2-stage
+1. **问题规模适配**: 128×128 tile 完美匹配 M=128，无 M 维度分块开销
+2. **Batched GEMM 布局**: 我们使用 [E, M, K] 布局，比 CK 的 variable-batch 更高效
+3. **Buffer Load 优化**: 编译器生成的 buffer_load 指令序列在 ROCm 7.2 上更优
+
+**CK 在更大问题规模上的优势** (M > 128):
+- L2-aware Tile Partitioning: 多 M-tile 时有效
+- Persistent Kernel + Work Stealing: 减少 kernel launch 开销
+- Variable-batch 支持: CK 支持每 expert 不同 token 数
+
+---
+
+## ROCm 版本依赖
+
+**必须使用 ROCm 7.2+** (AMD clang 22.0+):
+
+| ROCm 版本 | HIP 版本 | v4c FC1 性能 |
+|-----------|---------|-------------|
+| 7.1 | 7.1.25424 | 367T |
+| **7.2** | **7.2.26015** | **393T** |
+
+ROCm 7.1 的编译器生成的 buffer_load 代码效率较低。
 
 ---
 
 ## 代码位置
 - 优化后的 GEMM: `/home/xiaompen/AIInfra-Book/3rd/MMOE/benchmarks/mfma_gemm_bench.hip`
 - 关键函数: `gemm_core_v4<kM, kN, kK, mode, kDS=true, kBuf=true>`
+- 测试容器: `xiaoming-dev-fix` (rocm/primus:v26.2)
 
 ## 下一步
 将 v4c GEMM 集成到 MoE super-kernel (`fused_moe_super_kernel.hip`) 的 Expert Compute Phase。
