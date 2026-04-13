@@ -458,10 +458,3 @@ __global__ void mfma_gemm_kernel(
 | Grouped GEMM (MoE) | ~400 TFLOPS | ~250 TFLOPS | >300 TFLOPS |
 | Small batched | ~600 TFLOPS | ~400 TFLOPS | >450 TFLOPS |
 
-## Further Reading
-
-- `3rd/cutlass/media/docs/cpp/efficient_gemm.md` - CUTLASS design principles
-- `3rd/cutlass/media/docs/cpp/cute/0t_mma_atom.md` - CuTe MMA abstraction
-- `3rd/MMOE/docs/mfma_gemm_v2_mi355x.txt` - MI355X benchmark data
-- `3rd/tt/docs/mi355x_tile_overlap_analysis.md` - Advanced overlap techniques
-- `3rd/tt/tileflow/triton_kernels/amd_intrinsics.py` - AMD Triton primitives
