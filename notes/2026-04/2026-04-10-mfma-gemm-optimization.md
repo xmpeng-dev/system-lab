@@ -16,15 +16,16 @@
 | v2 baseline | 247T | 239T | 66% | 128×128 tile, K8-VGPR MFMA |
 | v4a | 250T | 254T | 67% | Pipelined global loads |
 | v4b | 368T | 369T | 98% | + ds_read for LDS |
-| **v4c** | **391-393T** | **398-400T** | **104-117%** | + buffer_load |
+| v4c (bench) | 391-393T | 398-400T | 104-117% | + buffer_load |
+| **Production** | **495-497T** | **497-498T** | **132-146%** | 精简代码，固定模板 |
 
 **基准对比** (primus_turbo CK GroupedGEMM):
 - CK FC1: 376T
 - CK FC2: 342T
 
-**最终结果: 超越 CK 参考实现！**
-- FC1: +4% (393T vs 376T)
-- FC2: +17% (400T vs 342T)
+**最终结果: 大幅超越 CK 参考实现！**
+- FC1: +32% (497T vs 376T)
+- FC2: +46% (498T vs 342T)
 
 ---
 
@@ -138,9 +139,18 @@ ROCm 7.1 的编译器生成的 buffer_load 代码效率较低。
 ---
 
 ## 代码位置
-- 优化后的 GEMM: `/home/xiaompen/AIInfra-Book/3rd/MMOE/benchmarks/mfma_gemm_bench.hip`
-- 关键函数: `gemm_core_v4<kM, kN, kK, mode, kDS=true, kBuf=true>`
-- 测试容器: `xiaoming-dev-fix` (rocm/primus:v26.2)
+
+**Production 实现** (推荐):
+- `csrc/grouped_gemm.hip` — 精简的生产代码
+- `benchmarks/bench_grouped_gemm.hip` — 独立测试
+
+**开发/调试版本**:
+- `benchmarks/mfma_gemm_bench.hip` — 包含所有优化版本 (v2/v4a/v4b/v4c/v4d)
+
+**CK 对比测试**:
+- `benchmarks/bench_grouped_gemm_ck.py` — Python 脚本对比 CK
+
+**测试容器**: `xiaoming-dev-fix` (rocm/primus:v26.2, ROCm 7.2)
 
 ## 下一步
-将 v4c GEMM 集成到 MoE super-kernel (`fused_moe_super_kernel.hip`) 的 Expert Compute Phase。
+将 `csrc/grouped_gemm.hip` 集成到 MoE super-kernel (`fused_moe_super_kernel.hip`) 的 Expert Compute Phase。
