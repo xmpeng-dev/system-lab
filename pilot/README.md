@@ -5,6 +5,24 @@
 
 ---
 
+## 目录
+
+1. [问题与边界](#1-问题与边界)
+2. [系统架构](#2-系统架构)
+3. [系统流程（泳道图）](#3-系统流程泳道图)
+4. [Skill 目录结构](#4-skill-目录结构)
+5. [Tool 接口](#5-tool-接口)
+6. [Execution Model（核心知识）](#6-execution-model核心知识)
+7. [收敛性保证](#7-收敛性保证)
+8. [数据结构（Schema）](#8-数据结构schema)
+9. [完整迭代示例](#9-完整迭代示例)
+10. [评估指标](#10-评估指标)
+11. [与现有系统的集成](#11-与现有系统的集成)
+12. [Guardrails](#12-guardrails)
+13. [一句话总结](#13-一句话总结)
+
+---
+
 ## 1. 问题与边界
 
 | 挑战 | 具体问题 |
@@ -253,17 +271,11 @@ skills/                                 # 唯一知识源（Agent 读取）
 │   ├── network.md                      # IB / RCCL
 │   └── trace.md                        # timeline 分析
 │
-├── constraints/                        # 安全约束
-│   ├── SKILL.md
-│   ├── oom.md                          # OOM 预估规则
-│   ├── config.md                       # 配置合法性
-│   └── validation.md                   # 验证方法
-│
-└── knowledge/                          # 经验沉淀
+└── constraints/                        # 安全约束
     ├── SKILL.md
-    ├── patterns.md                     # 通用规律
-    ├── cases.md                        # 历史案例
-    └── anti-patterns.md                # 常见错误
+    ├── oom.md                          # OOM 预估规则
+    ├── config.md                       # 配置合法性
+    └── validation.md                   # 验证方法
 ```
 
 **Skill 的作用**：Agent（Cursor / Claude）读取这些 Markdown 文件获取领域知识，而不是把知识硬编码在代码里。这样：
@@ -342,18 +354,195 @@ M_act   = f(seq, hidden, mbs, layers/pp, recompute)
 
 ---
 
-## 8. Guardrails
+## 8. 数据结构（Schema）
+
+Agent 与 Tool 之间通过结构化数据交换。下面是几个核心 schema。
+
+### 8.1 ClusterProfile（Preflight 输出）
+
+```yaml
+cluster_id: mi300x-16node
+collected_at: 2026-04-15T10:00:00Z
+nodes: 16
+gpus_per_node: 8
+
+compute:
+  peak_tflops_bf16: 1300         # 实测 GEMM peak
+  peak_tflops_fp8: 2600
+  hbm_bandwidth_gbs: 5300
+  hbm_capacity_gb: 192
+
+interconnect:
+  intra_node:
+    type: xgmi
+    bandwidth_gbs: 800
+  inter_node:
+    type: ib
+    bandwidth_gbs: 400            # 单卡有效带宽
+
+rccl_baseline:
+  allreduce:
+    - {size_mb: 1,    bw_gbs: 12}
+    - {size_mb: 256,  bw_gbs: 180}
+  alltoall:
+    - {size_mb: 1,    bw_gbs: 8}
+    - {size_mb: 256,  bw_gbs: 95}
+```
+
+### 8.2 Plan（待执行的配置）
+
+```yaml
+plan_id: r3_p2
+parent_baseline: r2_p1            # 上一轮的最优 plan
+parallelism:
+  tp: 4
+  pp: 2
+  dp: 16
+  ep: 8
+  vpp: 2
+runtime:
+  mbs: 2
+  gbs: 1024
+  recompute: selective
+comm:
+  bucket_size_mb: 64
+  overlap: true
+predicted:                         # Execution Model 预估值
+  tps: 18500
+  mem_peak_gb: 165
+  comm_ratio: 0.22
+generated_by:
+  bottleneck: PIPELINE_BOUND
+  strategy: skills/optimization/pipeline/vpp.md
+```
+
+### 8.3 Snapshot（Observe 输出）
+
+```yaml
+run_id: job_8842
+plan_id: r3_p2
+collected_at: 2026-04-15T11:23:00Z
+metrics:
+  tps: 17800
+  step_time_ms: 412
+  comm_ratio: 0.18
+  bubble_ratio: 0.09
+  overlap_ratio: 0.61
+  mem_peak_gb: 158
+  gpu_util_avg: 0.74
+status: completed                  # / early_stopped / oom / failed
+warnings: []
+```
+
+### 8.4 DiagnosisReport（Diagnose 输出）
+
+```yaml
+snapshot_id: job_8842
+bottleneck: COMPUTE_BOUND          # COMM / PIPELINE / MEMORY / COMPUTE
+confidence: 0.85
+evidence:
+  - "comm_ratio=0.18 < threshold 0.25"
+  - "bubble_ratio=0.09 < threshold 0.15"
+  - "gpu_util=0.74 vs baseline peak 0.92 → headroom"
+recommended_skills:
+  - skills/optimization/compute/mbs.md
+  - skills/optimization/compute/parallel.md
+```
+
+---
+
+## 9. 完整迭代示例
+
+一次 Tuning Loop 的真实数据流（以 MoE 16 节点为例）：
+
+```
+Round 0 (Baseline)
+  Plan:     {tp:2, pp:4, ep:8, mbs:1, recompute:full}
+  Snapshot: tps=12000, comm_ratio=0.38, bubble=0.12, mem=140GB
+  Diagnose: COMM_BOUND (alltoall 占 28%)
+  Re-Plan:  读 skills/optimization/comm/ → 生成 3 候选
+            P1: bucket_size 16→64 MB
+            P2: 启用 alltoall overlap
+            P3: ep 8→4（减少跨节点通信）
+
+Round 1
+  Execute:  3 个 plan 并行跑（每个 50 step early-stop）
+  Results:
+    P1: tps=14200 (+18%)
+    P2: tps=15800 (+32%)  ← best
+    P3: tps=13100 (+9%, ep 减小导致 expert 容量下降)
+  Settle:   选 P2 作为新 baseline
+  Diagnose: PIPELINE_BOUND (bubble 升至 0.18)
+  Re-Plan:  读 skills/optimization/pipeline/ → 生成 2 候选
+            P4: vpp 1→2
+            P5: mbs 1→2
+
+Round 2
+  Execute:  P4, P5
+  Results:
+    P4: tps=17600 (+11%)  ← best
+    P5: OOM → early stop
+  Settle:   选 P4，gain=11% > 2%，继续
+  Diagnose: COMPUTE_BOUND
+  Re-Plan:  ...
+
+Round 3
+  gain < 2% (连续两轮) → STOP
+  Final: tps=18200 (1.52× over baseline)
+  耗时:  ~4 GPU·h (Tuning Loop 部分)
+```
+
+---
+
+## 10. 评估指标
+
+如何判断 Pilot 系统本身好不好用：
+
+| 维度 | 指标 | 目标 |
+|------|------|------|
+| **效果** | 最终 TPS / baseline TPS | ≥ 1.3× |
+| **效果** | 与人工 best-known 配置差距 | ≥ 90% |
+| **效率** | 总 GPU·h 成本 | ≤ 10 GPU·h |
+| **效率** | 收敛轮数 | ≤ 5 轮 |
+| **可靠性** | 成功率（无 OOM / 任务挂掉） | ≥ 95% |
+| **可靠性** | Cost Model 预估误差 | ≤ 20% |
+| **可解释性** | 每步决策可追溯到 Skill | 100% |
+
+**评估方法**：
+1. **回归测试集**：维护 5-10 个典型场景（Dense 7B/70B、MoE 8x7B 等），每次系统升级后自动跑一遍
+2. **对照实验**：同一模型 + 集群，分别由 Pilot 和资深工程师调优，对比结果
+3. **消融实验**：关掉 Execution Model / 关掉 Cost Model 筛选，看 Tuning Loop 退化多少
+
+---
+
+## 11. 与现有系统的集成
+
+Pilot 不重新发明轮子，而是组合现有能力：
+
+| 现有系统 | 集成方式 |
+|---------|---------|
+| **Primus** | `submit.run()` 调 Primus CLI 提交任务；Preflight 复用 Primus 的硬件检测 |
+| **Megatron / TorchTitan** | 通过 Tuning IR 生成各 backend 的 config，Agent 不需要感知具体框架 |
+| **WandB / Prometheus** | `observe.snapshot()` 从 WandB API 拉取 metrics |
+| **rocprof / RCCL profiler** | `profiler.run()` 包装 rocprof 命令，输出结构化 trace |
+| **Slurm** | `submit.run()` 内部生成 sbatch 脚本，复用现有调度 |
+
+这种集成方式的好处：**Pilot 死掉后，所有底层工具仍然可用**；现有工程师的 muscle memory 不被破坏。
+
+---
+
+## 12. Guardrails
 
 | 机制 | 位置 | 作用 |
 |------|------|------|
 | OOM 预估 | `constraint.estimate_mem()` | 自动过滤高风险配置 |
 | early stop | `observe.snapshot()` | OOM / 吞吐退化 → 立即终止 |
-| history 去重 | `knowledge.search()` | 不重复尝试已失败配置 |
+| history 去重 | Settle 逻辑 | 不重复尝试已失败配置 |
 | max_rounds | Settle 逻辑 | 总成本硬约束 |
-| 审计日志 | 全流程 | 每步决策完整记录 |
+| 审计日志 | 全流程 | 每步决策完整记录，可回放 |
 
 ---
 
-## 9. 一句话总结
+## 13. 一句话总结
 
 Primus Pilot = **Agent**（Cursor / Claude 承载推理决策）+ **Skills**（Execution Model / 优化策略 / 诊断规则）+ **Tools**（执行层 Python 函数）—— Agent 读取 Skills 获取知识，调用 Tools 完成 Preflight → Projection → Tuning Loop 的闭环。
