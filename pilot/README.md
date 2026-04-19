@@ -1,7 +1,7 @@
 # Primus Pilot — 训练调优系统
 
-> 面向多节点训练集群的自动调优系统。  
-> Agent（Cursor / Claude）读取 Skills 中的知识，调用 Tools 执行操作，完成建模→搜索→收敛的闭环。
+> 训练任务的自动调优系统。  
+> Agent（任意支持工具调用的 LLM，如 Cursor / Claude / Codex）读取 Skills 中的知识，调用 Tools 执行操作，完成建模→搜索→收敛的闭环。
 
 ---
 
@@ -13,7 +13,7 @@
 4. [Skill 目录结构](#4-skill-目录结构)
 5. [Tool 接口](#5-tool-接口)
 6. [Execution Model（核心知识）](#6-execution-model核心知识)
-7. [收敛性保证](#7-收敛性保证)
+7. [搜索空间维护与解保证](#7-搜索空间维护与解保证)
 8. [数据结构（Schema）](#8-数据结构schema)
 9. [完整迭代示例](#9-完整迭代示例)
 10. [评估指标](#10-评估指标)
@@ -42,39 +42,58 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        Agent Layer                                  │
-│                   (Cursor / Claude 承载)                            │
+│                          Agent Layer                                │
+│              (任意工具调用 LLM，如 Cursor / Claude / Codex)          │
 │                                                                     │
-│   - 读取 Skills 获取知识（Execution Model、优化策略、诊断规则）        │
-│   - 调用 Tools 执行操作（profiling、submit、observe）                │
-│   - 驱动 Tuning Loop 完成推理和决策                                  │
-└─────────────────────────────────────────────────────────────────────┘
-                                │
-                ┌───────────────┴───────────────┐
-                ▼                               ▼
-┌───────────────────────────┐   ┌───────────────────────────────────┐
-│       Skill Layer         │   │          Tool Layer               │
-│      (知识 / 非执行)       │   │         (执行 / 代码)              │
-│                           │   │                                   │
-│  skills/                  │   │  tools/                           │
-│  ├── execution-model/     │   │  ├── preflight.py    # 硬件基线   │
-│  ├── optimization/        │   │  ├── profiler.py     # 单机采集   │
-│  ├── workflow/            │   │  ├── submit.py       # 任务提交   │
-│  ├── profiling/           │   │  ├── observe.py      # 运行时采集 │
-│  └── constraints/         │   │  └── constraint.py   # 约束检查   │
-│                           │   │                                   │
-│  Agent 读取这些 .md 文件   │   │  Agent 通过 function call 调用    │
-│  获取领域知识和规则        │   │  这些 Python 函数执行实际操作     │
-└───────────────────────────┘   └───────────────────────────────────┘
+│   - 读取 Skills 获取知识（workflow / execution-model / 优化策略）     │
+│   - 读写 State 维护工作记忆（PlanGraph / TuningState / ...）          │
+│   - 调用 Tools 执行操作（preflight / submit / observe / env_probe）  │
+│   - 按 state_machine.md 的转移规则驱动 Tuning Loop                   │
+└────────────────────┬─────────────┬────────────────────┬─────────────┘
+                     │             │                    │
+                     ▼             ▼                    ▼
+┌───────────────────────┐ ┌──────────────────┐ ┌───────────────────────┐
+│     Skill Layer       │ │   State Layer    │ │      Tool Layer       │
+│   (知识 / Markdown)   │ │ (工作记忆/YAML)  │ │   (执行 / Python)     │
+│                       │ │                  │ │                       │
+│  skills/              │ │ state/           │ │  tools/               │
+│  ├── workflow/        │ │ ├── cluster_     │ │  ├── preflight.py     │
+│  │   (state_machine,  │ │ │   profile.yaml │ │  ├── env_probe.py     │
+│  │    plan_graph,     │ │ ├── tuning_      │ │  ├── profiler.py      │
+│  │    replan, settle, │ │ │   state.yaml   │ │  ├── submit.py        │
+│  │    smoke,          │ │ ├── plan_        │ │  ├── observe.py       │
+│  │    correctness …)  │ │ │   graph.yaml   │ │  ├── constraint.py    │
+│  ├── execution-model/ │ │ ├── candidate_   │ │  ├── state.py         │
+│  ├── optimization/    │ │ │   pool.yaml    │ │  └── knowledge.py     │
+│  ├── env/             │ │ └── checkpoints/ │ │                       │
+│  ├── profiling/       │ │   r0/, r1/, ...  │ │  Agent 通过 function  │
+│  ├── constraints/     │ │                  │ │  call 调用这些函数；   │
+│  └── knowledge/       │ │ 每 stage 出口    │ │  函数读写 State Layer  │
+│                       │ │ checkpoint，可中 │ │                       │
+│  Agent 读取 .md 获取   │ │ 断续起 / 回放    │ │                       │
+│  领域知识和规则        │ │                  │ │                       │
+└───────────────────────┘ └──────────────────┘ └───────────────────────┘
+         ▲                          ▲                       ▲
+         │                          │                       │
+         └────────── LEARN 阶段把 best/失败 case ────────────┘
+                    回写 skills/knowledge/
+                    （唯一的 Skill ← State 反向流）
 ```
 
-**三层职责**：
+**四层职责切分**：
 
-| 层 | 载体 | 职责 | 示例 |
-|----|------|------|------|
-| **Agent** | Cursor / Claude | 推理、决策、驱动流程 | "comm_ratio=0.35，根据 skills/optimization/comm/ 应该尝试 overlap" |
-| **Skill** | Markdown 文件 | 知识、规则、模型公式 | `T_bubble = (pp-1)/(pp-1+M) × T_comp` |
-| **Tool** | Python 函数 | 执行、采集、提交 | `preflight.run()` → ClusterProfile |
+| 层 | 形式 | 谁写 | 谁读 | 例子 |
+|----|------|------|------|------|
+| **Agent** | LLM 推理 | — | Skills + State | "comm_ratio=0.35，按 skills/optimization/comm/SKILL.md 应试 overlap" |
+| **Skill** | Markdown | 人类（少数 LEARN 阶段由系统） | Agent | `T_bubble = (pp-1)/(pp-1+M) × T_comp` |
+| **State** | YAML / JSON | Agent 调 `state.checkpoint()` | Agent + 审计/回放 | `PlanGraph.champion = r2_p4` |
+| **Tool** | Python 函数 | 人类 | Agent (function call) | `preflight.run()` 返回 ClusterProfile，写入 State |
+
+**关键设计原则**：
+- **Skill ↔ State 单向**：Agent 读 Skill 决定怎么做、读 State 决定下一步；只有 LEARN 阶段会反向写 Skill（沉淀经验）
+- **State 是单一真相源**：所有跨 stage 的工作记忆都在 State Layer；Tool 是无状态函数（输入 → 输出 + State 更新）
+- **Skill 是知识，不是逻辑**：所有"if X then Y"的规则也写在 Markdown 里（如 `state_machine.md` 的转移表）；Agent 是规则的执行者，不是规则的拥有者
+- **可观测 = 可回放**：State 全程持久化，任何一次决策都能从 `state/checkpoints/rN/` 完整重现
 
 ---
 
@@ -453,9 +472,9 @@ skills/                                 # 唯一知识源（Agent 读取）
 - `skills/optimization/{bottleneck}/env.md` 只列**「该瓶颈下应优先看哪些 flag」**，引用 catalog
 - 这样新增 flag 只改 catalog 一处，避免知识散落
 
-**Skill 的作用**：Agent（Cursor / Claude）读取这些 Markdown 文件获取领域知识，而不是把知识硬编码在代码里。这样：
+**Skill 的作用**：Agent（Cursor / Claude / Codex 等任意工具调用 LLM）读取这些 Markdown 文件获取领域知识，而不是把知识硬编码在代码里。这样：
 - 知识可以独立迭代，不需要改代码
-- 不同的 Agent（Cursor / Claude / 其他）共用同一套知识
+- 不同的 Agent runtime 共用同一套知识
 - 新人可以直接阅读 Skills 了解系统的调优逻辑
 
 ---
@@ -517,23 +536,156 @@ M_act   = f(seq, hidden, mbs, layers/pp, recompute)
 
 ---
 
-## 7. 收敛性保证
+## 7. 搜索空间维护与解保证
+
+> 本节回答："为什么这套贪心循环不会陷在局部最优、不会重复搜索、不会漏掉真正的最优解？"
+> 这是 Pilot 收敛性的核心设计。Schema 落地见 §8.9 PlanGraph 与 §8.10 CandidatePool；
+> 这里只讲**心智模型与机制**。
+
+### 7.1 朴素贪心的两个坑
+
+最直觉的做法是：Settle 维护一个 baseline（当前最优），每轮 Re-Plan 在它之上派生候选、
+跑完取本轮 best 当下一轮 baseline。但裸贪心容易掉进两个坑：
+
+| 坑 | 表现 | 后果 |
+|----|------|------|
+| **过早收敛** | 每轮选 best 就丢掉次优；但次优可能开了另一种瓶颈的门（例如 P_b 当前略差，但开启了 PIPELINE_BOUND，下一轮潜力更大） | 永远停在某个局部最优 |
+| **重复搜索** | history 只去重已跑过的 plan id，但**派生关系丢失**；无法回答"这个配置是从哪个 baseline 演化来的、为什么没继续" | 反复在已耗尽的邻域试探，浪费预算 |
+
+Pilot 的应对是：**把"解空间"显式化为一棵带评分的搜索树（PlanGraph），把"候选"显式化为带优先级的池（CandidatePool），并在贪心之上叠加 3 种探索机制。**
+
+### 7.2 心智模型：搜索 = 维护一棵带评分的树
+
+Re-Plan / Settle / Execute 三者协同维护的不是一条链，而是一棵树：
+
+```
+                       root_plan (BASELINE)
+                       tps=12000
+                       /        |          \
+                   P1            P2           P3
+                tps=14200     tps=15800    tps=13100   ← Round 1 候选
+                              ★ champion       │
+                              /     \          ↓
+                            P4       P5      shelved
+                          tps=17600  OOM    （留在候选池，可复活）
+                          ★ champion │
+                          /  \       ↓
+                        ...  ...   dead       ← Round 2
+```
+
+节点状态四分类：
+
+| 状态 | 语义 | 是否可派生新候选 |
+|------|------|-----------------|
+| **champion** | 当前 baseline，沿粗箭头延伸 | 是（默认派生源） |
+| **shelved** | 本轮没赢但活着；可能后续复活做 backtrack | 是（探索时） |
+| **dead** | OOM / invalid / 数值失败，永久剪枝 | 否 |
+| **running** | 正在 Execute 中 | — |
+
+派生不一定从 champion 走——某些条件下 Re-Plan **从 shelved 派生**（见 §7.5 Backtrack）。
+这一点是跳出局部最优的关键。
+
+### 7.3 PlanGraph：解空间维护
+
+PlanGraph 是 State 层的持久化结构，每个 stage 出口写入。只列与"解保证"相关的关键字段
+（完整 schema 见 §8.9）：
+
+| 字段 | 作用 |
+|------|------|
+| `champion` | 当前 baseline pointer |
+| `champion_history` | 历任冠军（连续多次冠军 → 高稳定性奖励） |
+| `nodes[*].parent` | 派生关系；让审计能回放"从哪来、为什么走到这" |
+| `nodes[*].status` | completed / shelved / dead / running |
+| `nodes[*].derived_axis` | 该节点相对父节点动了哪根轴；novelty / 邻域剪枝都看它 |
+| `frontier` | 当前可派生节点集合（champion + shelved） |
+| `exhausted_neighborhoods` | 已探索半径；新候选若落在这里直接 reject，防重复搜索 |
+| `metadata.rounds_since_promotion` | stagnation 检测计数 |
+| `metadata.rounds_since_explore` | 距上次强制探索轮的距离 |
+| `metadata.dead_rate_in_subtree` | 各节点子树失败率，> 50% 触发 backtrack |
+
+### 7.4 候选生成：带优先级的池，不是固定的 K 个
+
+每轮 Re-Plan 输出的不是"要跑的 K 个 plan"，而是**带优先级的候选池**，由 Strategy
+Select（见 §8.10 selection）做最终裁决：
+
+```
+priority(c) = expected_gain(c) × confidence(c) / est_cost(c)
+            × novelty_bonus(c)              # 探索未走过的轴 +20%
+            × parent_stability_bonus(c)     # 从多次冠军派生 +10%
+```
+
+候选池里同时混合两类来源：
+
+- **exploit 候选**：从 `champion` 派生，沿当前最优继续微调。
+- **explore 候选**：从 `shelved` 派生，复活之前没赢但 viable 的分支。
+
+被拒的候选（命中 `exhausted_neighborhoods` / 触发 `constraint.estimate_mem` /
+违反 `constraint.check`）也写进 `candidate_pool.rejected[]`，理由可追溯。
+
+### 7.5 Settle：贪心 + 软回滚
+
+Settle 不是简单"选 best 当 baseline"。它在升降 champion 之外，还要决定 shelved 是否
+复活、是否进入 stagnation/explore 模式：
+
+```python
+def settle(round_results, plan_graph):
+    new_best = max(round_results, key=score)
+    cur     = plan_graph.champion
+
+    # 规则 1：显著提升 → 升新 champion
+    if new_best.tps > cur.tps * (1 + ε_promote):     # ε_promote ≈ 2%
+        plan_graph.champion = new_best.id
+        plan_graph.set_status(cur, 'shelved')        # 旧 champion 不丢，进 shelved
+    # 规则 2：微弱提升 → 保留旧 champion，best 进 shelved 待后续复活
+    elif new_best.tps > cur.tps:
+        plan_graph.set_status(new_best.id, 'shelved')
+    # 规则 3：全部退化 → 触发 backtrack（见 §7.6）
+    # 规则 4：连续 N 轮 gain < ε_stop → 进入 stagnation 模式
+    if recent_gain_pct(plan_graph, n=2) < ε_stop:
+        switch_to_explore_mode()                     # 下一轮 Re-Plan 从 shelved 派生
+```
+
+ε_promote / ε_stop 默认值在 `skills/pilot/workflow/settle.md` 给出，具体数值随
+TargetVector 的紧迫度调整（budget 越紧，ε_promote 越大、越保守）。
+
+### 7.6 跳出局部最优的 3 种探索机制
+
+| 机制 | 触发条件 | 动作 | 防止的失败模式 |
+|------|----------|------|----------------|
+| **Backtrack（回退到次优分支）** | 当前 champion 子树连续 2 轮 dead 率 > 50%；或 stagnation 持续 2 轮 | 从 frontier 里挑 priority 第二高的节点作为新 champion，重新派生 | 卡在死胡同里 |
+| **Diversification Bonus** | Re-Plan 每次评分都生效 | 给"覆盖未探索轴"的候选加 priority 权重，避免一直在一根轴上 nudge | 一根轴反复微调、忽略其他轴 |
+| **Periodic Exploration Round** | 每 K 轮强制一次（默认 K=3） | 候选池只从 `shelved` + 未探索轴生成，不从 champion 派生；这一轮可能不涨甚至跌 | 长期局部最优 |
+
+3 种机制不互斥。Backtrack 应对"突然跑死"，Diversification 应对"温水青蛙式停滞"，
+Periodic Exploration 是兜底。
+
+### 7.7 收敛性保证
+
+在上面的搜索结构之上，再叠加 4 条静态保证：
 
 | 机制 | 作用 |
 |------|------|
-| **Execution Model 筛选** | Plan 进入 Execute 前已经过模型预估，质量高 |
-| **baseline 单调递增** | `baseline[r+1] ≥ baseline[r]`，不会退化 |
-| **history 去重** | Re-Plan 排除已尝试的配置，搜索空间逐轮缩小 |
-| **三重终止条件** | 目标达成 / gain < 2% 连续两轮 / max_rounds |
+| **Execution Model 筛选** | Plan 进入 Execute 前已经过模型预估，质量高（confidence < 阈值的候选直接被剪） |
+| **PlanGraph + champion_history** | champion 单调或经审计的回退；不会退化无据 |
+| **`exhausted_neighborhoods`** | Re-Plan 排除已尝试邻域，搜索空间逐轮缩小 |
+| **三重终止条件** | TargetVector 达成 / gain < ε_stop 连续两轮 / 触达 `max_rounds` 或 `budget.total_gpu_h` |
 
-**成本控制**：
+成本上界（典型 Dense / MoE bring-up，single-node 量级；多节点按比例放大）：
 
 | 阶段 | 成本 |
 |------|------|
-| Preflight | ~30 min（一次性） |
-| Projection | ~1 GPU·h（单机） |
-| Tuning Loop | ~3-5 GPU·h |
+| Preflight | ~30 min（首次；同集群跨任务复用） |
+| Projection | ~1 GPU·h（含 single-node profiling） |
+| Tuning Loop | ~3-5 GPU·h（含 SMOKE / CORRECTNESS-LITE / 可选 EnvSweep） |
 | **总计** | ~5-7 GPU·h |
+
+> **设计交叉引用**：
+> - PlanGraph 落地 schema → §8.9
+> - CandidatePool 落地 schema → §8.10
+> - 升降规则与 stagnation 阈值 → `skills/pilot/workflow/settle.md`
+> - 候选生成 7 步 → `skills/pilot/workflow/replan.md`
+> - 探索/利用切换策略 → `skills/pilot/workflow/execution_strategy.md`
+> - 轴的探索半径与剪枝定义 → `skills/pilot/workflow/axis_taxonomy.md`
 
 ---
 
@@ -1040,4 +1192,4 @@ Guardrail 触发后由 `constraint.diagnose_failure()` 输出 `FailureReport`（
 
 ## 13. 一句话总结
 
-Primus Pilot = **Agent**（Cursor / Claude 承载推理决策）+ **Skills**（Execution Model / 优化策略 / 诊断规则）+ **Tools**（执行层 Python 函数）—— Agent 读取 Skills 获取知识，调用 Tools 完成 Preflight → Projection → Tuning Loop 的闭环。
+Primus Pilot = **Agent**（任意工具调用 LLM，如 Cursor / Claude / Codex 承载推理决策）+ **Skills**（Execution Model / 优化策略 / 诊断规则）+ **State**（PlanGraph / TuningState 等工作记忆）+ **Tools**（执行层 Python 函数）—— Agent 读取 Skills 获取知识，读写 State 维护搜索过程，调用 Tools 完成 Preflight → Projection → Tuning Loop 的闭环。
