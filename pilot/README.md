@@ -156,23 +156,29 @@
 └─────────────────────┴─────────────────────────┴─────────────────────────┘
 ```
 
-**流程说明**：
+**流程说明**（状态机驱动，每个 stage 出口持久化 `TuningState`，支持中断续起）：
 
-1. **Agent 收集需求**：用户输入 Model Spec / Cluster Size / Target
-2. **读 workflow Skill**：Agent 读取 `skills/workflow/SKILL.md` 了解整体流程
-3. **收集项目信息**：Agent 调用 Tool 采集集群信息、模型配置
-4. **进入 workflow**：
-   - **PREFLIGHT**：采集硬件基线 + 探测集群级 env baseline（ClusterProfile）
-   - **PROJECTION**：单机 profiling + 建立 Execution Model + 生成初始 Plans（含 scale-aware env diff）
-   - **进入 optimize-loop（双层）**：
-     - BASELINE：跑基准测试，记录起点
-     - **外层（结构）**：Observe → Diagnose → Re-Plan → Execute → Settle
-     - **内层（EnvSweep，可选）**：在 Settle 后、进入下一外层迭代前触发；锁定结构，仅扫 env diff
-     - 直到收敛或达标
-   - **REPORT**：输出最终配置和报告
-5. **验收**：跑完整测试，审计日志，确认结果
+1. **需求收集**：用户输入 Model Spec / Cluster Size / **TargetVector**（primary + constraints + budget，见 §8.6）
+2. **读 workflow Skill**：Agent 读取 `skills/workflow/SKILL.md` + `state_machine.md`，了解阶段集合与转移规则
+3. **项目信息收集**：Agent 调用 Tool 采集集群与模型配置
+4. **进入状态机驱动的 workflow**：
+   - **PREFLIGHT**：硬件基线 + 集群级 env baseline → `ClusterProfile`（任务间复用，按 `version`+`age` 决定是否重跑）
+   - **PROJECTION**：单机 profiling + Execution Model + 初始 Plans（含 scale-aware env diff）
+   - **SMOKE**：全配置 + tiny scale（如 1 节点 / 100 step）；验证可起、无静默 hang；失败回 PROJECTION
+   - **BASELINE**：完整规模跑起点
+   - **CORRECTNESS**：loss curve / grad norm 与 reference 对齐（数值闸门，失败则 ABORT 上报）
+   - **OPTIMIZE_LOOP（双层 + 状态机）**：
+     - 外层（结构）：`Observe → Diagnose → Re-Plan → Execute → CORRECTNESS-LITE → Settle`
+     - 内层（EnvSweep，可选）：在 Settle 后触发，锁结构扫 env diff
+     - 任意阶段可基于 `reentry_when` 回跳（如 Diagnose 发现 ClusterProfile 过期 → PREFLIGHT；Re-Plan 发现结构性失效 → PROJECTION）
+     - Guardrail 触发走显式失败回路（见 §12），不消耗 round 配额
+   - **REPORT**：输出 Final Config + 决策 trace
+   - **LEARN**：best config 与失败 case 回写 `skills/knowledge/`，供下次复用
+5. **验收**：跑完整测试，审计日志，确认 commit
 
 > **为什么外层/内层分开**：env 调参不改变形状（无 OOM 风险）、单次成本低（30-50 step 即可分辨），适合在每个外层 baseline 稳定后做一次"安全 sweep"；env 的最优值依赖结构（mbs / world_size），所以**不能一次跑完一劳永逸**，必须嵌在外层每轮里。
+>
+> **为什么用状态机而不是线性管线**：让"加新阶段 / 加跳转 / 加运行模式（如 RL post-training 双 loop）"变成"加节点 + 加边"，不需要改主泳道图；同时显式声明 `reentry_when`（回跳条件）与 `on_fail`（失败转移），让 Agent 的决策有规则可循。
 
 ### 3.1 Tuning Loop 内部泳道（展开）
 
@@ -190,6 +196,16 @@
 │     │               │                         │                         │
 │     └── 调 Tool ───────────────────────────────► submit.run(plan)       │
 │                     │                         │   └► 返回 run_id        │
+│                     │                         │                         │
+│ [CORRECTNESS-LITE]  │                         │                         │
+│  (Execute 后随机抽查) │                         │                         │
+│     │               │                         │                         │
+│     ├── 读 correctness.md ► 数值闸门          │                         │
+│     │               │   - loss_delta_pct 阈值 │                         │
+│     │               │   - grad_norm 范围      │                         │
+│     │               │                         │                         │
+│     └── 调 Tool ───────────────────────────────► observe.compare_loss() │
+│                     │                         │   └► pass / drift       │
 │                     │                         │                         │
 │ [Observe]           │                         │                         │
 │     │               │                         │                         │
@@ -261,15 +277,19 @@
 ```
 skills/                                 # 唯一知识源（Agent 读取）
 │
-├── workflow/                           # 调优主流程
-│   ├── SKILL.md                        # tuning loop 总体说明（含外层/内层切换条件）
+├── workflow/                           # 调优主流程（状态机驱动）
+│   ├── SKILL.md                        # tuning loop 总体说明（含外/内层切换条件）
+│   ├── state_machine.md                # 状态集合 / 转移规则 / reentry_when / on_fail
 │   ├── projection.md                   # 建模阶段
+│   ├── smoke.md                        # 起前自检（tiny scale × 100 step）
+│   ├── correctness.md                  # 数值闸门（loss/grad vs reference）
 │   ├── observe.md                      # 观测数据定义（snapshot schema）
-│   ├── diagnose.md                     # 瓶颈分类逻辑（含 env_suspect 输出）
+│   ├── diagnose.md                     # 瓶颈分类逻辑（含 env_suspect / reentry 触发）
 │   ├── plan.md                         # plan 结构定义（含 env.diff）
 │   ├── execute.md                      # 执行与 early stop
 │   ├── envsweep.md                     # 内层 EnvSweep 协议（触发条件 / 候选 / 收敛）
-│   └── settle.md                       # 收敛逻辑
+│   ├── settle.md                       # 收敛逻辑（含 TargetVector 多目标判定）
+│   └── learn.md                        # best/失败 case 回写 knowledge/ 的协议
 │
 ├── execution-model/                    # 训练建模（核心知识）
 │   ├── SKILL.md                        # 总体说明
@@ -332,12 +352,18 @@ skills/                                 # 唯一知识源（Agent 读取）
 │   ├── trace.md                        # timeline 分析
 │   └── env_probe.md                    # env 安全探测协议（连通性 → micro-bench → 多节点）
 │
-└── constraints/                        # 安全约束
-    ├── SKILL.md
-    ├── oom.md                          # OOM 预估规则
-    ├── config.md                       # 配置合法性
-    ├── validation.md                   # 验证方法
-    └── env.md                          # env 不兼容矩阵（互斥 / 危险组合）
+├── constraints/                        # 安全约束
+│   ├── SKILL.md
+│   ├── oom.md                          # OOM 预估规则
+│   ├── config.md                       # 配置合法性
+│   ├── validation.md                   # 验证方法
+│   └── env.md                          # env 不兼容矩阵（互斥 / 危险组合）
+│
+└── knowledge/                          # 经验沉淀（LEARN stage 写入目标）
+    ├── SKILL.md                        # 检索 / 写入协议
+    ├── patterns.md                     # 通用规律（"MoE > 16 节点必开 alltoall overlap"）
+    ├── cases.md                        # 历史 best config 案例库（按模型 × 集群索引）
+    └── anti-patterns.md                # 失败 case / 已知坑
 ```
 
 **env 知识的组织原则**：
@@ -365,9 +391,14 @@ Tools 是 Agent 通过 function calling 调用的 Python 函数：
 | `submit.run()` | 提交训练任务 | plan, cluster | job_id |
 | `submit.cancel()` | 取消任务 | job_id | status |
 | `observe.snapshot()` | 采集运行时数据 | job_id | Snapshot |
+| `observe.compare_loss()` | CORRECTNESS 闸门：与 reference loss 对齐 | job_id, reference_curve | pass / drift, delta_pct |
 | `constraint.check()` | 验证配置合法性 | plan, cluster | valid, violations |
 | `constraint.check_env()` | 验证 env 组合（互斥 / 危险） | env_diff, baseline | valid, violations |
 | `constraint.estimate_mem()` | 估算显存 | plan | mem_gb |
+| `constraint.diagnose_failure()` | 失败归因（OOM/hang/invalid → reason） | snapshot/error | failure_reason, suggested_transition |
+| `state.checkpoint()` | 持久化 TuningState（每 stage 出口调用） | tuning_state | path |
+| `state.resume()` | 从 checkpoint 续起 | path | tuning_state |
+| `knowledge.write()` | LEARN：回写 best/失败 case | report, kind | written_paths |
 
 Agent 根据 Skill 中的知识决定"做什么"，然后调用 Tool 执行。
 
@@ -571,6 +602,75 @@ selected_diff:                     # 合并进 baseline.env.diff
 cost_gpu_h: 0.3
 ```
 
+### 8.6 TargetVector（用户输入 / Settle 判定依据）
+
+把"达标"从单 TPS 升级为多目标。Settle 的停止条件 = 全部 `constraints` 满足且 `primary` 不再显著提升 / 触达 `budget`。
+
+```yaml
+target:
+  primary: tps                     # 主目标（也支持 per_token_cost_usd / time_to_loss）
+  constraints:                     # 必须满足的硬约束
+    - mem_peak_gb <= 180
+    - per_token_cost_usd <= 1.2e-7
+    - correctness.loss_delta_pct <= 1.0
+  budget:
+    total_gpu_h: 10
+    max_rounds: 5
+    wallclock_h: 24
+  preferences:                     # 软偏好（同分时打破平局）
+    prefer_lower_pp: true          # 减少 bubble 风险
+    prefer_known_env_presets: true # 优先用已沉淀的 presets
+```
+
+### 8.7 TuningState（每个 stage 出口持久化）
+
+让 Agent 中断后可从任意 stage 续起；同时是审计 / 回放的基本单元。
+
+```yaml
+session_id: pilot_run_20260418_a3
+current_stage: OPTIMIZE_LOOP.OBSERVE   # 状态机定位
+stage_history:
+  - {stage: PREFLIGHT,   exit: success, at: ...}
+  - {stage: PROJECTION,  exit: success, at: ...}
+  - {stage: SMOKE,       exit: success, at: ...}
+  - {stage: BASELINE,    exit: success, at: ...}
+  - {stage: CORRECTNESS, exit: success, at: ...}
+  - {stage: OPTIMIZE_LOOP.SETTLE, exit: continue, round: 2, at: ...}
+
+cluster_profile_ref: mi300x-16node-v3   # 指向 ClusterProfile 版本
+target: <TargetVector>
+baseline: <Plan>                         # 当前最优
+history:                                 # Re-Plan 去重用
+  - {plan_id: r0_p0, tps: 12000, status: completed}
+  - {plan_id: r1_p1, tps: 14200, status: completed}
+  - {plan_id: r2_p3, tps: 0,     status: oom}
+
+budget_used:
+  gpu_h: 4.2
+  rounds: 2
+  wallclock_h: 6.1
+
+reentry_log:                             # 跳回记录（审计用）
+  - {from: DIAGNOSE, to: PREFLIGHT, reason: cluster_profile.age>7d, at: ...}
+```
+
+### 8.8 FailureReport（Guardrail 触发时的归因输出）
+
+由 `constraint.diagnose_failure()` 生成，决定 Guardrail 走哪条恢复路径（见 §12）。
+
+```yaml
+run_id: job_8842
+failure_kind: OOM                  # OOM / HANG / INVALID_CONFIG / NUMERICAL / CLUSTER
+root_cause: "act_mem_underestimated"
+evidence:
+  - "predicted mem_peak=170GB, actual=192GB at step 47"
+  - "no recompute on layers 12-23"
+suggested_transition:              # 给状态机的回路提示
+  to: REPLAN
+  hint: "mark plan dead, try recompute=full on rear half"
+counts_against_budget: false       # OOM/invalid 不消耗 round 配额
+```
+
 ---
 
 ## 9. 完整迭代示例
@@ -664,18 +764,37 @@ Pilot 不重新发明轮子，而是组合现有能力：
 
 ## 12. Guardrails
 
+### 12.1 预防性约束
+
 | 机制 | 位置 | 作用 |
 |------|------|------|
 | OOM 预估 | `constraint.estimate_mem()` | 自动过滤高风险配置 |
+| 数值闸门 | `correctness.md` + `observe.compare_loss()` | BASELINE 后 / 每 N 轮抽查 loss curve 与 reference 对齐 |
+| Smoke 起前自检 | `smoke.md` + `submit.run(tiny)` | tiny scale × 100 step 验证可起，失败回 PROJECTION |
 | early stop | `observe.snapshot()` | OOM / 吞吐退化 → 立即终止 |
 | history 去重 | Settle 逻辑 | 不重复尝试已失败配置 |
-| max_rounds | Settle 逻辑 | 总成本硬约束 |
+| max_rounds / budget | Settle + TargetVector.budget | 总成本硬约束（GPU·h / wallclock） |
 | env 连通性 fail-fast | `env_probe.run()` | 错误 NCCL_IB_HCA 等 30s 内炸掉，不进 baseline |
 | env 不兼容矩阵 | `constraint.check_env()` | 拒绝危险/互斥组合（如 MSCCL × 某些 GDR 模式） |
 | EnvSweep 单次 cap | inner loop | 每次 ≤ 5 flag、≤ 8 组合、≤ 50 step |
 | env baseline 版本化 | `ClusterProfile.env_baseline.version` | 集群升级 / 驱动变更触发重新探测 |
 | env diff-only 记录 | `Plan.env.diff` | 审计、复现、回滚都基于 diff |
-| 审计日志 | 全流程 | 每步决策完整记录，可回放 |
+| 审计日志 + 持久化 | `state.checkpoint()` 每 stage 出口 | 可回放、可中断续起 |
+
+### 12.2 失败回路（状态机的 `on_fail` / `reentry_when` 实现）
+
+Guardrail 触发后由 `constraint.diagnose_failure()` 输出 `FailureReport`（§8.8），驱动状态机走以下转移之一。**`counts_against_budget=false` 表示不消耗 round 配额**。
+
+| 失败类别 | 归因 | 转移目标 | 说明 |
+|---------|------|---------|------|
+| `OOM` | 显存超出预估 | → `REPLAN` | 标记 plan dead，强制 recompute / 减 mbs；不计配额 |
+| `HANG` (NCCL/IB) | 通信卡住 > timeout | → `PREFLIGHT` (env_probe) | 怀疑 env baseline 失效，重新探测；不计配额 |
+| `INVALID_CONFIG` | constraint.check 失败 | → `REPLAN` | 仅丢弃该 plan，不进 Execute；不计配额 |
+| `NUMERICAL` | loss drift / NaN | → `ABORT` + escalate | 数值正确性破坏，停下问人 |
+| `CLUSTER` | 节点掉线 / 驱动错误 | → `PREFLIGHT` | ClusterProfile 标记为 stale，重探 |
+| `BUDGET_EXCEEDED` | gpu_h / wallclock 超限 | → `REPORT` | 提前结束，输出当前最优 |
+| `STRUCTURAL_INVALIDATION` | 模型/数据规格变 | → `PROJECTION` | 重新建模，history 失效 |
+| `UNKNOWN` | 兜底 | → `ABORT` + escalate | 不要乱猜，交给人判断 |
 
 ---
 
