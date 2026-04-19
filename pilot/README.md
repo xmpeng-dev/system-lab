@@ -99,11 +99,17 @@
 │       ▼             │                         │                         │
 │  4. 交给            │                         │                         │
 │     workflow ──────►│ PREFLIGHT               │                         │
-│       │             │ 整理并行优化参数         │                         │
+│       │             │ 硬件+env baseline       │                         │
+│       │             │ (按 version/age 复用)   │                         │
 │       │             │       │                 │                         │
 │       │             │       ▼                 │                         │
 │       │             │ PROJECTION              │                         │
 │       │             │ 建立 Execution Model    │                         │
+│       │             │       │                 │                         │
+│       │             │       ▼                 │                         │
+│       │             │ SMOKE                   │                         │
+│       │             │ tiny scale × 100 step   │                         │
+│       │             │ 验证可起 / 无 hang      │                         │
 │       │             │       │                 │                         │
 │       │             │       ▼                 │                         │
 │       │             │ 进 optimize-loop ──────►│ BASELINE                │
@@ -111,19 +117,39 @@
 │       │             │                         │ 记录起点                │
 │       │             │                         │       │                 │
 │       │             │                         │       ▼                 │
-│       │             │                         │ 自主循环迭代优化         │
+│       │             │                         │ CORRECTNESS             │
+│       │             │                         │ loss/grad vs reference  │
+│       │             │                         │ (失败 → ABORT)          │
+│       │             │                         │       │                 │
+│       │             │                         │       ▼                 │
+│       │             │                         │ 外层结构循环             │
 │       │             │                         │ (Observe→Diagnose→      │
 │       │             │                         │  Re-Plan→Execute→       │
+│       │             │                         │  CORRECTNESS-LITE→      │
 │       │             │                         │  Settle)                │
+│       │             │                         │       │                 │
+│       │             │                         │       ▼                 │
+│       │             │                         │ 内层 EnvSweep（可选）   │
+│       │             │                         │ (锁结构、扫 env diff)   │
 │       │             │                         │       │                 │
 │       │             │                         │       ▼                 │
 │       │             │                         │ 收敛 / 达标              │
 │       │             │       │                 │       │                 │
 │       │             │◄──────┘                 │◄──────┘                 │
 │       │             │                         │                         │
+│       │             │ 反向跳转（reentry）：    │                         │
+│       │             │  ClusterProfile 过期     │                         │
+│       │             │   → 回 PREFLIGHT        │                         │
+│       │             │  Plan 结构性失效         │                         │
+│       │             │   → 回 PROJECTION       │                         │
+│       │             │                         │                         │
 │       │             │ REPORT                  │                         │
-│       ▼             │ 输出最终报告             │                         │
-│  5. 验收            │                         │                         │
+│       │             │ 输出最终配置 + trace    │                         │
+│       │             │       │                 │                         │
+│       │             │       ▼                 │                         │
+│       │             │ LEARN                   │                         │
+│       ▼             │ best/失败 case 回写     │                         │
+│  5. 验收            │ skills/knowledge/       │                         │
 │     跑完整测试+审计  │                         │                         │
 │     确认 commit     │                         │                         │
 │                     │                         │                         │
@@ -136,14 +162,17 @@
 2. **读 workflow Skill**：Agent 读取 `skills/workflow/SKILL.md` 了解整体流程
 3. **收集项目信息**：Agent 调用 Tool 采集集群信息、模型配置
 4. **进入 workflow**：
-   - **PREFLIGHT**：采集硬件基线（ClusterProfile）
-   - **PROJECTION**：单机 profiling + 建立 Execution Model + 生成初始 Plans
-   - **进入 optimize-loop**：
+   - **PREFLIGHT**：采集硬件基线 + 探测集群级 env baseline（ClusterProfile）
+   - **PROJECTION**：单机 profiling + 建立 Execution Model + 生成初始 Plans（含 scale-aware env diff）
+   - **进入 optimize-loop（双层）**：
      - BASELINE：跑基准测试，记录起点
-     - 迭代循环：Observe → Diagnose → Re-Plan → Execute → Settle
+     - **外层（结构）**：Observe → Diagnose → Re-Plan → Execute → Settle
+     - **内层（EnvSweep，可选）**：在 Settle 后、进入下一外层迭代前触发；锁定结构，仅扫 env diff
      - 直到收敛或达标
    - **REPORT**：输出最终配置和报告
 5. **验收**：跑完整测试，审计日志，确认结果
+
+> **为什么外层/内层分开**：env 调参不改变形状（无 OOM 风险）、单次成本低（30-50 step 即可分辨），适合在每个外层 baseline 稳定后做一次"安全 sweep"；env 的最优值依赖结构（mbs / world_size），所以**不能一次跑完一劳永逸**，必须嵌在外层每轮里。
 
 ### 3.1 Tuning Loop 内部泳道（展开）
 
@@ -192,6 +221,25 @@
 │     └── 调 Tool ───────────────────────────────► constraint.check(plan) │
 │                     │                         │   └► 返回 valid/invalid │
 │                     │                         │                         │
+│ [EnvSweep]          │                         │                         │
+│  (条件触发：         │                         │                         │
+│   bottleneck 命中    │                         │                         │
+│   且结构稳定)        │                         │                         │
+│     │               │                         │                         │
+│     ├── 读 env/SKILL.md & env_probe.md ──────┤                          │
+│     │               │   - 候选 flag 列表      │                         │
+│     │               │   - 安全 sweep 协议     │                         │
+│     │               │                         │                         │
+│     ├── 读 optimization/{bottleneck}/env.md   │                         │
+│     │               │   - 该瓶颈下相关 flag   │                         │
+│     │               │                         │                         │
+│     ├── 调 Tool ───────────────────────────────► constraint.check_env() │
+│     │               │                         │   └► 拒绝危险组合       │
+│     │               │                         │                         │
+│     └── 调 Tool ───────────────────────────────► submit.run(plans, short)
+│                     │                         │   └► 30-50 step 并行    │
+│                     │                         │      返回 best env diff │
+│                     │                         │                         │
 │ [Settle]            │                         │                         │
 │     │               │                         │                         │
 │     ├── 读 settle.md ► 收敛规则               │                         │
@@ -214,12 +262,13 @@
 skills/                                 # 唯一知识源（Agent 读取）
 │
 ├── workflow/                           # 调优主流程
-│   ├── SKILL.md                        # tuning loop 总体说明
+│   ├── SKILL.md                        # tuning loop 总体说明（含外层/内层切换条件）
 │   ├── projection.md                   # 建模阶段
 │   ├── observe.md                      # 观测数据定义（snapshot schema）
-│   ├── diagnose.md                     # 瓶颈分类逻辑
-│   ├── plan.md                         # plan 结构定义
+│   ├── diagnose.md                     # 瓶颈分类逻辑（含 env_suspect 输出）
+│   ├── plan.md                         # plan 结构定义（含 env.diff）
 │   ├── execute.md                      # 执行与 early stop
+│   ├── envsweep.md                     # 内层 EnvSweep 协议（触发条件 / 候选 / 收敛）
 │   └── settle.md                       # 收敛逻辑
 │
 ├── execution-model/                    # 训练建模（核心知识）
@@ -238,7 +287,8 @@ skills/                                 # 唯一知识源（Agent 读取）
 │   │   ├── SKILL.md                    # reduce_comm_pressure
 │   │   ├── bucket.md                   # bucket tuning
 │   │   ├── overlap.md                  # overlap 优化
-│   │   └── topology.md                 # 跨节点 vs 单节点
+│   │   ├── topology.md                 # 跨节点 vs 单节点
+│   │   └── env.md                      # COMM_BOUND 候选 env（→ env/rccl.md）
 │   │
 │   ├── pipeline/                       # pipeline 瓶颈
 │   │   ├── SKILL.md                    # pipeline 优化策略
@@ -250,13 +300,15 @@ skills/                                 # 唯一知识源（Agent 读取）
 │   │   ├── SKILL.md                    # memory 优化策略
 │   │   ├── recompute.md                # activation recompute
 │   │   ├── offload.md                  # CPU / NVMe offload
-│   │   └── fragmentation.md            # 内存碎片
+│   │   ├── fragmentation.md            # 内存碎片
+│   │   └── env.md                      # MEMORY_BOUND 候选 env（→ env/alloc.md）
 │   │
 │   ├── compute/                        # 计算瓶颈
 │   │   ├── SKILL.md                    # compute 利用率优化
 │   │   ├── mbs.md                      # mbs scaling
 │   │   ├── parallel.md                 # dp/tp 调整
-│   │   └── kernel.md                   # kernel-level hint
+│   │   ├── kernel.md                   # kernel-level hint
+│   │   └── env.md                      # COMPUTE_BOUND 候选 env（→ env/threading.md, hsa.md）
 │   │
 │   └── moe/                            # MoE 专项
 │       ├── SKILL.md
@@ -264,19 +316,34 @@ skills/                                 # 唯一知识源（Agent 读取）
 │       ├── dispatch.md
 │       └── load_balance.md
 │
+├── env/                                # env 调参 catalog（事实源 / 单点维护）
+│   ├── SKILL.md                        # env 调参总论 / 双层循环触发条件
+│   ├── rccl.md                         # NCCL_*/RCCL_* 全集（默认 / 范围 / 已知坑）
+│   ├── hsa.md                          # HSA_*/HIP_*/GPU_MAX_HW_QUEUES
+│   ├── alloc.md                        # PYTORCH_HIP_ALLOC_CONF / MALLOC_*
+│   ├── threading.md                    # OMP_*/MKL_*/numactl
+│   └── presets.md                      # per-cluster-type 已验证预设组合
+│
 ├── profiling/                          # 数据采集方法
 │   ├── SKILL.md
 │   ├── preflight.md                    # cluster baseline
 │   ├── gpu.md                          # GPU metrics
 │   ├── network.md                      # IB / RCCL
-│   └── trace.md                        # timeline 分析
+│   ├── trace.md                        # timeline 分析
+│   └── env_probe.md                    # env 安全探测协议（连通性 → micro-bench → 多节点）
 │
 └── constraints/                        # 安全约束
     ├── SKILL.md
     ├── oom.md                          # OOM 预估规则
     ├── config.md                       # 配置合法性
-    └── validation.md                   # 验证方法
+    ├── validation.md                   # 验证方法
+    └── env.md                          # env 不兼容矩阵（互斥 / 危险组合）
 ```
+
+**env 知识的组织原则**：
+- `skills/env/*.md` 是**唯一 catalog**（每个 flag 只在这里完整定义一次）
+- `skills/optimization/{bottleneck}/env.md` 只列**「该瓶颈下应优先看哪些 flag」**，引用 catalog
+- 这样新增 flag 只改 catalog 一处，避免知识散落
 
 **Skill 的作用**：Agent（Cursor / Claude）读取这些 Markdown 文件获取领域知识，而不是把知识硬编码在代码里。这样：
 - 知识可以独立迭代，不需要改代码
@@ -292,11 +359,14 @@ Tools 是 Agent 通过 function calling 调用的 Python 函数：
 | Tool | 功能 | 输入 | 输出 |
 |------|------|------|------|
 | `preflight.run()` | 采集集群硬件基线 | cluster_id | ClusterProfile |
+| `env_probe.run()` | 探测/校验集群级 env baseline（连通性 + RCCL micro-bench） | cluster_id, candidate_envs | EnvBaseline (写入 ClusterProfile) |
+| `env_probe.sweep()` | 内层 EnvSweep：固定结构，扫描 env diff | base_plan, candidate_envs, max_steps | best_env_diff, results |
 | `profiler.run()` | 单机 profiling | model_spec, configs | ProfilingResult |
 | `submit.run()` | 提交训练任务 | plan, cluster | job_id |
 | `submit.cancel()` | 取消任务 | job_id | status |
 | `observe.snapshot()` | 采集运行时数据 | job_id | Snapshot |
 | `constraint.check()` | 验证配置合法性 | plan, cluster | valid, violations |
+| `constraint.check_env()` | 验证 env 组合（互斥 / 危险） | env_diff, baseline | valid, violations |
 | `constraint.estimate_mem()` | 估算显存 | plan | mem_gb |
 
 Agent 根据 Skill 中的知识决定"做什么"，然后调用 Tool 执行。
@@ -387,6 +457,22 @@ rccl_baseline:
   alltoall:
     - {size_mb: 1,    bw_gbs: 8}
     - {size_mb: 256,  bw_gbs: 95}
+
+env_baseline:                      # 集群级 env 黄金默认（一次探测 / 多任务复用）
+  version: mi300x-16node-v3
+  status: validated                # validated / tentative
+  rccl:
+    NCCL_IB_HCA: "mlx5_0:1,mlx5_1:1,mlx5_2:1,mlx5_3:1"
+    NCCL_NET_GDR_LEVEL: 4
+    NCCL_IB_GID_INDEX: 3
+    NCCL_SOCKET_IFNAME: bond0
+  hsa:
+    HSA_FORCE_FINE_GRAIN_PCIE: 1
+    GPU_MAX_HW_QUEUES: 2
+  alloc:
+    PYTORCH_HIP_ALLOC_CONF: "expandable_segments:True"
+  threading:
+    OMP_NUM_THREADS: 8
 ```
 
 ### 8.2 Plan（待执行的配置）
@@ -407,6 +493,13 @@ runtime:
 comm:
   bucket_size_mb: 64
   overlap: true
+env:                               # 仅记录相对 env_baseline 的差异
+  baseline_ref: mi300x-16node-v3
+  diff:
+    NCCL_MIN_NCHANNELS: 16
+    NCCL_BUFFSIZE: 16777216
+    PYTORCH_HIP_ALLOC_CONF: "expandable_segments:True,max_split_size_mb:512"
+    RCCL_MSCCL_ENABLE: 1
 predicted:                         # Execution Model 预估值
   tps: 18500
   mem_peak_gb: 165
@@ -447,6 +540,35 @@ evidence:
 recommended_skills:
   - skills/optimization/compute/mbs.md
   - skills/optimization/compute/parallel.md
+env_suspect:                       # 若有 → 触发 EnvSweep（先于结构调整）
+  - flag: NCCL_BUFFSIZE
+    reason: "comm_ratio=0.32 但 msg_size_p95=4MB，buffer 偏小"
+    hint: skills/env/rccl.md#buffsize
+  - flag: PYTORCH_HIP_ALLOC_CONF
+    reason: "mem_reserved/mem_alloc=1.45 → 碎片偏高"
+    hint: skills/env/alloc.md#expandable-segments
+```
+
+### 8.5 EnvSweepResult（内层循环输出）
+
+```yaml
+sweep_id: r3_envsweep_1
+parent_plan: r3_p2                 # 锁定的结构 baseline
+trigger: COMM_BOUND
+candidates:                        # 本轮试过的 env 组合
+  - env_diff: {NCCL_BUFFSIZE: 8388608}
+    tps: 17900
+    delta_pct: +0.6
+  - env_diff: {NCCL_BUFFSIZE: 16777216, NCCL_MIN_NCHANNELS: 16}
+    tps: 18650
+    delta_pct: +4.8                # ← best
+  - env_diff: {NCCL_BUFFSIZE: 33554432}
+    tps: 17600
+    delta_pct: -1.1
+selected_diff:                     # 合并进 baseline.env.diff
+  NCCL_BUFFSIZE: 16777216
+  NCCL_MIN_NCHANNELS: 16
+cost_gpu_h: 0.3
 ```
 
 ---
@@ -465,13 +587,22 @@ Round 0 (Baseline)
             P2: 启用 alltoall overlap
             P3: ep 8→4（减少跨节点通信）
 
-Round 1
+Round 1 (外层)
   Execute:  3 个 plan 并行跑（每个 50 step early-stop）
   Results:
     P1: tps=14200 (+18%)
     P2: tps=15800 (+32%)  ← best
     P3: tps=13100 (+9%, ep 减小导致 expert 容量下降)
   Settle:   选 P2 作为新 baseline
+
+Round 1' (内层 EnvSweep，因 Diagnose 输出 env_suspect=NCCL_BUFFSIZE)
+  Sweep:    锁定 P2 结构，扫 3 个候选（30 step）
+            E1: NCCL_BUFFSIZE=8M             → tps=15900 (+0.6%)
+            E2: NCCL_BUFFSIZE=16M+MIN_NCH=16 → tps=16550 (+4.7%)  ← best
+            E3: NCCL_BUFFSIZE=32M            → tps=15600 (-1.3%)
+  Merge:    P2.env.diff += {NCCL_BUFFSIZE:16M, NCCL_MIN_NCHANNELS:16}
+            new baseline tps=16550
+  Cost:     0.3 GPU·h
   Diagnose: PIPELINE_BOUND (bubble 升至 0.18)
   Re-Plan:  读 skills/optimization/pipeline/ → 生成 2 候选
             P4: vpp 1→2
@@ -539,6 +670,11 @@ Pilot 不重新发明轮子，而是组合现有能力：
 | early stop | `observe.snapshot()` | OOM / 吞吐退化 → 立即终止 |
 | history 去重 | Settle 逻辑 | 不重复尝试已失败配置 |
 | max_rounds | Settle 逻辑 | 总成本硬约束 |
+| env 连通性 fail-fast | `env_probe.run()` | 错误 NCCL_IB_HCA 等 30s 内炸掉，不进 baseline |
+| env 不兼容矩阵 | `constraint.check_env()` | 拒绝危险/互斥组合（如 MSCCL × 某些 GDR 模式） |
+| EnvSweep 单次 cap | inner loop | 每次 ≤ 5 flag、≤ 8 组合、≤ 50 step |
+| env baseline 版本化 | `ClusterProfile.env_baseline.version` | 集群升级 / 驱动变更触发重新探测 |
+| env diff-only 记录 | `Plan.env.diff` | 审计、复现、回滚都基于 diff |
 | 审计日志 | 全流程 | 每步决策完整记录，可回放 |
 
 ---
