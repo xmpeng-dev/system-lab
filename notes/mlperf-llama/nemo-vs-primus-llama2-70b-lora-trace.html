@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NeMo vs Primus - Llama-2-70B LoRA SFT trace breakdown</title>
+<style>
+  :root { color-scheme: light dark; --bg:#ffffff; --text-primary:#0a0a0a; --text-secondary:#4a4a4a; --text-tertiary:#7a7a7a; --text-quaternary:#a0a0a0; --text-on-accent:#ffffff; --fill-primary:#f5f5f5; --fill-secondary:#ebebeb; --fill-tertiary:#fafafa; --fill-quaternary:#f3f3f3; --stroke-primary:#d0d0d0; --stroke-secondary:#e1e1e1; --stroke-tertiary:#ececec; --accent:#2563eb; --success:#15803d; --warning:#b45309; --danger:#b91c1c; --info:#0e7490; --success-bg:#ecfdf5; --warning-bg:#fffbeb; --danger-bg:#fef2f2; --info-bg:#ecfeff; --neutral-bg:#f3f3f3; --chart-1:#2563eb; --chart-2:#7c3aed; --chart-3:#0891b2; --chart-4:#db2777; --chart-5:#d97706; --chart-6:#16a34a; --chart-7:#dc2626; --chart-8:#6b7280; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0e0e10; --text-primary:#f4f4f6; --text-secondary:#b4b4be; --text-tertiary:#80808c; --text-quaternary:#5a5a64; --text-on-accent:#ffffff; --fill-primary:#1c1c20; --fill-secondary:#232328; --fill-tertiary:#18181b; --fill-quaternary:#141417; --stroke-primary:#2f2f35; --stroke-secondary:#28282d; --stroke-tertiary:#1f1f23; --accent:#6ea4ff; --success:#4ade80; --warning:#fbbf24; --danger:#f87171; --info:#38bdf8; --success-bg:#062618; --warning-bg:#2a1c08; --danger-bg:#2a1313; --info-bg:#082630; --neutral-bg:#1c1c20; --chart-1:#6ea4ff; --chart-2:#a78bfa; --chart-3:#38bdf8; --chart-4:#f472b6; --chart-5:#fbbf24; --chart-6:#4ade80; --chart-7:#f87171; --chart-8:#9ca3af; } }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; background:var(--bg); color:var(--text-primary); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,"Helvetica Neue",Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+  body { max-width:1180px; margin:0 auto; padding:32px 24px 64px; }
+  .stack { display:flex; flex-direction:column; gap:16px; }
+  .row { display:flex; flex-direction:row; gap:12px; align-items:center; flex-wrap:wrap; }
+  .grid { display:grid; gap:16px; }
+  .grid-2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .grid-4 { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .grid-5 { grid-template-columns:repeat(5,minmax(0,1fr)); }
+  @media (max-width:900px){ .grid-4,.grid-5{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:540px){ .grid-2,.grid-4,.grid-5{ grid-template-columns:1fr; } }
+  h1 { font-size:24px; font-weight:600; margin:0; letter-spacing:-0.01em; }
+  h2 { font-size:18px; font-weight:600; margin:0; }
+  h3 { font-size:14px; font-weight:600; margin:0; }
+  p { margin:0; }
+  .text-secondary { color:var(--text-secondary); }
+  .text-small { font-size:12px; }
+  .text-semibold { font-weight:600; }
+  code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:0.92em; padding:1px 5px; background:var(--fill-secondary); border-radius:3px; }
+  .card { border:1px solid var(--stroke-secondary); border-radius:8px; background:var(--fill-tertiary); overflow:hidden; }
+  .card-header { padding:8px 14px; min-height:28px; border-bottom:1px solid var(--stroke-tertiary); font-weight:500; font-size:12px; color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .card-body { padding:16px; }
+  .stat { border:1px solid var(--stroke-secondary); border-radius:8px; background:var(--fill-tertiary); padding:14px 16px; display:flex; flex-direction:column; gap:4px; }
+  .stat-value { font-size:22px; font-weight:600; letter-spacing:-0.01em; font-feature-settings:"tnum" 1; line-height:1.15; }
+  .stat-label { font-size:12px; color:var(--text-tertiary); }
+  .stat-success .stat-value { color:var(--success); }
+  .stat-warning .stat-value { color:var(--warning); }
+  .stat-danger .stat-value { color:var(--danger); }
+  .pill { display:inline-flex; align-items:center; height:20px; padding:0 8px; border-radius:10px; font-size:11px; font-weight:500; background:transparent; color:var(--text-secondary); border:1px solid var(--stroke-primary); white-space:nowrap; }
+  .pill-sm { height:18px; padding:0 6px; font-size:10.5px; border:0; background:var(--fill-secondary); }
+  .pill-success { background:var(--success-bg); color:var(--success); border-color:transparent; }
+  .pill-warning { background:var(--warning-bg); color:var(--warning); border-color:transparent; }
+  .pill-danger { background:var(--danger-bg); color:var(--danger); border-color:transparent; }
+  .pill-info { background:var(--info-bg); color:var(--info); border-color:transparent; }
+  .pill-neutral { background:var(--neutral-bg); color:var(--text-secondary); border-color:transparent; }
+  .callout { border:1px solid var(--stroke-secondary); border-left-width:3px; background:var(--fill-tertiary); padding:12px 14px; border-radius:4px; display:flex; flex-direction:column; gap:6px; }
+  .callout-title { font-weight:600; font-size:13px; }
+  .callout-success { border-left-color:var(--success); background:var(--success-bg); }
+  .callout-success .callout-title { color:var(--success); }
+  .callout-info { border-left-color:var(--info); background:var(--info-bg); }
+  .callout-info .callout-title { color:var(--info); }
+  .divider { border:0; border-top:1px solid var(--stroke-secondary); margin:4px 0; }
+  .table-shell { border:1px solid var(--stroke-secondary); border-radius:8px; overflow:hidden; background:var(--fill-tertiary); }
+  .table { width:100%; border-collapse:collapse; font-size:13px; font-feature-settings:"tnum" 1; }
+  .table th,.table td { text-align:left; padding:8px 12px; border-bottom:1px solid var(--stroke-tertiary); vertical-align:top; }
+  .table tr:last-child td { border-bottom:0; }
+  .table th { font-weight:600; color:var(--text-tertiary); font-size:11px; text-transform:uppercase; letter-spacing:0.04em; background:var(--fill-quaternary); border-bottom:1px solid var(--stroke-secondary); }
+  .table .right { text-align:right; }
+  .table tr.row-warning td { background:color-mix(in srgb, var(--warning) 9%, transparent); }
+  .table tr.row-danger td { background:color-mix(in srgb, var(--danger) 9%, transparent); }
+  .table tr.row-info td { background:color-mix(in srgb, var(--info) 7%, transparent); }
+  .chart-frame { border:1px solid var(--stroke-secondary); border-radius:6px; background:var(--fill-tertiary); padding:12px; }
+  .legend { display:flex; flex-wrap:wrap; gap:12px; font-size:12px; color:var(--text-secondary); }
+  .legend > span { display:inline-flex; align-items:center; gap:6px; }
+  .swatch { display:inline-block; width:12px; height:12px; border-radius:2px; }
+  svg { display:block; max-width:100%; height:auto; }
+</style>
+</head>
+<body>
+  <main class="stack" style="gap:24px">
+    <div class="stack" style="gap:6px">
+      <h1>NeMo vs Primus - Llama-2-70B LoRA SFT trace breakdown</h1>
+      <div class="row">
+        <span class="pill pill-info">8 x MI355X (288 GiB HBM)</span>
+        <span class="pill pill-neutral">Llama-2-70B · LoRA SFT · bf16+FP8</span>
+        <span class="pill pill-neutral">TP1 PP1 CP1 - pure DP=8 (DDP + DistOpt)</span>
+        <span class="pill pill-neutral">GBS 8 · MBS 1 · seq 8192 (packed)</span>
+      </div>
+    </div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">Headline</div>
+      <p>On identical hardware and workload, NeMo step is <span class="text-semibold">1490 ms</span> vs Primus <span class="text-semibold">1626 ms</span> - a <span class="text-semibold">1.091x speed-up</span>. Most of the gap is Primus's <span class="text-semibold">191 ms DataLoader idle hole</span>. NeMo additionally saves about 50 ms RCCL and reaches eval_acc 0.9244 at step 384 in 10.79 min.</p>
+    </div>
+
+    <div class="grid grid-5" style="gap:12px">
+      <div class="stat"><div class="stat-value">1626 ms</div><div class="stat-label">Primus step</div></div>
+      <div class="stat stat-success"><div class="stat-value">1490 ms</div><div class="stat-label">NeMo step</div></div>
+      <div class="stat stat-success"><div class="stat-value">1.091x</div><div class="stat-label">NeMo per-step speed-up</div></div>
+      <div class="stat stat-danger"><div class="stat-value">11.8%</div><div class="stat-label">Primus idle (DataLoader)</div></div>
+      <div class="stat stat-success"><div class="stat-value">0.5%</div><div class="stat-label">NeMo idle</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span>NeMo end-to-end convergence (this run)</span><span class="pill pill-success">MLPerf target</span></div>
+      <div class="card-body">
+        <div class="grid grid-5" style="gap:12px">
+          <div class="stat stat-success"><div class="stat-value">5.40 sps</div><div class="stat-label">Throughput</div></div>
+          <div class="stat"><div class="stat-value">384</div><div class="stat-label">Steps to target</div></div>
+          <div class="stat"><div class="stat-value">3072</div><div class="stat-label">Samples to target</div></div>
+          <div class="stat stat-success"><div class="stat-value">0.9244</div><div class="stat-label">Best eval_acc</div></div>
+          <div class="stat stat-success"><div class="stat-value">10.79 min</div><div class="stat-label">Wall-clock</div></div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <h2>Per-stream timeline (one ProfilerStep)</h2>
+    <p class="text-secondary">Both sides share the same compute kernels. The difference is where the bubbles are.</p>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-header"><span>Primus · ProfilerStep #82</span><span class="pill pill-warning">DataLoader-bound</span></div>
+        <div class="card-body">
+          <div class="chart-frame">
+            <svg viewBox="0 0 920 95" width="100%" height="95">
+              <rect x="150" y="14" width="730" height="24" fill="var(--fill-quaternary)" rx="3"/>
+              <rect x="236" y="14" width="610" height="24" fill="#2E79B5E0" rx="2"/>
+              <rect x="850" y="14" width="26" height="24" fill="#C85898E0" rx="2"/>
+              <text x="6" y="30" font-size="11" fill="var(--text-secondary)">stream 0 compute</text>
+              <text x="154" y="30" font-size="9" fill="var(--text-secondary)">idle 191 ms</text>
+              <rect x="150" y="50" width="730" height="24" fill="var(--fill-quaternary)" rx="3"/>
+              <rect x="850" y="50" width="26" height="24" fill="#C85898E0" rx="2"/>
+              <text x="6" y="66" font-size="11" fill="var(--text-secondary)">stream 33 RCCL</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span>NeMo · ProfilerStep #5</span><span class="pill pill-success">Compute-bound</span></div>
+        <div class="card-body">
+          <div class="chart-frame">
+            <svg viewBox="0 0 920 120" width="100%" height="120">
+              <rect x="150" y="10" width="730" height="22" fill="var(--fill-quaternary)" rx="3"/>
+              <rect x="157" y="10" width="652" height="22" fill="#2E79B5E0" rx="2"/>
+              <text x="6" y="25" font-size="11" fill="var(--text-secondary)">stream 3 compute</text>
+              <rect x="150" y="40" width="730" height="22" fill="var(--fill-quaternary)" rx="3"/>
+              <rect x="150" y="40" width="585" height="22" fill="#D89048E0" rx="2"/>
+              <text x="6" y="55" font-size="11" fill="var(--text-secondary)">stream 3 memcpy</text>
+              <text x="154" y="55" font-size="9" fill="var(--text-on-accent)">HtoD 1195 ms</text>
+              <rect x="150" y="70" width="730" height="22" fill="var(--fill-quaternary)" rx="3"/>
+              <rect x="444" y="70" width="8" height="22" fill="#C85898E0" rx="2"/>
+              <rect x="872" y="70" width="8" height="22" fill="#7DCAB0E0" rx="2"/>
+              <text x="6" y="85" font-size="11" fill="var(--text-secondary)">stream 45 RCCL</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <h2>DataLoader configuration (the headline gap)</h2>
+    <div class="grid grid-2">
+      <div class="card"><div class="card-header"><span>Primus baseline</span><span class="pill pill-danger">Synchronous</span></div><div class="card-body stack" style="gap:8px">
+        <div class="stat stat-danger"><div class="stat-value">0</div><div class="stat-label">num_workers</div></div>
+        <p class="text-small text-secondary">Single-process dataloader. Main thread builds 8K mask on CPU and copies to GPU each step, causing ~191 ms idle.</p>
+      </div></div>
+      <div class="card"><div class="card-header"><span>NeMo default</span><span class="pill pill-success">Async prefetch</span></div><div class="card-body stack" style="gap:8px">
+        <div class="stat stat-success"><div class="stat-value">8</div><div class="stat-label">num_workers</div></div>
+        <p class="text-small text-secondary">8 persistent workers with prefetch keep batches DMA-ready, removing step-start idle.</p>
+      </div></div>
+    </div>
+
+    <hr class="divider">
+    <h2>GPU work decomposition (across all streams, ms)</h2>
+    <div class="table-shell">
+      <table class="table">
+        <thead><tr><th>Category</th><th class="right">Primus</th><th class="right">NeMo</th><th class="right">Delta</th></tr></thead>
+        <tbody>
+          <tr class="row-info"><td>FP8 weight GEMM (4 main kernels)</td><td class="right">773.5</td><td class="right">806.3</td><td class="right">32.8</td></tr>
+          <tr><td>Attention (aiter::fmha, CK V3, bf16)</td><td class="right">315.5</td><td class="right">329.5</td><td class="right">14.0</td></tr>
+          <tr class="row-warning"><td>FP8 cast/transpose standalone kernel</td><td class="right">21.2</td><td class="right">1232.3</td><td class="right">1211.1</td></tr>
+          <tr class="row-warning"><td>Memcpy HtoD</td><td class="right">4.5</td><td class="right">1199.8</td><td class="right">1195.3</td></tr>
+          <tr class="row-danger"><td>RCCL gradient sync (DDP)</td><td class="right">54.4</td><td class="right">5.2</td><td class="right">-49.2</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="divider">
+    <h2>Configuration deltas that matter</h2>
+    <div class="table-shell">
+      <table class="table">
+        <thead><tr><th>Knob</th><th>Primus</th><th>NeMo</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr class="row-danger"><td>DataLoader num_workers</td><td>0</td><td>8</td><td>+191 ms idle on Primus</td></tr>
+          <tr class="row-info"><td>TE op-fuser</td><td>enable_primus_turbo=True, use_transformer_engine_op_fuser=True</td><td>unfused</td><td>Primus fuses cast/transpose into GEMM</td></tr>
+          <tr><td>DDP overlap_grad_reduce / overlap_param_gather</td><td>True / True</td><td>False / False</td><td>Primus overlaps DDP comm</td></tr>
+          <tr class="row-danger"><td>Model fp8_param (run.log Overwrote)</td><td>True (False -> True)</td><td>False</td><td>~70 GB HBM gap (3 B/param vs 2 B/param)</td></tr>
+          <tr><td>DDP grad_reduce_in_fp32 (run.log Overwrote)</td><td>True (False -> True)</td><td>False</td><td>Primus RS in FP32 (2x BW)</td></tr>
+          <tr><td>DDP fp8_param_gather (run.log Overwrote)</td><td>True (False -> True)</td><td>False</td><td>Primus AG params in FP8 (0.5x BW)</td></tr>
+          <tr><td>RCCL observed in step</td><td>54 ms tail-AR</td><td>5 ms LoRA-only</td><td>Different comm path (DDP buckets vs LoRA-A2A)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="divider">
+    <h2>Action items for Primus</h2>
+    <div class="grid grid-2">
+      <div class="card"><div class="card-header"><span>1) Eliminate 191 ms idle</span><span class="pill pill-success">High-impact</span></div><div class="card-body"><p class="text-small">Enable DataLoader workers (<code>num_workers=2-8</code>, <code>persistent_workers=True</code>, <code>prefetch_factor=2</code>) with <code>multiprocessing_context="spawn"</code> to avoid fork-after-CUDA deadlock.</p></div></div>
+      <div class="card"><div class="card-header"><span>2) Keep TE op-fuser ON</span><span class="pill pill-success">Confirmed-good</span></div><div class="card-body"><p class="text-small">Do not disable op-fuser for parity. It keeps standalone transpose at 21 ms vs 1232 ms.</p></div></div>
+      <div class="card"><div class="card-header"><span>3) Reduce FP8 amax history</span><span class="pill pill-info">Medium-impact</span></div><div class="card-body"><p class="text-small">Align bridge precision with NeMo: <code>fp8_amax_history_len=4</code>, <code>fp8_amax_compute_algo=most_recent</code>.</p></div></div>
+      <div class="card"><div class="card-header"><span>4) Match RCCL channel tuning</span><span class="pill pill-info">Low-priority</span></div><div class="card-body"><p class="text-small">Add <code>NCCL_MIN_CTAS=32</code>, <code>NCCL_MIN_P2P_NCHANNELS=32</code>, <code>NCCL_NCHANNELS_PER_NET_PEER=32</code>; keep <code>TORCH_NCCL_HIGH_PRIORITY=1</code>.</p></div></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">Methodology</div>
+      <p>Traces from torch.profiler with <code>record_shapes=false</code>, <code>with_stack=false</code>, one active step/rank. Parsed via <code>.cursor/skills/gpu-trace-analysis/scripts/full_breakdown.py</code> on NeMo rank 4 and Primus rank 2.</p>
+    </div>
+  </main>
+</body>
+</html>
