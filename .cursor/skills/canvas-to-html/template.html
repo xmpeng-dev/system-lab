@@ -1,0 +1,420 @@
+<!doctype html>
+<!--
+  Canvas → standalone HTML scaffold.
+
+  Filling instructions:
+    1. Set <title> and the <h1> inside <main> to the canvas H1 text.
+    2. Replace the placeholder content under <main> with the converted body.
+       Use the classes already defined in <style> below.
+    3. Do NOT add external links/scripts — keep this file self-contained.
+    4. Do NOT introduce new colors. Use the CSS variables (var(--text-*)
+       etc.) defined in :root and the dark-mode media query.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+  :root {
+    color-scheme: light dark;
+
+    /* ── Light theme (default) ─────────────────────────────────────── */
+    --bg:               #ffffff;
+    --text-primary:     #0a0a0a;
+    --text-secondary:   #4a4a4a;
+    --text-tertiary:    #7a7a7a;
+    --text-quaternary:  #a0a0a0;
+    --text-on-accent:   #ffffff;
+
+    --fill-primary:     #f5f5f5;
+    --fill-secondary:   #ebebeb;
+    --fill-tertiary:    #fafafa;
+    --fill-quaternary:  #f3f3f3;
+
+    --stroke-primary:   #d0d0d0;
+    --stroke-secondary: #e1e1e1;
+    --stroke-tertiary:  #ececec;
+
+    --accent:           #2563eb;
+    --success:          #15803d;
+    --warning:          #b45309;
+    --danger:           #b91c1c;
+    --info:             #0e7490;
+
+    --success-bg:       #ecfdf5;
+    --warning-bg:       #fffbeb;
+    --danger-bg:        #fef2f2;
+    --info-bg:          #ecfeff;
+    --neutral-bg:       #f3f3f3;
+
+    /* Chart palette — used by BarChart series tones. Distinct, flat, no
+       neon. Order matches "auto-assigned" series in cursor/canvas. */
+    --chart-1: #2563eb;
+    --chart-2: #7c3aed;
+    --chart-3: #0891b2;
+    --chart-4: #db2777;
+    --chart-5: #d97706;
+    --chart-6: #16a34a;
+    --chart-7: #dc2626;
+    --chart-8: #6b7280;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:               #0e0e10;
+      --text-primary:     #f4f4f6;
+      --text-secondary:   #b4b4be;
+      --text-tertiary:    #80808c;
+      --text-quaternary:  #5a5a64;
+      --text-on-accent:   #ffffff;
+
+      --fill-primary:     #1c1c20;
+      --fill-secondary:   #232328;
+      --fill-tertiary:    #18181b;
+      --fill-quaternary:  #141417;
+
+      --stroke-primary:   #2f2f35;
+      --stroke-secondary: #28282d;
+      --stroke-tertiary:  #1f1f23;
+
+      --accent:           #6ea4ff;
+      --success:          #4ade80;
+      --warning:          #fbbf24;
+      --danger:           #f87171;
+      --info:             #38bdf8;
+
+      --success-bg:       #062618;
+      --warning-bg:       #2a1c08;
+      --danger-bg:        #2a1313;
+      --info-bg:          #082630;
+      --neutral-bg:       #1c1c20;
+
+      --chart-1: #6ea4ff;
+      --chart-2: #a78bfa;
+      --chart-3: #38bdf8;
+      --chart-4: #f472b6;
+      --chart-5: #fbbf24;
+      --chart-6: #4ade80;
+      --chart-7: #f87171;
+      --chart-8: #9ca3af;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+          "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+  }
+
+  /* ── Layout ──────────────────────────────────────────────────────── */
+  .stack { display: flex; flex-direction: column; gap: 16px; }
+  .row   { display: flex; flex-direction: row; gap: 12px;
+           align-items: center; flex-wrap: wrap; }
+  .row-top    { align-items: flex-start; }
+  .row-between { justify-content: space-between; }
+
+  .grid       { display: grid; gap: 16px; }
+  .grid-2     { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-3     { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid-4     { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .grid-5     { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .grid-6     { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+  @media (max-width: 900px) {
+    .grid-3, .grid-4, .grid-5, .grid-6 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 540px) {
+    .grid-2, .grid-3, .grid-4, .grid-5, .grid-6 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ── Typography ──────────────────────────────────────────────────── */
+  h1, .h1 { font-size: 24px; font-weight: 600; margin: 0;
+            letter-spacing: -0.01em; }
+  h2, .h2 { font-size: 18px; font-weight: 600; margin: 0; }
+  h3, .h3 { font-size: 14px; font-weight: 600; margin: 0;
+            color: var(--text-primary); }
+
+  p, .text          { margin: 0; color: var(--text-primary); }
+  .text-secondary   { color: var(--text-secondary); }
+  .text-tertiary    { color: var(--text-tertiary); }
+  .text-quaternary  { color: var(--text-quaternary); }
+  .text-small       { font-size: 12px; }
+  .text-mono        { font-family: ui-monospace, SFMono-Regular, Menlo,
+                                  "Cascadia Code", monospace; }
+  .text-semibold    { font-weight: 600; }
+  .text-italic      { font-style: italic; }
+  .text-num         { font-feature-settings: "tnum" 1; }
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.92em;
+    padding: 1px 5px;
+    background: var(--fill-secondary);
+    border-radius: 3px;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── Card ────────────────────────────────────────────────────────── */
+  .card {
+    border: 1px solid var(--stroke-secondary);
+    border-radius: 8px;
+    background: var(--fill-tertiary);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 8px 14px;
+    min-height: 28px;
+    border-bottom: 1px solid var(--stroke-tertiary);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .card-body { padding: 16px; }
+  .card-body-flush { padding: 0; }
+
+  /* ── Stat ────────────────────────────────────────────────────────── */
+  .stat {
+    border: 1px solid var(--stroke-secondary);
+    border-radius: 8px;
+    background: var(--fill-tertiary);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    font-feature-settings: "tnum" 1;
+    line-height: 1.15;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+  .stat-success .stat-value { color: var(--success); }
+  .stat-warning .stat-value { color: var(--warning); }
+  .stat-danger  .stat-value { color: var(--danger);  }
+  .stat-info    .stat-value { color: var(--info);    }
+
+  /* ── Pill ────────────────────────────────────────────────────────── */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--stroke-primary);
+    white-space: nowrap;
+  }
+  .pill-sm { height: 18px; padding: 0 6px; font-size: 10.5px;
+             border: 0; background: var(--fill-secondary); }
+  .pill-success { background: var(--success-bg); color: var(--success);
+                  border-color: transparent; }
+  .pill-warning { background: var(--warning-bg); color: var(--warning);
+                  border-color: transparent; }
+  .pill-danger  { background: var(--danger-bg);  color: var(--danger);
+                  border-color: transparent; }
+  .pill-info    { background: var(--info-bg);    color: var(--info);
+                  border-color: transparent; }
+  .pill-neutral { background: var(--neutral-bg); border-color: transparent;
+                  color: var(--text-secondary); }
+
+  /* ── Callout ─────────────────────────────────────────────────────── */
+  .callout {
+    border: 1px solid var(--stroke-secondary);
+    border-left-width: 3px;
+    background: var(--fill-tertiary);
+    padding: 12px 14px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .callout-title { font-weight: 600; font-size: 13px;
+                   color: var(--text-primary); }
+  .callout-success { border-left-color: var(--success);
+                     background: var(--success-bg); }
+  .callout-success .callout-title { color: var(--success); }
+  .callout-warning { border-left-color: var(--warning);
+                     background: var(--warning-bg); }
+  .callout-warning .callout-title { color: var(--warning); }
+  .callout-danger  { border-left-color: var(--danger);
+                     background: var(--danger-bg); }
+  .callout-danger  .callout-title { color: var(--danger); }
+  .callout-info    { border-left-color: var(--info);
+                     background: var(--info-bg); }
+  .callout-info    .callout-title { color: var(--info); }
+
+  /* ── Divider ─────────────────────────────────────────────────────── */
+  .divider {
+    border: 0;
+    border-top: 1px solid var(--stroke-secondary);
+    margin: 4px 0;
+  }
+
+  /* ── Table ───────────────────────────────────────────────────────── */
+  .table-shell {
+    border: 1px solid var(--stroke-secondary);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--fill-tertiary);
+  }
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    font-feature-settings: "tnum" 1;
+  }
+  .table th, .table td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--stroke-tertiary);
+    vertical-align: top;
+  }
+  .table tr:last-child td { border-bottom: 0; }
+  .table th {
+    font-weight: 600;
+    color: var(--text-tertiary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--fill-quaternary);
+    border-bottom: 1px solid var(--stroke-secondary);
+  }
+  .table td.num, .table th.num,
+  .table td.right, .table th.right { text-align: right; }
+  .table td.center, .table th.center { text-align: center; }
+  .table tr.row-success td { background:
+      color-mix(in srgb, var(--success) 7%, transparent); }
+  .table tr.row-warning td { background:
+      color-mix(in srgb, var(--warning) 9%, transparent); }
+  .table tr.row-danger  td { background:
+      color-mix(in srgb, var(--danger)  9%, transparent); }
+  .table tr.row-info    td { background:
+      color-mix(in srgb, var(--info)    7%, transparent); }
+  .table tr.row-neutral td { background: var(--fill-quaternary); }
+
+  /* ── SVG / charts ─────────────────────────────────────────────────── */
+  svg { display: block; max-width: 100%; height: auto; }
+  .chart-frame {
+    border: 1px solid var(--stroke-secondary);
+    border-radius: 6px;
+    background: var(--fill-tertiary);
+    padding: 12px;
+  }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px;
+            font-size: 12px; color: var(--text-secondary); }
+  .legend > span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch {
+    display: inline-block; width: 12px; height: 12px; border-radius: 2px;
+  }
+
+  /* ── Print: PDF export friendly ───────────────────────────────────── */
+  @media print {
+    body { max-width: none; padding: 16px; }
+    .card, .stat, .table-shell, .chart-frame, .callout {
+      break-inside: avoid;
+    }
+  }
+</style>
+</head>
+<body>
+  <main class="stack" style="gap:24px">
+
+    <!--
+      ╭─────────────────────────────────────────────────────────────────╮
+      │ DELETE everything inside <main> below this comment and replace  │
+      │ with the converted canvas body. The block here is a sample that │
+      │ exercises every component class so you can see how it looks.    │
+      ╰─────────────────────────────────────────────────────────────────╯
+    -->
+
+    <div class="stack" style="gap:6px">
+      <h1>{{TITLE}}</h1>
+      <div class="row">
+        <span class="pill pill-info">context</span>
+        <span class="pill pill-neutral">left config</span>
+        <span class="pill pill-neutral">right config</span>
+      </div>
+    </div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">Headline</div>
+      <p>One-sentence finding goes here.</p>
+    </div>
+
+    <div class="grid grid-4" style="gap:12px">
+      <div class="stat">
+        <div class="stat-value">123 ms</div>
+        <div class="stat-label">step time A</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">456 ms</div>
+        <div class="stat-label">step time B</div>
+      </div>
+      <div class="stat stat-success">
+        <div class="stat-value">3.7×</div>
+        <div class="stat-label">speed-up</div>
+      </div>
+      <div class="stat stat-warning">
+        <div class="stat-value">42%</div>
+        <div class="stat-label">utilization</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <h2>Section heading</h2>
+    <p class="text-secondary">
+      Supporting text in secondary tone. Replace this entire
+      <code>&lt;main&gt;</code> body with the converted canvas content.
+    </p>
+
+    <div class="table-shell">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th class="num">Left</th>
+            <th class="num">Right</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Row 1</td><td class="num">10.0</td><td class="num">20.0</td></tr>
+          <tr class="row-warning"><td>Row 2 (warning tone)</td><td class="num">5.5</td><td class="num">7.2</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</body>
+</html>
