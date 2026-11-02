@@ -20,7 +20,7 @@
 | [`megaattn/`](./megaattn/README.md) | DSA attention megakernel：indexer + top-k + sparse MLA 三段融合 (MI355X) | active — M0 完成：decode 有条件 GO（B ≤ 16 过 15% 门槛）；训练（CP）NO-GO（128K 时 ≤ 5%） |
 | [`hk-attn-bwd/`](./hk-attn-bwd/README.md) | kernel-substrate：自主可控 GEMM 底座（原 attention backward 专项，2026-08-13 重写） | active — M0=GEMM epilogue 融 quant；attention 入口已关闭，见代码核查 |
 | [`peer-tiles/`](./peer-tiles/README.md) | 自有 repo：AMD 上融合 MoE 训练 kernel 的 tile 原语库（HK 形状，加第四条原语「所有权与可见性」） | **M0 设计中** — 立项文档已成文，三个待决问题未定 |
-| [`MegaMoeFlydsl/`](./MegaMoeFlydsl/mxfp8_moe_bwd_perf_summary.md) | MXFP8 Mega MoE fwd+bwd (FlyDSL, 8× MI355X) | active — e2e fwd+bwd 14.117 ms / FP8 净 1.41×；靶点是量化↔GEMM 格式缝 |
+| [`MegaMoeFlydsl/`](./MegaMoeFlydsl/README.md) | Mega MoE 通信-计算融合算子 (FlyDSL, 8× MI355X) | ⚠️ blocked — MXFP8 e2e fwd+bwd 14.64 ms / bf16÷fp8 1.40×；但 **2026-09-07 在新栈（torch 2.12+ROCm7.15）上 dispatch 大幅回归**：grouped/dense 8.7%（基准 91.9–100%）、XGMI 50.8 GB/s（基准 368–381），回归点待二分 |
 | [`primus-turbo/`](./primus-turbo/README.md) | Primus-Turbo **作为交付物**的 owner 视角规划与审计(库边界 / CI / 六栈治理 / 差异化) | active — 2026-10-28 接任 owner 首版 roadmap 成文:**最严重的是契约不是 kernel**(≥3 个 Primus import 指向 Turbo 零分支存在的模块)、CI 不测 gfx1250、静默数值回归靠 vendoring |
 | [`mlperf-llama/`](./mlperf-llama/README.md) | Llama-2-70B LoRA SFT, NeMo vs Primus | active — DataLoader fix + `fp8_param` A/B 待跑 |
 | [`pilot/`](./pilot/README.md) | Primus Pilot v2: agentic training-tuning system | active — bootstrap 工具落地,BASELINE 入口待排查 |
