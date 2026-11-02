@@ -1,10 +1,10 @@
 # 训练/推理系统优化 arXiv 全景（2025–2026）
 
 > **定位：** 从 arXiv 近期工作中筛选**训练工程优化**相关论文，含可迁移到训练的推理系统工作。  
-> **更新时间：** 2026-07-31  
+> **更新时间：** 2026-10-12  
 > **筛选标准：** 大厂/顶尖名校优先；有量化数据；与 comm-compute overlap / MoE / 优化器 / kernel fusion 相关。  
 > **详细笔记：** 见 [`../../papers/README.md`](../../papers/README.md)；单篇深读用 `paper-deep-analysis` skill。
-> **最新增量：** 2026-05~08 的扫描结果单独成文，见 [`arxiv-digest-2026-08.md`](./arxiv-digest-2026-08.md)（27 篇新论文 + 5 篇精读）。
+> **最新增量：** [`arxiv-digest-2026-08.md`](./arxiv-digest-2026-08.md) → [`arxiv-digest-2026-09.md`](./arxiv-digest-2026-09.md) → [`arxiv-digest-2026-10.md`](./arxiv-digest-2026-10.md)（09-04~10-08 公告；最新主线 Expert Coupling / MegaFlux / FP4 fusion / HyDra / RelayMoE）。
 
 ---
 
@@ -13,11 +13,14 @@
 | 你的瓶颈 | 优先看 |
 |----------|--------|
 | MoE all-to-all 隐藏 | UniEP · Comet · DisagMoE · FlashOverlap · TileLink |
-| Muon/Shampoo 分布式 | [DMuon](../../papers/dmuon.md) · Canzona · MatrixFSDP |
-| 变长序列 + 万卡 | ByteScale · ByteRobust |
+| **NVL72 / Helios scale-up MoE** | **Mixture-of-Kittens** · **MegaFlux** · MegaMoE（自家）· Weave（推理对照） |
+| MoE EP 放置 / 负载均衡 | **Expert Coupling** · UltraEP · TopoEP · Cobalt · MoonEP（选型见 port note） |
+| Muon/Shampoo 分布式 | [DMuon](../../papers/dmuon.md) · Canzona · MatrixFSDP · **HyperParallel-FSDP** |
+| 变长序列 + 万卡 | ByteScale · ByteRobust · **HyDra** · NSP · Flatten Memory Peaks |
 | 推理思路回灌训练 | MegaScale-Infer→DisagMoE · Event Tensor · CODA |
 | NCCL 争用 / overlap 调参 | Lagom · Resource-aware Overlap |
 | FP8 MoE | DeepSeek-V3 报告 · FP8-Flow-MoE |
+| FP4 训练配方 / fusion | MXFP4 Pretraining 📒 · **Format-Aware Fusion** · UE5M3 |
 | Transformer 非 GEMM 融合 | CODA |
 
 **已有深读笔记（📒）** 链到 `papers/`；**待读（⭐）** 建议下一步细读。
@@ -38,6 +41,13 @@
 | **MoE-Hub** | [2605.05888](https://arxiv.org/abs/2605.05888) | **SJTU** (ISCA'26) | 硬件-软件协同：destination-agnostic GPU hub | 单层 **1.4–3.08×** | ⭐ 待读 |
 | FlowMoE | NeurIPS'25 | — | 统一流水线 + chunk 优先级 | **-57%** 训练时间 | 📒 [flowmoe.md](../../papers/flowmoe.md) |
 | Piper | arXiv'26 | — | AMD Frontier：PP×EP + 拓扑感知 A2A | **2–3.5×** MFU | 📒 [piper/](../../papers/piper/README.md) |
+| **Mixture-of-Kittens** | [2609.36070](https://arxiv.org/abs/2609.36070) | **Stanford + Cursor** | NVL72 **训练** megakernel：pull/push 分算子、可调 minibatch、ring buffer；开源 | 层最高 **2.37×**；512 GPU E2E **1.41×** | 📒 [`mixture-of-kittens.md`](../../papers/mixture-of-kittens.md) |
+| **TopoEP** | [2609.35481](https://arxiv.org/abs/2609.35481) | 中科大 | 拓扑感知 GPU-native EP 均衡（Megatron） | 32×H800 **+6.2–11.4%** | ⭐ |
+| **Cobalt** | [2609.36959](https://arxiv.org/abs/2609.36959) | 浙大/北大/上交 | 专家**共激活**共址 + 两阶段布局 | 平均 **1.28–1.89×**；跨节点 token −75–99% | ⭐ |
+| **Expert Coupling** | [2610.09372](https://arxiv.org/abs/2610.09372) | **Zyphra** | 共激活放置 + 按目标 GPU 去重 + attention RS 内 token shuffle | **MI300X**；A2A **1.16–2.63×**；E2E 最高 **1.41×** | ⭐⭐⭐ |
+| **MegaFlux** | [2610.00671](https://arxiv.org/abs/2610.00671) | **Princeton + NVIDIA** | 训练 megakernel 内动态复制热专家；流水化权重搬运与 replica Wgrad 归并 | 8×B200；F/B geomean **1.45×/1.28×**；⚠ 单域、无代码 | ⭐⭐ |
+| **RelayMoE** | [2610.07333](https://arxiv.org/abs/2610.07333) | — | ring expert/token routing；不物化完整 top-k-expanded dispatch buffer | 全模型同显存最高 **2.02×** throughput / **2.85×** max sequence | ⭐⭐ memory |
+| Weave (MoE SM sched) | [2609.21483](https://arxiv.org/abs/2609.21483) | SJTU + 阿里 | megakernel 内按层动态切通信/计算 SM | ⚠ 推理；层 **2.89×** | ⭐ 对照 |
 
 **技术演进：**
 
@@ -47,6 +57,9 @@ chunk 流水线 (Tutel/FasterMoE)
     → 单 kernel 融合 (Comet / UniEP / FlashMoE)
     → 解耦式 EP (MegaScale-Infer → DisagMoE)
     → 硬件加速控制面 (MoE-Hub)
+    → scale-up 专用 megakernel (Mixture-of-Kittens / MegaMoE)
+    → 拓扑分层 EP 均衡 (UltraEP → TopoEP) + 共激活布局 (Cobalt → Expert Coupling)
+    → megakernel 内动态专家复制与 Wgrad 归并 (MegaFlux)
 ```
 
 ---
@@ -72,6 +85,7 @@ chunk 流水线 (Tutel/FasterMoE)
 | **DMuon** | [2606.27153](https://arxiv.org/abs/2606.27153) | X Square Robot | FSDP2 **外挂 owner runtime** + Gram SYRK NS | E2E avg **+2%** vs AdamW | 📒 [dmuon.md](../../papers/dmuon.md) |
 | **Canzona** | [2602.06079](https://arxiv.org/abs/2602.06079) | **阿里 Qwen** | Megatron 栈；DP α-balanced + TP async micro-group | E2E **1.57×**, optim **5.8×** | ⭐⭐ 待读 |
 | **MatrixFSDP** | [2607.05895](https://arxiv.org/abs/2607.05895) | Pittsburgh/Google/清华 | **改 ZeRO-3 shard 布局**；optim step 无 matrix collective | optim **4.2×→54.6×**(1→8 节点) / E2E **1.37×→2.15×** | 📒 [matrixfsdp.md](../../papers/matrixfsdp.md) |
+| **HyperParallel-FSDP** | [2609.21594](https://arxiv.org/abs/2609.21594) | **华为 + 浙大** | 拓扑感知 FSDP + **layout-driven Muon**；dual-mode DTensor | 505B MoE @768 ranks；Muon vs 三基线 **−5.4~16%** 步时 | ⭐⭐ [digest-10](./arxiv-digest-2026-10.md) |
 
 **三条系统路线对比：**
 
@@ -93,6 +107,7 @@ chunk 流水线 (Tutel/FasterMoE)
 | **ByteRobust** | [2509.16293](https://arxiv.org/abs/2509.16293) | ByteDance | 万卡容错 / checkpoint / 故障定位 | 9600 GPU **97% ETTR** |
 | **Decoupled DiLoCo** | [2604.21428](https://arxiv.org/abs/2604.21428) | Google DeepMind | 异步 learner + quorum；超越 SPMD | 故障环境 zero downtime |
 | **DeepSeek-V3 硬件洞察** | [2505.09343](https://arxiv.org/abs/2505.09343) | DeepSeek | MLA + FP8 + DeepEP/DeepGEMM | 2048×H800 |
+| **HyDra** | [2609.34318](https://arxiv.org/abs/2609.34318) | — | Megatron-Core 动态 CP；按 compute load 而非 token 数分配 | >11K GPU 生产信号；2,048 GPU bubble **36%→14%**，吞吐平均 **1.25×** |
 
 **开源组件：** [DeepEP](https://github.com/deepseek-ai/DeepEP) · [DeepGEMM](https://github.com/deepseek-ai/DeepGEMM)
 
@@ -103,6 +118,8 @@ chunk 流水线 (Tutel/FasterMoE)
 | 论文 | arXiv | 机构 | 核心 | 训练适用性 |
 |------|-------|------|------|------------|
 | **CODA** | [2605.19269](https://arxiv.org/abs/2605.19269) | **MIT + Meta + Princeton** | Transformer block → **GEMM-epilogue 程序（含 backward）** | ⭐⭐⭐ 直接面向训练 |
+| **Format-Aware Fusion** | [2610.00053](https://arxiv.org/abs/2610.00053) | Robert Hu | FP4 scale domain × packing × consumer layout × autograd state 联合 fusion | ⭐⭐⭐ 160B tokens；代码/配方/数据 ledger 开放；GB200 |
+| **QEffect** | [2609.23536](https://arxiv.org/abs/2609.23536) | — | FP8 pipeline/CUDA Graph state contract；scale generation 与 backward lifetime 正确性 | ⭐⭐ 1F1B/zero-bubble correctness 对照，不是新调度 |
 | MoEBlaze | MLSys'26 | — | routed token 不物化 + SwiGLU 融合 | 📒 [moeblaze.md](../../papers/moeblaze.md) |
 | FP8-Flow-MoE | [2511.02302](https://arxiv.org/abs/2511.02302) | — | 无 cast 的 FP8 MoE 数据流 | 对标 DeepSeek-V3 |
 
@@ -165,13 +182,21 @@ chunk 流水线 (Tutel/FasterMoE)
 
 | 优先级 | 论文 | 理由 |
 |--------|------|------|
+| **P0** | [Expert Coupling](https://arxiv.org/abs/2610.09372) | MI300X + Megatron 直接证据；先做 trace-only 上限检查，再决定是否改 dispatcher |
+| **P0** | [MegaFlux](https://arxiv.org/abs/2610.00671) | 动态复制首次进入完整训练 backward megakernel；直接对照 MegaMoE/UltraEP 边界 |
+| **P0** | [Format-Aware Fusion](https://arxiv.org/abs/2610.00053) | 160B-token 可复现样本；用于拆解 AMD/NVIDIA FP4 随机性冲突 |
+| **P0** | [Mixture-of-Kittens](https://arxiv.org/abs/2609.36070) 📒 | **Helios/MegaMoE 设计必读**；已精读 → [`papers/mixture-of-kittens.md`](../../papers/mixture-of-kittens.md) |
+| **P0** | [HyperParallel-FSDP](https://arxiv.org/abs/2609.21594) | 超节点 Muon + 拓扑 FSDP；对照 Primus DistMuon |
 | P0 | [FlashOverlap](https://arxiv.org/abs/2504.19519) | 通用 tile overlap 方法论（EuroSys'26）；训练 TP/FSDP 直接受益 |
 | P0 | [Canzona](https://arxiv.org/abs/2602.06079) | 阿里 Megatron 栈 Muon；与 DMuon 对照 |
 | P0 | [MatrixFSDP](https://arxiv.org/abs/2607.05895) | ZeRO-3 + Muon 另一条系统路线 |
+| P1 | [TopoEP](https://arxiv.org/abs/2609.35481) / [Cobalt](https://arxiv.org/abs/2609.36959) | EP 均衡下一档；C0-4 后选型 |
+| P1 | [HyDra](https://arxiv.org/abs/2609.34318) / [RelayMoE](https://arxiv.org/abs/2610.07333) | 长上下文动态 CP / MoE activation-memory 两条新支线 |
+| P1 | [QEffect](https://arxiv.org/abs/2609.23536) | FP8 graph + pipeline schedule 的状态正确性合同 |
 | P1 | [CODA](https://arxiv.org/abs/2605.19269) | MIT/Meta 训练 epilogue fusion（含 backward） |
 | P1 | [MoE-Hub](https://arxiv.org/abs/2605.05888) | SJTU ISCA'26；EP 硬件/软件协同 |
+| P2 | [NSP](https://arxiv.org/abs/2609.22755) / [Flatten Memory Peaks](https://arxiv.org/abs/2609.14306) | 变长 / 长上下文 MoE |
 | P2 | [Event Tensor](https://arxiv.org/abs/2604.13327) | CMU 动态 megakernel；若做 super-kernel |
-| P2 | [ByteScale](https://arxiv.org/abs/2502.21231) | 变长序列 + 16384 GPU |
 | P2 | [Lagom](https://arxiv.org/abs/2602.20656) | 低成本 NCCL co-tune 叠加 |
 
 细读完成后用 `paper-deep-analysis` skill 写入 `papers/<slug>.md` 并回写 [`papers/README.md`](../../papers/README.md)。
@@ -183,17 +208,18 @@ chunk 流水线 (Tutel/FasterMoE)
 ```
 训练瓶颈                         优先看的 arXiv 线
 ──────────────────────────────────────────────────────────
-MoE A2A 隐藏                    UniEP / Comet / DisagMoE / FlashOverlap
-Muon 分布式                     DMuon 📒 / Canzona / MatrixFSDP
-变长序列 + 万卡                  ByteScale / ByteRobust
+MoE A2A 隐藏                    UniEP / Comet / DisagMoE / FlashOverlap / MoK
+Muon 分布式                     DMuon 📒 / Canzona / MatrixFSDP / HyperParallel-FSDP
+变长序列 + 万卡                  ByteScale / ByteRobust / NSP / Flatten Peaks
 推理思路回灌训练                 MegaScale-Infer→DisagMoE / Event Tensor / CODA
 NCCL 争用调优                   Lagom / Resource-aware Overlap
 FP8 MoE                         DeepSeek-V3 报告 / FP8-Flow-MoE
 非 GEMM 算子融合                 CODA
-MoE 内存                        MoEBlaze 📒 / MemFine 📒
-AMD 集群 MoE                    Piper 📒 / UltraEP 📒
+MoE 内存                        MoEBlaze 📒 / MemFine 📒 / Flatten Peaks
+AMD 集群 MoE                    Piper 📒 / UltraEP 📒 / MoK（点名 Helios）
 低精度梯度通信 / wgrad RS        AGoQ 📒 / DynamiQ 📒 / GIFT 📒（见 §11）
-Rack-scale 并行策略 / 72 卡域    UltraEP 📒 / Megatron-Core MoE 📒（见 MI455X 参考点）
+Rack-scale 并行策略 / 72 卡域    UltraEP 📒 / Megatron-Core MoE 📒 / MoK / TopoEP
+EP 负载均衡                     UltraEP 📒 / TopoEP / Cobalt / MoonEP
 ```
 
 ---
@@ -205,6 +231,7 @@ Rack-scale 并行策略 / 72 卡域    UltraEP 📒 / Megatron-Core MoE 📒（�
 - MoE 训练 arXiv 早期整理：[`../moe/recent-arxiv.md`](../moe/recent-arxiv.md)
 - TorchTitan 跨版本 diff：[`torchtitan-diff-2025-10-vs-2026-04.md`](./torchtitan-diff-2025-10-vs-2026-04.md)
 - **MI455X / Helios 并行策略参考点**：[`mi455x-parallelism-strategy-reference.md`](./mi455x-parallelism-strategy-reference.md)
+- **增量扫描**：[`arxiv-digest-2026-08.md`](./arxiv-digest-2026-08.md) → [`arxiv-digest-2026-09.md`](./arxiv-digest-2026-09.md) → [`arxiv-digest-2026-10.md`](./arxiv-digest-2026-10.md)（09-04 ~ 10-08 公告；category listing + 定向检索）。10-09~12 投稿尚未进入 mailing，下一轮仍从 10-01 起，用 [`scripts/arxiv-scan.py`](../../scripts/arxiv-scan.py)
 
 ---
 
@@ -232,6 +259,12 @@ Rack-scale 并行策略 / 72 卡域    UltraEP 📒 / Megatron-Core MoE 📒（�
 
 ⚠ **规模警告**：三篇的验证规模都不足以支撑前沿预训练结论——AGoQ ≤64 卡 / 8–32B，DynamiQ 是微调级负载（BERT-large、LLaMA-1B、Gemma-1B）且大规模靠模拟，GIFT 只到 Llama-600M。
 
+**2026-09-07 复查**：[`arxiv-digest-2026-09.md`](./arxiv-digest-2026-09.md) 对 08-07 ~ 09-03 投稿做了定向检索，本分类 **0 篇新增**（只捞回联邦学习与多智能体场景，与训练侧无关）。缺口是真实的而非检索遗漏，窗口仍然开着；上面那个「确定性 Hadamard + FP8 wgrad RS」对照组没有被抢跑的压力，但也没有再拖的理由。同期出现的 [UE5M3 `2609.02846`](https://arxiv.org/abs/2609.02846) 主张更宽的 block scale 可以让 Hadamard 变得冗余，**与该对照组共用同一批基础设施，应当合并成一次实验**。
+
+**2026-10-01 复查**：[`arxiv-digest-2026-10.md`](./arxiv-digest-2026-10.md) 对 09-04 ~ 09-30 再扫，本分类仍 **0 篇训练侧新增**（仅有 Ozaki 系 FP64 仿真 `2609.37693`，与 wgrad RS 无关）。窗口继续开着。
+
+**2026-10-12 复查**：10 月上旬出现的 Format-Aware Fusion 优化本地 Wgrad operand 与 layout，并未改变 collective 线格式；低精度 wgrad RS / AllReduce 仍 **0 篇新增**。这进一步说明当前缺口在通信协议与宽累加，而不是再做一个本地 FP4 GEMM recipe。
+
 **与 MI455X 的关系**：详见 [`mi455x-parallelism-strategy-reference.md`](./mi455x-parallelism-strategy-reference.md)。要点是 Helios 域内是**单跳非阻塞**，而 DynamiQ 的立论前提是 multi-hop——需要区分"域内单跳"与"跨机架 DP（multi-hop，且是 6:1 里窄的一侧）"分别适用哪条路线。
 
 ---
@@ -242,3 +275,6 @@ Rack-scale 并行策略 / 72 卡域    UltraEP 📒 / Megatron-Core MoE 📒（�
 |------|------|
 | 2026-07-31 | 初版：arXiv 2025–2026 训练/推理迁移全景，含机构索引与优先队列 |
 | 2026-09-03 | 新增 §11 低精度梯度通信分类（AGoQ / DynamiQ / GIFT），补 §9 速查条目与 §10 MI455X 参考点链接 |
+| 2026-09-07 | 接入 2026-09 增量扫描；§11 记录该分类在 08-07~09-03 窗口 0 新增，并与 UE5M3 的 FP4 scale 实验合并 |
+| 2026-10-01 | 接入 2026-10 增量扫描：§1 增 MoK/TopoEP/Cobalt/Weave；§3 增 HyperParallel-FSDP；优先队列与速查表重排；§11 仍 0 新增 |
+| 2026-10-12 | 增 Expert Coupling / MegaFlux / Format-Aware Fusion / HyDra / RelayMoE / QEffect；重排 P0/P1；§11 再确认无低精度梯度 collective 新作 |

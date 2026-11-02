@@ -152,6 +152,31 @@ https://www.asplos-conference.org/asplos2026/program/
 
 ---
 
+## 五、2026-10-01 补记（非本轮会议语料）
+
+本文件只覆盖到 2026-08 会议程序。09 月下旬 arXiv 上出现的 **Mixture-of-Kittens / TopoEP / Cobalt / HyperParallel-FSDP** 等**不在本扫描语料内**，已写入 [`arxiv-digest-2026-10.md`](./arxiv-digest-2026-10.md) 与 industry §8。
+
+下轮会议补扫优先级不变：SIGCOMM '26（UBEP 已精读）、SOSP/SC/MICRO '26。另：MoK 作者含 Cursor Research，若后续进 MLSys/OSDI 程序，应用「定向 grep AMD / megakernel / NVL」双轨捞回，避免再被短标题漏掉。
+
+---
+
+## 六、2026-10-12 会议增量：SOSP 已扫，MICRO 先记待读
+
+SOSP '26（2026-09-29 ~ 10-02）程序已公开。与训练系统直接相关的优先级如下：
+
+| 优先级 | 论文 | 可验证结论 | 与我们的关系 |
+|---|---|---|---|
+| **P0** | [CrystalLLM](https://doi.org/10.1145/3830418.3843852)（阿里 + Harvard + SJTU + 浙大） | 用真实 rank + virtual-rank replay 在少量 GPU 上模拟大规模训练；至 8,192 GPU、物理 GPU <1%；迭代时间平均误差 **0.58%**、峰值显存误差 **<0.01%**；[代码开放](https://github.com/AlibabaResearch/CrystalLLM) | 对照 Primus Projection：解析 projection 负责设计空间，CrystalLLM 式 replay 负责接近真实 runtime 的回归验证 |
+| **P0（RL）** | [TensorHub](https://doi.org/10.1145/3830418.3843859)（ByteDance Seed + UW-Madison） | 把 rollout GPU 上已有权重副本抽象为 reference-oriented storage；1024 GPU 相比 NCCL stall 最多 **6.7×** 更低，弹性更新 **4.8×**，跨数据中心 stall **19×** 更低；已生产部署 | Primus/Miles 若走 trainer-rollout 分池，这是权重广播/存储层的强对标；普通预训练不适用 |
+| **P1** | [Taming Dynamism / MeldKernel](https://doi.org/10.1145/3830418.3843857)（SJTU IPADS） | 跨 SM cooperation + just-in-time reduction 消 kernel boundary；动态 workload 平均 **1.3×**，MoE forward **1.06–2.92×** | 与 Event Tensor / MPK / MegaMoE 的运行时抽象同线；偏推理，先精读机制，不直接排移植 |
+| P2 | [StreamEP](https://doi.org/10.1145/3830418.3843869) | 消除 decoding EP collective barrier；16×L40S/A100 最高 **1.7×** | 推理侧、commodity network；只借鉴异步 token queue，不进入训练主线 |
+
+MICRO '26 议程还出现 **“Architecting for Hardware Diversity: Meta's End-to-End Co-Design for High-Performance AI Training on AMD GPUs”**（Meta + AMD）和 **AIPerf**。前者题目与当前工作高度重合，但截至本次扫描只拿到议程与作者表，没有正文、摘要和数字；因此标为 **P0-watch（全文公开即精读）**，不把标题当技术结论。
+
+SC '26 / MICRO '26 尚未完成逐篇扫描；本节不能替代完整 10–11 月 venue scan。
+
+---
+
 ## 附录：1,249 篇是怎么筛到 46 条的
 
 ### A.1 漏斗每一层在做什么

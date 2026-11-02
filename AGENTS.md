@@ -97,6 +97,7 @@ slab/
 | Comparing backends (TorchTitan / Megatron / Primus) | `.cursor/skills/backend-gap-report`, `slab/knowledge/systems/` |
 | Touching Primus pipeline scheduling / adding a schedule algorithm / wiring a backend into the Primus runtime | `slab/knowledge/systems/primus-pipeline-runtime-megatron-integration.md` (plan→adapter→executor→handler chain, IR pitfalls) |
 | Picking / wrapping a 3rd-party kernel library (CK, AITER, hipBLASLt, primus-turbo, …) | `slab/knowledge/libraries/README.md` first, then `slab/knowledge/libraries/<lib>.md`; `_patterns.md` for cross-library trade-offs |
+| Deciding which industry training opts to port into Primus / ROCm | `slab/knowledge/systems/industry-training-optimization-2026.md` §7 (four port modes), then `slab/notes/primus-moe/2026-09-11_1541_industry_opt_port_to_rocm_primus.md` |
 | Distilling a new external library into knowledge | `.cursor/skills/distill-operator-repo/SKILL.md` → outputs `slab/knowledge/libraries/<slug>.md` |
 | Wiring a brand-new knowledge doc into discovery paths | `.cursor/skills/wire-knowledge-into-system/SKILL.md` |
 

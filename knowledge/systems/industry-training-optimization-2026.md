@@ -1,9 +1,10 @@
-# 大厂训练侧优化动向（2026-03 ~ 2026-08）
+# 大厂训练侧优化动向（2026-03 ~ 2026-10）
 
 > **定位：** 不看学术热点，只看**大厂在训练工程上实际投了人力的方向**。按机构组织，每条都核实过论文的**作者单位归属**（拉 arXiv HTML 的作者块 + 邮箱域名，不靠摘要里出现公司名）。
 > **口径：** 只收训练相关（含明确回灌训练的推理工作）；纯推理/serving 工作除非有训练含义否则不收。
-> **配套：** 主题维度的全景见 [`training-optimization-landscape-2026.md`](./training-optimization-landscape-2026.md)；最近一轮 arXiv 增量扫描见 [`arxiv-digest-2026-08.md`](./arxiv-digest-2026-08.md)。
+> **配套：** 主题维度的全景见 [`training-optimization-landscape-2026.md`](./training-optimization-landscape-2026.md)；arXiv 增量见 [`arxiv-digest-2026-08.md`](./arxiv-digest-2026-08.md) → [`09`](./arxiv-digest-2026-09.md) → [`10`](./arxiv-digest-2026-10.md)。接到 Primus / ROCm 的切法见 **§7–§8** 与 [`notes/primus-moe/2026-09-11_1541_industry_opt_port_to_rocm_primus.md`](../../notes/primus-moe/2026-09-11_1541_industry_opt_port_to_rocm_primus.md)。
 > **检索方法与可复现命令：** 见文末 §5。
+> **覆盖：** §1–§6 主体仍为 2026-03~08；§8 补 09 月下旬，**§9（2026-10-12）** 补 Primus 26.8、10 月上旬论文与 SOSP/MICRO 会议信号。
 
 ---
 
@@ -295,6 +296,7 @@ python3 /tmp/org_resolve.py
 | | [FlyDSL](https://github.com/ROCm/FlyDSL) | 2026-02/03 | `fly` MLIR dialect + CuTe 风格 layout algebra；已在 Primus-Turbo 承担 FP8 grouped GEMM（[PR #384](https://github.com/AMD-AGI/Primus-Turbo/pull/384)）与 MXFP8 dense GEMM（[PR #390](https://github.com/AMD-AGI/Primus-Turbo/pull/390)）主力后端 |
 | | [1K GPU MoE 预训练](https://pytorch.org/blog/efficient-moe-pre-training-at-scale-with-torchtitan/) | 2025-12 | 与 Meta PyTorch 合作。分项收益：AITER attention +15% → tensorwise FP8 GEMM +102% → FP8 grouped GEMM +60%，累计 **2.77×**；1024 卡 96% scaling。**DeepEP 的量化价值**：EP 8→32 时朴素 A2A 吞吐 2000→750 TPS、通信占比 10%→50%，换 DeepEP 后稳在 2000–2100 TPS、通信封顶 18% |
 | | [Primus v26.5.0](https://github.com/AMD-AGI/Primus/releases) | 2026-07 | **DeepSeek-V4 训练支持**（含 Muon 优化器、FP8/FP4）；Flux 训练后端的 **FSDP2 fp8 all-gather**；移除 grouped MLP 的 D2H 同步 |
+| | [Primus 26.8 release notes](https://rocm.docs.amd.com/projects/primus/en/latest/01-getting-started/release-notes.html) | 2026-10-08 | **当前最该先验证的工程增量。** `rocm/primus:v26.8` = ROCm 10.1 / PyTorch 2.14 / RCCL 2.30.7 / Turbo 0.5.1.dev7；新增 fused FP8/FP4 grouped MLP（含 Wgrad）、非 preshuffled MXFP4 fused Wgrad accumulation、SDMA param gather、dedicated RCCL group 做 gradient RS。并修复 Triton buffer-store 静默梯度损坏、MegaMoE `mxfp8` 实际跑成 BF16、DeepSeek-V4 TFLOPs 高报 3.63× 等问题 |
 | **NVIDIA** | [GTP / `--fp4-param-gather`](https://docs.nvidia.com/megatron-core/developer-guide/nightly/api-guide/core/generalized_tensor_parallel.html) | 2026 | ⭐⭐ 分片保持为 native `NVFP4Tensor`，以 **packed 4-bit 直接 all-gather**，distributed optimizer 每 step 只写一次分片，**前向零 per-microbatch 量化** |
 | | [CuTe DSL MoE 融合内核](https://developer.nvidia.com/blog/boosting-moe-training-throughput-with-advanced-fusion-kernels/) | 2026-06 | kernel 级 1.3–2×，但真正的收益来自**消除同步后整个迭代可被 CUDA Graph 捕获**：DeepSeek-V3 预训练 **+8%**、GPT-OSS **+93%** |
 | | [NCCL 2.28](https://developer.nvidia.com/blog/fusing-communication-and-compute-with-new-device-api-and-copy-engine-collectives-in-nvidia-nccl-2-28/) | — | **Device API**（kernel 内发起通信，LSA / Multimem / **GIN** 三后端）+ **Copy Engine collectives**（用 copy engine 驱动传输，把 SM 从 alltoall/allgather 里释放出来） |
@@ -336,3 +338,99 @@ python3 /tmp/org_resolve.py
 ### 6.5 两侧共同的新主线：Muon 成为跨栈共识
 
 这是只看 arXiv 看不出来的一条。Muon 已经同时落进：字节 veScale-FSDP（`RaggedShard` 专为非逐元素优化器设计）、DeepSeek-V4（hybrid ZeRO + 背包算法均衡矩阵分配 + BF16 梯度量化通信减半）、Kimi K3（Per-Head Muon）、微软 DeepSpeed（ZeRO 2/3 已合并）、NVIDIA NeMo-RL v0.6、AMD Primus v26.5。**优化器从算法选择变成了系统约束**——它要求分布式框架能保住参数的 2D 结构，这与现有把梯度当扁平 buffer 的设计直接冲突。
+
+---
+
+## 7. 2026-09-11 回写：接到 Primus / ROCm 时怎么切
+
+> 详细论证与仓库活性表见 [`notes/primus-moe/2026-09-11_1541_industry_opt_port_to_rocm_primus.md`](../../notes/primus-moe/2026-09-11_1541_industry_opt_port_to_rocm_primus.md)。这里只留决策口径，避免把 §4 的「该读哪篇」误当成「下周 HIP-ify 哪个库」。
+
+上一轮（§4 + 9-07 EP 选型）排的是仓库。深挖之后改成四种模式，**先选模式再选仓库**：
+
+| 模式 | 本轮结论 |
+|---|---|
+| **偷思路**（调度 / 配置 / 同步原语） | **本季度最高 ROI。** MXFP8 在 EP dispatch 之前量化（Motif 3）、DPO 关负载均衡（Instella，已在 Primus 上训过）、逐层选 CP、linghe routing-map padding、UBEP Sentinel Polling、FarSkip 做成带关闭条件的开关 |
+| **搬代码** | 只留三条，且都在 C0-4 之后：MORI-EP 替换 turbo `deep_ep`（MI355X 同机已测 dispatch 1.21× / combine 1.58×）、RCCLX LP collectives 评估、UltraEP HIP-ify（叠加式、点名 Helios、仓库 2026-07-17 后冻结） |
+| **不要搬** | Tessera（闭源）、DeepGEMM MegaMoE（与自家撞车）、Comet 当生产默认（Tessera 在 10k GPU 上否掉）、MoonEP 本季度（README 设备列表 = NVIDIA + 真武 PPU；`[E+B,H,H']` 布局穿透 optimizer）、FlashOverlap 代码（2026-01 后休眠） |
+| **vendor gap** | DeepEP V2 已切 NCCL Gin + `ElasticBuffer`（训练 24 SM → 4–6），Primus 现有路径是 V1 语义，不能靠 hipify 跟上。AMD 对等物是 MORI device primitive，不是再 fork DeepEP。另：Copy Engine collectives、packed FP4 param all-gather（追平）、块缩放 wgrad RS（真缺口，09-04~09-11 仍 0 篇新论文） |
+
+硬前置没变，还多了一条：**当前容器栈上 MegaMoE XGMI dispatch 从 368–381 GB/s 塌到 50.8 GB/s**，三方对比在修好之前做不了。
+
+UltraEP 与 MoonEP 仍然互斥。MoonEP 的 symmetric-memory gate 已被 mori #544 削掉，成败压在权重布局；再加上官方不声明 AMD 支持，本季度不排期。
+
+---
+
+## 8. 2026-10-01 回写：09 月下旬增量 → Primus 该引入什么
+
+> 详细论文表见 [`arxiv-digest-2026-10.md`](./arxiv-digest-2026-10.md)。这里只留 **Owner 决策口径** 与 §7 四种移植模式的增量。
+
+### 8.1 本窗口改变判断的三件事
+
+1. **Scale-up MoE 有了公开的「正解参考实现」。** [Mixture-of-Kittens](https://arxiv.org/abs/2609.36070)（Stanford + Cursor，开源 [`cursor/mixture-of-kittens`](https://github.com/cursor/mixture-of-kittens)）明确写：**为 NVL72 设计；正文点名 AMD Helios**。实证上 DeepEP/Comet 系在近一半 NVL72 配置上**慢于朴素 PyTorch+NCCL**；生产 512×GB300 相对 DeepEP 栈 **1.41×**。这把我们之前「455/Helios 不要照抄 EP64 overlap」从策略推断升成**有公开对照的工程事实**。
+2. **EP 均衡候选从二选一变成三轨。** UltraEP（单域 exact-load）之外出现 [TopoEP](https://arxiv.org/abs/2609.35481)（跨域拓扑代价 + Megatron 集成）与 [Cobalt](https://arxiv.org/abs/2609.36959)（专家共激活共址）。机架内仍偏 UltraEP；跨 tray / 跨机架看 TopoEP；共址启发式可先偷 Cobalt。
+3. **Muon×超节点有了 Ascend 生产级对照。** [HyperParallel-FSDP](https://arxiv.org/abs/2609.21594)（华为）在 Atlas A3 上把 layout-driven Muon 做到 505B MoE @768 ranks，FSDP 通信仅占步时 2.9%。Primus 的 DistMuon / Megatron Muon 应对齐「通信域从 sharding 语义推导、慢链路零重复正交化」。
+
+### 8.2 Primus / Primus-Turbo 引入清单（按模式）
+
+| 优先级 | 项 | 模式 | 接到哪 | 预期 / 备注 |
+|---|---|---|---|---|
+| **P0** | MoK 三洞察：pull dispatch + push combine；minibatch 粒度一等公民；ring buffer 消 D2H | **偷思路** | MegaMoE / Turbo dispatcher + sync-free | Helios 默认设计约束。用朴素 RCCL A2A 作大域基线。**不要**本季度 HIP-ify MoK CUDA |
+| **P0** | 修 MegaMoE XGMI 回归 + C0-4 多机 golden | 硬前置（§7 G0/G1） | Turbo / Primus CI | 没修好，横向对比无意义 |
+| **P0** | MORI-EP 替换 turbo `deep_ep` | **搬代码**（§7 已列） | `PRIMUS_TURBO_MOE_DISPATCH_COMBINE_BACKEND` | DeepEP V2 = NCCL Gin；AMD 对等仍是 MORI |
+| **P1** | FarSkip / DPO 关 LB / EP 前 MXFP8（§7 偷思路表） | 偷思路 | 配置 + dispatcher | Instella 已在 Primus 上验证过 FarSkip |
+| **P1** | HyperParallel 的 Muon 通信域推导 | 偷思路 | Megatron/TorchTitan Muon 路径 | 对照 DMuon/MatrixFSDP/TorchTitan FlexShard |
+| **P1** | Cobalt 共激活启发式（托盘内共址） | 偷思路 | Projection / expert placement | 周期统计 Ochiai；不搬框架 |
+| **P2** | TopoEP（跨域）或 UltraEP（机架内） | **搬代码**，C0-4 后 | dispatcher 之上 | 互不替代；选型加「是否跨域」一列 |
+| **P2** | NSP / Flatten Memory Peaks | 偷思路 | Projection + 长上下文 recipe | 不抢 MoE 主线 |
+| **P3** | Weave 动态 SM 调度 | 对照 / 研究 | MegaMoE 消融 | ⚠ 推理论文；本季度不移植 |
+| **不要** | 照搬 MoK 整库、MoonEP、Comet 作生产默认、DeepEP V1 hipify 追 V2 | — | — | 见 §7 |
+
+### 8.3 对 Helios / EP8 vs EP64 讨论的直接含义
+
+MoK 的评测形状含 **EP64（4 local experts）** 与可调粒度；但它同时证明：**scale-up 上通信方向与粒度选错会比「朴素 collective」更慢**。因此：
+
+- Primus 在 Helios 上的主轨仍应是 **EP≤8 + MegaMoE 融合（吸收 MoK 三洞察）+ 浅 PP**（432 GB）；
+- EP64 副轨若做，基线必须含 **朴素 RCCL A2A**，且 overlap 粒度要可扫，不能默认 DeepEP/MegaMoE 旧参数；
+- 「比不过 NV72」更可能输在 **是否按 scale-up 成本结构重写 MoE 执行**，而不是 EP 数字是否等于 64。
+
+---
+
+## 9. 2026-10-12 回写：先锁 correctness pin，再做两条 MoE 实验
+
+### 9.1 本周改变工程优先级的五件事
+
+| 优先级 | 新信息 | 为什么现在值得跟进 | 立即动作 |
+|---|---|---|---|
+| **P0** | [Primus 26.8](https://rocm.docs.amd.com/projects/primus/en/latest/01-getting-started/release-notes.html)，镜像构建于 10-08 | 不只是版本升级：fused grouped MLP 已拥有 Wgrad，gradient RS 隔离到专用 RCCL group；同时修了多项精度与统计问题 | **不能只看 `26.8` 标签。** 先确认 Turbo 含 [cheap-fence #539](https://github.com/AMD-AGI/Primus-Turbo/commit/53099da3a1501a02b1b03e6985bd272c72813fed) 且 Primus 含 [pin/env 修复 #1236](https://github.com/AMD-AGI/Primus/commit/9b0ce906466cdf4d795597317a79cb368725ff1c) 或等价 backport，再跑 correctness + E2E golden |
+| **P0** | [Expert Coupling](https://arxiv.org/abs/2610.09372) | 8×MI300X/node、Megatron-LM、EP8–64 的直接 AMD 证据；端到端最高 1.41×，比 Cobalt 更贴当前栈 | 先离线统计 top-k trace 的 pair coupling、dedup row reduction 与跨节点字节；信号足够再改 dispatcher |
+| **P1** | [MegaFlux](https://arxiv.org/abs/2610.00671) | 动态专家复制第一次与训练 backward megakernel、replica Wgrad 归并一起评测 | 只移植 cost model / gate / tile-ready 顺序；不要搬 CuTeDSL。重点防论文已观察到的小 backward 0.91× 回退 |
+| **P1** | [Format-Aware Fusion](https://arxiv.org/abs/2610.00053) | 160B-token、代码与 recipe ledger 开放；把 FP4 随机性争论拆成 operand-specific 问题 | 在 MI355X 做 `Dgrad SR × Wgrad fixed H16/H32 × scale direction` 小矩阵，更新当前“随机性整体有害”的过宽表述 |
+| **P1** | [Primus hybrid-LLM smoke recipe](https://rocm.blogs.amd.com/artificial-intelligence/primus-hybrid-llm/README.html) | 官方给出 8×MI355X、BF16、pure-DP 的 300M/1B 完整训练稳定性样本；mixer 选择可改变吞吐最高 1.75× | 把 300M/50-step 配置收进升级 smoke test；它验证 hybrid mixer 与数值稳定性，**不验证 MoE/EP** |
+
+### 9.2 仓库级核查：四个 silent-wrong-result 门禁
+
+| 风险 | 一手证据 | 判断 / 门禁 |
+|---|---|---|
+| **Primus-Turbo DeepEP cheap fence** | Turbo [#539](https://github.com/AMD-AGI/Primus-Turbo/commit/53099da3a1501a02b1b03e6985bd272c72813fed) 修复发送 wave 未 drain 与 payload load scope；Primus [#1236](https://github.com/AMD-AGI/Primus/commit/9b0ce906466cdf4d795597317a79cb368725ff1c) 记录旧 pin 在 3/15 次 DSv3 dispatch-backward 中损坏 row，最大超 cross-rank bound **34,900×** | MI355X 基线必须同时记录 Primus 与 Turbo commit；Turbo v0.5.0，或 pre-#539 pin 配合 `PRIMUS_TURBO_DEEPEP_DISABLE_CHEAP_FENCE=0`，不可作为 correctness 基线 |
+| **activation checkpoint 重放非确定 dispatch** | TorchTitan [#5115](https://github.com/pytorch/torchtitan/commit/70ad4c997248aba994d4089d9fb19cdd36ea749d) 指出 `ElasticBuffer(deterministic=False)` 重算 row 顺序变化，forward loss 正常但全部 MoE 梯度错误 | 所有 dispatcher + FullAC 组合必须二选一：保存 dispatch/combine，或强制 deterministic replay；把 loss-only smoke test 升级为梯度对照 |
+| **gfx1250 MORI combine backward** | MORI [#675](https://github.com/ROCm/mori/commit/28d4973f05f70289bc8bdf2a271ce72856082ca3) 恢复 bring-up 时被删掉的 replay payload；旧路径留下 stale `grad_x` 并导致 grad norm 爆炸 | MI455X 训练 build 未含 #675 时禁止使用 MORI combine；EP4 FP4 push 数据只能当 microbench，不能外推 Helios step time |
+| **Megatron HybridEP custom AG** | Megatron [#7771](https://github.com/NVIDIA/Megatron-LM/commit/8a9923b694c5c72cbdb5bd9c67e6f94c2f117092) 因静默 routing corruption 禁用 custom all-gather | 所有“更快的自定义 collective”都必须做 routing map + gradient 双重等价检查，不能只看 loss 与吞吐 |
+
+另一个架构变化是 [DeepEP V2.5](https://github.com/deepseek-ai/DeepEP/commit/def865146e95aa9ea223e277c0a8a4c6b81e5ac7) 已删除 V1 API/NVSHMEM，并拆出 `EPBuffer` / `EngramBuffer` / `PPBuffer` / `BucketBuffer`；Megatron 10-09 主线已接 `deepepv2`。这进一步确认：**AMD 当前路线应留在修复后的 Primus-Turbo/MORI device primitive，不要再 hipify DeepEP V1。**
+
+性能侧只登记、不直接开启：10-11 的 MXFP4 permute→quant fusion（Primus [#1241](https://github.com/AMD-AGI/Primus/commit/7f28481cc2138a567bd05c8554bcc07f391e4cf9) / Turbo [#546](https://github.com/AMD-AGI/Primus-Turbo/commit/795d26d944a6cc0bac8e7eaaf15ab215e49783b5)）作者明确撤回旧的 11 ms 收益口径，且 revised heads 未做 GPU correctness；三个 flag 保持 default-off，待重新 A/B。
+
+### 9.3 会议侧新增信号
+
+- **SOSP '26 / CrystalLLM**：阿里开源大规模训练仿真器；用不足目标集群 1% 的 GPU 模拟至 8,192 GPU，迭代时间平均误差 0.58%、峰值显存误差 <0.01%。对 Primus Projection 的价值是引入“真实 rank + virtual rank replay”校验层，而不是替换现有解析模型。
+- **SOSP '26 / TensorHub**：字节 RL 权重传输把 rollout GPU 上已有副本当作 reference-oriented storage；1024 GPU 相比 NCCL GPU stall 最多降 6.7×。只在 Primus/Miles 做分离式 RL 时升 P0，普通预训练不抢主线。
+- **SOSP '26 / MeldKernel**：跨 SM cooperation + just-in-time reduction，动态 workload 平均 1.3×、MoE forward 1.06–2.92×；方法论与 persistent super-kernel 同线，但当前主评测偏推理，列作编译器对照。
+- **MICRO '26 / Meta+AMD hardware diversity co-design**：议程已公开，正文与数字尚未拿到。因题目直接覆盖 AMD GPU 高性能 AI training，设为“论文公开即精读”，现阶段不要从标题推断结论。
+
+### 9.4 更新后的次序
+
+1. **先锁定含 #539/#1236（或等价 backport）的 Primus/Turbo pin，并补 dispatcher gradient replay 检查**；
+2. **MI455X 确认 MORI #675 后才做训练；MXFP4 gather fusion 保持关闭直到重测**；
+3. **再做 Expert Coupling trace-only 上限检查**；
+4. **MegaFlux 与 FP4 各做一个最小对照组**；
+5. Helios / MI455X 仍只做 bring-up 跟踪：26.8 官方只有四个单 GPU LoRA-SFT proxy，尚无多卡或 rack-scale 训练 recipe，不能把推理发布数字当训练 ready。官方 10-08 博客确认 Helios scale-up 域是 **72-GPU rack**；`27×` 是 switched topology 的 single-pair 数，A2A 建模应使用约 `3.8×` aggregate，而不是把 single-pair 峰值外推到训练。

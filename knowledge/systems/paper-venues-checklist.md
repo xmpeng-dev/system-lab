@@ -95,7 +95,7 @@ https://www.usenix.org/system/files/osdi26-hu-weifang.pdf        # 论文 PDF
 | 8 月 | SIGCOMM、ICPP |
 | 10–11 月 | **SOSP**、MICRO、SC |
 
-> 当前是 2026-08。**OSDI '26、EuroSys '26、ASPLOS '26、NSDI '26、MLSys '26、FAST '26、PPoPP '26、CGO '26、HPCA '26 均已发布并已完成一轮扫描** → [`venue-scan-2026-08.md`](./venue-scan-2026-08.md)。SOSP '26 / SC '26 / MICRO '26 / ISCA '26 要等到 10–11 月（ISCA '26 6 月已开但 DBLP 尚未索引）。
+> 当前是 2026-10。**OSDI '26、EuroSys '26、ASPLOS '26、NSDI '26、MLSys '26、FAST '26、PPoPP '26、CGO '26、HPCA '26 已完成首轮扫描；SOSP '26 已在 10-12 补扫** → [`venue-scan-2026-08.md`](./venue-scan-2026-08.md) §六。MICRO '26 已登记 Meta+AMD training co-design 为 P0-watch，但尚未完成逐篇扫描；SC '26 仍待程序稳定后扫描。
 
 ## 与现有文档的关系
 
