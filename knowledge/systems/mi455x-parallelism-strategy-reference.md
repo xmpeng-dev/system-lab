@@ -4,6 +4,7 @@
 > **主要信源**：NVIDIA 官方 Megatron-Core MoE 论文 [2603.07685](https://arxiv.org/abs/2603.07685)（已有深读笔记 [`papers/megatron-core-moe.md`](../../papers/megatron-core-moe.md)，本文按 GB200/GB300 NVL72 相关内容重新提取）、Megatron-LM 主线 GTP 设计文档、AMD Helios 发布规格、[`papers/ultraep/`](../../papers/ultraep/README.md)。
 > **建立日期**：2026-09-03
 > **状态**：MI455X 侧全部为**推断**，未经实测。所有"Helios 列"的数字都要标记为待验证。
+> **执行层设计：** [`mi455x-megamoe-ep64-architecture.md`](./mi455x-megamoe-ep64-architecture.md) 将本文的并行策略落成 EP8/16/32/64 共用的 MegaMoE forward/backward、ring、同步与验证方案。
 
 ---
 
@@ -26,11 +27,11 @@
 | 架构 | Blackwell | Blackwell Ultra | **CDNA5 / TSMC 2nm** |
 | scale-up 域 | 72 GPU | 72 GPU | **72 GPU** |
 | 每卡 HBM | 192 GB | 288 GB (HBM3E) | **432 GB HBM4** |
-| 每卡显存带宽 | ~8 TB/s | — | **19.6 或 23.3 TB/s**（AMD 两处口径不一致，待澄清） |
+| 每卡显存带宽 | ~8 TB/s | — | **≈23.3 TB/s**（AMD CDNA 5 博客：2.91× MI355X；早先另一处写 19.6） |
 | 每卡 scale-up 带宽 | 1.8 TB/s 双向（NVLink5） | 1.8 TB/s | **3.6 TB/s 双向**（36×400 GbE UALoE） |
 | 机架 scale-up 聚合 | 130 TB/s（单向）/ 260 TB/s（双向） | — | **260 TB/s** |
 | 机架 scale-out | 800 Gb/s per GPU（CX-8） | — | **43 TB/s / 72 ≈ 597 GB/s per GPU** |
-| 域内拓扑 | 单跳全互联 | 单跳全互联 | **单跳全互联（UALoE，12 交换机 × 21.6 TB/s ≈ 259 TB/s）** |
+| 域内拓扑 | 单跳全互联 | 单跳全互联 | **单跳、多平面交换（AMD 官方：12 台 UALoE 交换机 / 6 个交换机 tray；12 × 21.6 TB/s ≈ 259 TB/s）** |
 | 每卡 FP8 稠密 | — | — | **1.4 EF / 72 ≈ 19.4 PFLOPS** |
 | 每卡 FP4 稠密 | — | — | **40 PFLOPS** |
 | 互连标准 | 私有 NVLink | 私有 | **UALink over Ethernet + Ultra Ethernet（开放）** |
@@ -166,7 +167,7 @@ MI455X 上 FP4 是 40 PFLOPS/卡，这个效应只会更强。对应动作：
 
 1. **全迭代 HIP graph 捕获**——这是 roadmap 里的 C3-7，**应从"路线图后段"提前到前段**。NVIDIA 的做法是**部分捕获**：把 attention / router / MoE 预处理捕成静态图，动态的专家计算留在图外。这个"部分捕获"的划分方式可以直接照搬，比追求全迭代捕获更现实。
 2. **kernel 融合**：router fusion、permute fusion、MLA RoPE fusion。
-3. **CPU/NUMA 绑定**：按 local rank 检测 GPU/NUMA 拓扑并用 `numactl` 绑定。Helios 每托盘 4 卡 + 1 颗 96 核 EPYC Venice + 1 TB DDR，NUMA 拓扑和 8 卡 OAM 节点完全不同，**这块需要重做**。
+3. **CPU/NUMA 绑定**：按 local rank 检测 GPU/NUMA 拓扑并用 `numactl` 绑定。Helios 每托盘 4 卡 + 1 颗 EPYC Venice（此前记录 96 核 + 1 TB DDR；AMD 08-04 博客写每颗最多 256 核、整机架最多 36 TB DDR5，以交付配置为准），NUMA 拓扑和 8 卡 OAM 节点完全不同，**这块需要重做**。
 4. **sync-free 执行**：device-initiated Grouped GEMM + 估上界预分配的 sync-free dispatch，消除 dropless MoE 里的 host-device 同步（代价是额外显存）。Primus 已有 Sync-Free MoE stage 0–3，需要按 CDNA5 重标定。
 
 ### 5.3 显存换性能的两条具体路径
@@ -308,7 +309,7 @@ W=72、N = 4096×14336 = 58.72M、单向 1.8 TB/s 的估算：BF16 ring RS 115.8
 | 3 | **`PP=1` 或 `PP=2` 是否可行** | 直接删掉气泡与显存倾斜两个问题 | Projection 先扫（已有 node/pod 两级建模），再上机 |
 | 4 | **RCCL 有无 NCCL UBR 等价物**，通信 kernel SM 占用能否压到个位数 | Tessera 实测 20 SM 通信 kernel 致 10–20% 减速 | rocprof 数通信 kernel 的 CU 占用 |
 | 5 | **CDNA5 上现有 kernel 的可移植性** | "十余年来最大架构改动"，FlyDSL / HK tile / CK 配置 / hipBLASLt 调优缓存都不保证平移 | 拿现有 micro-benchmark 全套重跑 |
-| 6 | **Helios NUMA 拓扑下的 CPU 绑定** | 每托盘 4 卡 + 1 颗 96 核 EPYC，与 8 卡 OAM 节点完全不同 | 重做 bindpcie 等价物 |
+| 6 | **Helios NUMA 拓扑下的 CPU 绑定** | 每托盘 4 卡 + 1 颗 EPYC Venice（核数按交付配置），与 8 卡 OAM 节点完全不同 | 重做 bindpcie 等价物 |
 | 7 | 主机侧卸载路径带宽（UALoE ≠ NVLink-C2C） | 决定优化器状态卸载能否复现 GB200 的 47–62% 节省 | 测 H2D/D2H 有效带宽与重叠度 |
 | 8 | **CDNA5 的 copy engine 能否打满 UALoE** | Primus 现有 `hipMemcpyDeviceToDeviceNoCU` 路径（零 CU param all-gather）的全部价值建立在此。MI355X 的 XGMI 与 UALoE 的 3.6 TB/s 不是一个量级 | SDMA vs RCCL 零 CTA 两条路径在 UALoE 上对打，扫 message size |
 | 9 | **SDMA 路径的 launch 开销在大域上是否反转** | 每 bucket 发 `world_size` 个 `hipMemcpyAsync`（DP64 = 63 peer + 1 local，摊在 8 条流上）+ 2 次 barrier。**§5.2 说大域上瓶颈本就移到 CPU/launch**，SM 不再是瓶颈后这些 launch 可能变成新瓶颈 | 对比 SDMA 多 memcpy vs RCCL 单 collective kernel，扫 world_size 8→72 |
@@ -319,6 +320,7 @@ W=72、N = 4096×14336 = 58.72M、单向 1.8 TB/s 的估算：BF16 ring RS 115.8
 
 ## 8. 相关索引
 
+- MegaMoE EP64 架构设计：[`mi455x-megamoe-ep64-architecture.md`](./mi455x-megamoe-ep64-architecture.md)
 - 论文深读：[`papers/megatron-core-moe.md`](../../papers/megatron-core-moe.md)（[2603.07685](https://arxiv.org/abs/2603.07685)）、[`papers/ultraep/`](../../papers/ultraep/README.md)（点名 Helios）、[`papers/moe-parallel-folding.md`](../../papers/moe-parallel-folding.md)（[2504.14960](https://arxiv.org/abs/2504.14960)，打破 EP ≤ DP）、[`papers/tessera.md`](../../papers/tessera.md)（20 SM 发现）、[`papers/motif-3.md`](../../papers/motif-3.md)（消除优于隐藏、逐层选 CP）
 - 低精度通信线（wgrad RS 前沿）：[`papers/gift.md`](../../papers/gift.md)、[`papers/dynamiq.md`](../../papers/dynamiq.md)、[`papers/agoq.md`](../../papers/agoq.md)
 - 硬件规格：[`../hardware/gpu-comparison.md`](../hardware/gpu-comparison.md)

@@ -34,13 +34,19 @@
 | MI300X | CDNA 3 | 192 GB HBM3 | 5.3 TB/s | 2.61 PFLOPS（5.22 PFLOPS 结构化稀疏） | 750 W | OAM（UBB） |
 | MI325X（单 OAM） | CDNA 3（MI300 系列演进） | 256 GB HBM3E | 6 TB/s（AMD MI325X 平台页：per OAM） | 与 MI300X 同档标称 FP8（见该系列 datasheet） | 以 datasheet 为准 | OAM，与 MI300X 平台兼容演进 |
 | MI355X | **CDNA 4** | **288 GB HBM3E** | **8 TB/s** | OCP-FP8 **5 PFLOPS** / **10.1 PFLOPS**（结构化稀疏）；另标称 MXFP4/MXFP6 矩阵 **10.1 PFLOPS**、MXFP8 矩阵 **5 PFLOPS** | **1400 W**（TBP） | OAM（UBB 2.0），被动/主动散热 |
-| **MI455X** | **CDNA 5**（TSMC 2nm） | **432 GB HBM4** | **19.6 或 23.3 TB/s**（AMD 两处页面口径不一致，待澄清） | 每卡 **FP4 40 PFLOPS**；机架 FP8 1.4 EF / 72 ≈ **19.4 PFLOPS** 每卡 | 未公开（机架 225–246 kW，4 卡/托盘，推测 **>2 kW**） | Helios 机架（OCP ORW），**非独立 OAM 售卖形态** |
+| **MI455X** | **CDNA 5**（TSMC 2nm） | **432 GB HBM4** | **≈23.3 TB/s**（AMD CDNA 5 博客称 2.91× MI355X，8 × 2.91 ≈ 23.3；早先另一处页面写 19.6，待白皮书确认）；实测 HBM 读 3× MI355X | 每卡 **FP4 40 PFLOPS**；机架 FP8 1.4 EF / 72 ≈ **19.4 PFLOPS** 每卡 | 未公开（机架 225–246 kW，4 卡/托盘，推测 **>2 kW**） | Helios 机架（OCP ORW），**非独立 OAM 售卖形态** |
 
 **平台级参考（8× MI325X）**：总 HBM3E **2.048 TB**，单 OAM 带宽 **6 TB/s**（[MI325X Platform](https://www.amd.com/en/products/accelerators/instinct/mi300/mi325x/platform.html)）。
 
 **平台级参考（8× MI355X）**：总 HBM3E **2.3 TB**，单 OAM 带宽 **8 TB/s**（[MI355X Platform](https://www.amd.com/en/products/accelerators/instinct/mi350/mi355x/platform.html)）。
 
-**平台级参考（Helios 机架 = 72× MI455X）**：2026-07-23 Advancing AI 发布，量产 2H 2026。总 HBM4 **31 TB**、聚合显存带宽 **1.7 PB/s**、稠密 FP4 **2.9 EF** / FP8 **1.4 EF**。**72 卡在单一 scale-up 域内**，经 UALink-over-Ethernet（UALoE）单跳全互联——每卡 36×400 GbE 合 **3.6 TB/s 双向**，机架聚合 **260 TB/s**（12 台交换机 × 21.6 TB/s）。scale-out 经 Pensando Vulcano NIC 合 **43 TB/s**（≈597 GB/s 每卡），即**域内 : 跨机架 ≈ 6 : 1**。宿主为 18 颗 6th Gen EPYC "Venice" 9006（每托盘 1 颗 96 核 + 1 TB DDR）。
+**平台级参考（Helios 机架 = 72× MI455X）**：2026-07-23 Advancing AI 发布，量产 2H 2026。总 HBM4 **31 TB**、聚合显存带宽 **1.7 PB/s**、稠密 FP4 **2.9 EF** / FP8 **1.4 EF**。**72 卡在单一 scale-up 域内**，经 UALink-over-Ethernet（UALoE）单跳交换式互联（不是 MI355X 那种点对点 mesh）——每卡 36×400 GbE 合 **3.6 TB/s 双向**，机架聚合 **260 TB/s**（12 台交换机 × 21.6 TB/s）。scale-out 经 Pensando Vulcano NIC 合 **43 TB/s**（≈597 GB/s 每卡），即**域内 : 跨机架 ≈ 6 : 1**。宿主为 18 颗 6th Gen EPYC "Venice" 9006（此前记录为每托盘 1 颗 96 核 + 1 TB DDR；AMD 08-04 博客写每颗最多 256 核、整机架最多 36 TB DDR5，即每托盘最多 2 TB，以实际交付配置为准）。
+
+**Helios fabric 细节（[AMD CDNA 5 + Helios 博客](https://rocm.blogs.amd.com/ecosystems-and-partners/cdna5-helios/README.html)，2026-08-04）**：官方原文为 single-hop、multi-plane UALoE fabric，72 卡经 **12 台 UALoE 交换机 / 6 个交换机 tray** 互连，任意两卡有多条路径；整机架 18 个计算 tray + 6 个交换机 tray，均可热插拔。故障降级：断 1 条链路约 −3%（DMA 自动重路由，CU 流量由 fabric manager 约 1 s 内重新均衡）、断 1 台交换机约 −8%、断 1 个交换机 tray 约 −17%，对应每卡 36 条链路均匀分到 12 台交换机。机架可切成相互隔离的 Virtual Pod（vPod），GPU 故障只重启所在 vPod。软件分层：ROCm + UALoE runtime、AMD Fabric Manager（agent 嵌在交换机芯片里）、Rack Infrastructure Manager（Redfish），原生对接 Slurm / Kubernetes。
+
+**MI455X 实测倍数（[AMD MI455X vs MI355X 博客](https://rocm.blogs.amd.com/software-tools-optimization/mi455x-vs-mi355x/README.html)，2026-10-08，pre-release bring-up 平台，单卡对比）**：MXFP4 GEMM 3.3×（20.0 vs 6.0 PFLOPS，近常数输入下的峰值交付值）；MLA decode 带宽 3.8×；HBM 读 3×；scale-up（TransferBench 16 GB，4×MI455X 节点 vs 8×MI355X 节点）每卡聚合单向 3.8× / 双向 3.7×、单 pair 单向 27× / 双向 26×，**all-to-all 建模用 3.8×**；scale-out（Vulcano 800 vs Pollara 400，`ib_write_bw`）2×。博客明确：同 node 两卡也经交换机、带宽相同。
+
+**CDNA 5 片上（[MI450 LDS 博客](https://rocm.blogs.amd.com/software-tools-optimization/mi450-lds-optimization/README.html)，gfx1250）**：**Wave32**、矩阵指令为 **WMMA**；计算单元称 WGP（4 SIMD 分 2 对）；每 WGP **320 KiB LDS**（6 个 64 KiB 分区，5 个给 LDS、1 个给 L0），2 端口各 256 B/cycle，跨 SIMD 对访问同一分区会使 LDS 带宽减半；HBM→LDS 有 **TDM**（Tensor Data Movement，不能在拷贝中改变连续维）；`ds_load_tr` 转置读。CDNA 5 博客另列：更大 L2 与寄存器文件、E5M3 scale 格式、VALU 4-bit tensor LUT 反量化指令、低精度 AI 算力最高 4× MI355X（峰值）。
 
 > **scale-up 带宽不要当差异化点**：AMD 官方对比 Vera Rubin NVL72 时声称 **+15% 算力、+50% HBM 容量、+50% scale-out 带宽**，**唯独没有声称 scale-up 带宽优势**；而 NVIDIA GB200 NVL72 报 1.8 TB/s/卡、130 TB/s 单向（另处称 all-reduce 可达 260 TB/s）。两边单/双向口径未对齐，**"Helios scale-up 是 NVL72 的 2×"不成立**。真正的代际差异是 **HBM 容量**：432 GB vs GB200 的 192 GB（2.25×）、vs GB300 的 288 GB（1.5×）。
 >
