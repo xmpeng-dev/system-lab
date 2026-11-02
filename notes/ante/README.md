@@ -1,14 +1,15 @@
-# ante — Agent-Native Training Engineering on CDNA
+# Cairn（原 ante）— Agent-Native Training Engineering on CDNA
 
 > **目标**：构建面向 AI Agent 设计的 CDNA 训练工程环境，使通用 coding agent 能完成从端到端训练性能问题下钻到 GPU kernel 修改的完整闭环。
 > **平台**：MI355X（CDNA4, gfx950）
 > **栈**：ROCm / HipKittens / PyTorch
-> **工作仓库**：`~/workspace/ante/`（开题分析见 `docs/proposal.md`）
+> **工作仓库**：`~/workspace/Cairn/`（`ante` 已降为 CLI 兼容别名）
 > **相关仓库**：`~/workspace/hipKitten/`（kernel 底座）· `~/workspace/Primus/`（双臂对照的 A 臂）· `~/workspace/FlyDSL/`（外环骨架参考）
 
 ## 状态
 
-**开题阶段。** 尚无实验。
+**执行引擎已可运行，架构仍在演进。** 当前重点是判断 primitive MathGraph 与
+RegionGraph 哪种表示更适合 coding-agent 持续修改和验证。
 
 ## 核心命题
 
@@ -31,10 +32,14 @@
 | 日期 | 事件 | 记录 |
 |---|---|---|
 | 2026-08-17 | 开题分析定稿，repo `ante` 建立 | [`ante/docs/proposal.md`](../../../ante/docs/proposal.md) |
+| 2026-10-03 | 启动 MathGraph / RegionGraph 多 agent 架构讨论 | [`coding-agent-training-architecture/`](./coding-agent-training-architecture/README.md) |
 
 ## 下一步
 
-细化 design docs 1–4（算子契约 · 证据 schema · kernel 隔离编译 · 闭合动作空间）。它们共同决定 agent 在 kernel 层能否动手，是其余部分的前提。索引见 `ante/docs/design/README.md`。
+由 Cairn Owner 冻结 Attention implementation、RoutedExperts lowering/overlap、
+schedule/residency policy 三项 matched-trial 协议和基线 revision；双 slice 最多运行
+一个 milestone，以 median Edit-to-Verdict 改善 30% 决定是否继续 RegionGraph。讨论见
+[`coding-agent-training-architecture/`](./coding-agent-training-architecture/README.md)。
 
 ## 已核实的技术前提
 

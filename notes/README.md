@@ -12,6 +12,7 @@
 
 | 项目 | 主题 | 状态 |
 |---|---|---|
+| [`ante/`](./ante/README.md) | Cairn（原 ante）：coding-agent 原生 AMD MoE 训练引擎 | active — MathGraph vs RegionGraph 架构讨论中 |
 | [`career-strategy/`](./career-strategy/README.md) | 长期技术定位：边界消解 → 删掉量化↔GEMM 的跨 op 格式契约 | active — 2026-08-12 定落地形态（Pilot 主线已降级、判定层已作废） |
 | [`gpt-oss/`](./gpt-oss/README.md) | GPT-OSS-20B MLPerf 调优 (MI355X) | active — best 9963 s |
 | [`monolith-moe/`](./monolith-moe/README.md) | MoE super-kernel + CCO (MI355X) | 阶段性收尾 — HIP C++ IPC kernel 待落地 |

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "discussion": "cairn-coding-agent-training-architecture",
+  "status": "stopped",
+  "next_role": "A",
+  "next_turn": 7,
+  "cycle": 3,
+  "last_turn": "turns/2026-10-03-103316-0006-c.md",
+  "question": "（等待 Owner）先提交基线后，做 E1：MoE 层 region 前端与当前 Program digest 等价性。",
+  "max_turns": 9,
+  "stop_reason": "达到本次 6 次发言上限；剩余分歧收敛为 Owner 选择（提交 untracked compiler 基线、修复三个缺陷、MX 排期、region 内 autograd 规则）与实验 E1(CPU)/E2/E3(GPU)。",
+  "participants": {
+    "A": {
+      "name": "Compiler Advocate",
+      "agent_id": "96c1aae4-6864-4d6b-a523-4c8aed8b7381"
+    },
+    "B": {
+      "name": "Complexity Skeptic",
+      "agent_id": "claude-subagent (new; Cursor session not resumable)"
+    },
+    "C": {
+      "name": "GPT-5.6 Sol",
+      "agent_id": "host"
+    }
+  }
+}
