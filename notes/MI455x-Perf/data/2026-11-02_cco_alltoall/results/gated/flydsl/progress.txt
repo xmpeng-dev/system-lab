@@ -1,0 +1,7 @@
+fly gmm_flydsl 768 try 1 exit 1 05:54:01
+fly gmm_flydsl 768 try 2 exit 1 05:57:08
+fly gmm_flydsl 768 try 3 exit 0 05:57:49
+fly gmm_flydsl 384 try 1 exit 0 05:58:22
+fly gmm_flydsl 256 try 1 exit 1 06:01:35
+fly gmm_flydsl 256 try 2 exit 0 06:02:06
+fly gmm_flydsl 128 try 1 exit 0 06:02:54

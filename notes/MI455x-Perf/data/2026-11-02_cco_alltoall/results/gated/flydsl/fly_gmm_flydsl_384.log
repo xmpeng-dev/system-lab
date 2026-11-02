@@ -1,0 +1,20 @@
+W1102 05:57:50.832000 61017 torch/distributed/run.py:982] 
+W1102 05:57:50.832000 61017 torch/distributed/run.py:982] *****************************************
+W1102 05:57:50.832000 61017 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 05:57:50.832000 61017 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+gmm_flydsl + alltoall        384 MiB  m1  comp   0.933->  1.236 ms (1.32x,  1770-> 1337 TF)  comm   0.437->  0.697 ms (1.60x, busbw   691->  433 GB/s)  [370, 655 calls]
+gmm_flydsl + alltoall        384 MiB  m2  x1   comp   0.831  comm   0.446  ovl   1.022 ms  (in ovl: comp   1.013, comm   0.831)  E  0.57  S 1.25 of 1.54
+gmm_flydsl + alltoall        384 MiB  (2 episodes released early and dropped)
+
+validation: all passed
+wrote .scratch/cco-analysis/flydsl/fly_gmm_flydsl_384.json

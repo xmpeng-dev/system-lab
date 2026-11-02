@@ -1,0 +1,272 @@
+{
+ "config": {
+  "comm": "alltoall",
+  "sizes_mib": "768",
+  "comm_dtype": "bf16",
+  "compute": "gmm,gemm",
+  "modes": "m1,m2",
+  "ratios": "1",
+  "stagger_us": 0.0,
+  "cu_reserve": 0,
+  "comm_priority": "default",
+  "gemm": "8192,6144,24576",
+  "gmm": "72,912,6144,2048",
+  "attn": "2,4096,64,128",
+  "warmup_ms": 1000.0,
+  "target_ms": 100.0,
+  "rounds": 5,
+  "pg_timeout_s": 60.0,
+  "no_telemetry": true,
+  "output": "results/ctheliosr-rck-g02-e15-01_20261102_cusplit/r48.json"
+ },
+ "world": 4,
+ "ranks": [
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 0,
+   "bdf": "0001:01:00"
+  },
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 1,
+   "bdf": "0002:01:00"
+  },
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 2,
+   "bdf": "0003:01:00"
+  },
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 3,
+   "bdf": "0004:01:00"
+  }
+ ],
+ "environment": {
+  "torch": "2.14.0+rocm10.2.0a20261011",
+  "hip": "7.17.26405",
+  "rccl": "2.32.3",
+  "image": null,
+  "env": {
+   "GPU_ARCHS": "native",
+   "HIP_ARCHITECTURES": "gfx1250",
+   "HIP_CLANG_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/llvm/bin",
+   "HIP_DEVICE_LIB_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib/llvm/amdgcn/bitcode",
+   "HIP_INCLUDE_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/include",
+   "HIP_LIB_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib",
+   "HIP_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel",
+   "HIP_PLATFORM": "amd",
+   "HSA_ENABLE_SCRATCH_ASYNC_RECLAIM": "0",
+   "HSA_NO_SCRATCH_RECLAIM": "1",
+   "TORCH_NCCL_ASYNC_ERROR_HANDLING": "1"
+  }
+ },
+ "comp_stream_cus": null,
+ "failed": [],
+ "cases": [
+  {
+   "compute": "gmm",
+   "compute_label": "bmm x[72,912,6144] @ W[72,6144,2048]",
+   "comm": "alltoall",
+   "size_mib": 768,
+   "comm_bytes": 805306368,
+   "results": {
+    "m1 comp alone": {
+     "n_comp": 99,
+     "n_comm": 0,
+     "episodes": 1,
+     "comp": 107.24591827392578,
+     "ovl": 107.25209045410156,
+     "gfx_mhz": null,
+     "power_w": null
+    },
+    "m1 comm alone": {
+     "n_comp": 0,
+     "n_comm": 123,
+     "episodes": 1,
+     "comm": 100.60029602050781,
+     "ovl": 100.60694122314453,
+     "gfx_mhz": null,
+     "power_w": null
+    },
+    "m1 both": {
+     "n_comp": 99,
+     "n_comm": 123,
+     "episodes": 1,
+     "comm": 175.59988403320312,
+     "comm_under": 2.198933439434699,
+     "comm_under_calls": 55.0,
+     "comp": 121.16007232666016,
+     "comp_under": 1.2237108789309106,
+     "comp_under_calls": 99.0,
+     "ovl": 175.6068115234375,
+     "gfx_mhz": null,
+     "power_w": null
+    },
+    "m2 x1 comp": {
+     "n_comp": 1,
+     "n_comm": 0,
+     "episodes": 77,
+     "comp": 1.0110729932785034,
+     "ovl": 1.0172029733657837,
+     "gfx_mhz": null,
+     "power_w": null
+    },
+    "m2 x1 both": {
+     "n_comp": 1,
+     "n_comm": 1,
+     "episodes": 77,
+     "comm": 1.7621619701385498,
+     "comp": 1.0456069707870483,
+     "ovl": 1.7681310176849365,
+     "gfx_mhz": null,
+     "power_w": null
+    },
+    "m2 comm": {
+     "n_comp": 0,
+     "n_comm": 1,
+     "episodes": 90,
+     "comm": 0.8193879723548889,
+     "ovl": 0.8253970146179199,
+     "gfx_mhz": null,
+     "power_w": null
+    }
+   },
+   "summary": {
+    "m1": {
+     "t_comp": 1.083292103777028,
+     "t_comm": 0.8178885855325838,
+     "t_comp_under": 1.2237108789309106,
+     "t_comm_under": 2.198933439434699,
+     "comp_slowdown": 1.1296222640821396,
+     "comm_slowdown": 2.6885488785771736,
+     "calls_under": [
+      99,
+      55
+     ],
+     "tflops": 1525.4322092576874,
+     "tflops_under": 1350.3914164591633,
+     "busbw": 738.4621654876221,
+     "busbw_under": 274.66942162436294
+    },
+    "m2": [
+     {
+      "n_comp": 1,
+      "ratio": 1.2339368252779197,
+      "t_comp": 1.0110729932785034,
+      "t_comm": 0.8193879723548889,
+      "t_ovl": 1.7681310176849365,
+      "t_comp_in": 1.0456069707870483,
+      "t_comm_in": 1.7621619701385498,
+      "efficiency": 0.07606890758882143,
+      "speedup": 1.0352518831042656,
+      "ideal_speedup": 1.8104142606934273
+     }
+    ]
+   },
+   "late_releases": 3
+  },
+  {
+   "compute": "gemm",
+   "compute_label": "x[8192,6144] @ W[24576,6144]^T",
+   "comm": "alltoall",
+   "size_mib": 768,
+   "comm_bytes": 805306368,
+   "results": {
+    "m1 comp alone": {
+     "n_comp": 93,
+     "n_comm": 0,
+     "episodes": 1,
+     "comp": 110.37704467773438,
+     "ovl": 110.38341522216797,
+     "gfx_mhz": null,
+     "power_w": null
+    },
+    "m1 comm alone": {
+     "n_comp": 0,
+     "n_comm": 122,
+     "episodes": 1,
+     "comm": 99.62761688232422,
+     "ovl": 99.63378143310547,
+     "gfx_mhz": null,
+     "power_w": null
+    },
+    "m1 both": {
+     "n_comp": 93,
+     "n_comm": 122,
+     "episodes": 1,
+     "comm": 133.88270568847656,
+     "comm_under": 1.09736695836802,
+     "comm_under_calls": 122.0,
+     "comp": 151.99952697753906,
+     "comp_under": 1.7188752409699675,
+     "comp_under_calls": 80.0,
+     "ovl": 152.01185607910156,
+     "gfx_mhz": null,
+     "power_w": null
+    },
+    "m2 x1 comp": {
+     "n_comp": 1,
+     "n_comm": 0,
+     "episodes": 73,
+     "comp": 1.1159110069274902,
+     "ovl": 1.1243239641189575,
+     "gfx_mhz": null,
+     "power_w": null
+    },
+    "m2 x1 both": {
+     "n_comp": 1,
+     "n_comm": 1,
+     "episodes": 73,
+     "comm": 1.2249159812927246,
+     "comp": 1.4929180145263672,
+     "ovl": 1.5026919841766357,
+     "gfx_mhz": null,
+     "power_w": null
+    },
+    "m2 comm": {
+     "n_comp": 0,
+     "n_comm": 1,
+     "episodes": 90,
+     "comm": 0.8212110102176666,
+     "ovl": 0.8271400034427643,
+     "gfx_mhz": null,
+     "power_w": null
+    }
+   },
+   "summary": {
+    "m1": {
+     "t_comp": 1.1868499427713373,
+     "t_comm": 0.8166198105108543,
+     "t_comp_under": 1.7188752409699675,
+     "t_comm_under": 1.09736695836802,
+     "comp_slowdown": 1.4482666923809526,
+     "comm_slowdown": 1.3437917427958772,
+     "calls_under": [
+      80,
+      122
+     ],
+     "tflops": 2084.4262390234035,
+     "tflops_under": 1439.2558014274316,
+     "busbw": 739.609507663263,
+     "busbw_under": 550.3899779324735
+    },
+    "m2": [
+     {
+      "n_comp": 1,
+      "ratio": 1.358860260083108,
+      "t_comp": 1.1159110069274902,
+      "t_comm": 0.8212110102176666,
+      "t_ovl": 1.5026919841766357,
+      "t_comp_in": 1.4929180145263672,
+      "t_comm_in": 1.2249159812927246,
+      "efficiency": 0.5290114569376912,
+      "speedup": 1.2891011847691174,
+      "ideal_speedup": 1.735910843355475
+     }
+    ]
+   },
+   "late_releases": 0
+  }
+ ]
+}

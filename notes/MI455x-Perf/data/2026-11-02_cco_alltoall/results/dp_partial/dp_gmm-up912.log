@@ -1,0 +1,88 @@
+W1102 04:24:50.001000 49870 torch/distributed/run.py:982] 
+W1102 04:24:50.001000 49870 torch/distributed/run.py:982] *****************************************
+W1102 04:24:50.001000 49870 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 04:24:50.001000 49870 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+gmm       + alltoall        768 MiB  m1  comp   0.956->  1.340 ms (1.40x,  1729-> 1234 TF)  comm   0.818->  1.110 ms (1.36x, busbw   738->  544 GB/s)  [104, 123 calls]
+gmm       + alltoall        768 MiB  m2  x1   comp   0.888  comm   0.821  ovl   1.241 ms  (in ovl: comp   1.223, comm   1.229)  E  0.57  S 1.38 of 1.92
+gmm       + alltoall        768 MiB  (2 episodes released early and dropped)
+gmm       + alltoall        384 MiB  m1  comp   0.980->  1.289 ms (1.31x,  1685-> 1282 TF)  comm   0.441->  0.706 ms (1.60x, busbw   685->  428 GB/s)  [114, 207 calls]
+gmm       + alltoall        384 MiB  m2  x1   comp   0.884  comm   0.458  ovl   1.098 ms  (in ovl: comp   1.089, comm   0.849)  E  0.53  S 1.22 of 1.52
+gmm       + alltoall        256 MiB  m1  comp   0.956->  1.108 ms (1.16x,  1729-> 1491 TF)  comm   0.249->  0.519 ms (2.08x, busbw   809->  388 GB/s)  [114, 244 calls]
+gmm       + alltoall        256 MiB  m2  x1   comp   0.883  comm   0.270  ovl   0.969 ms  (in ovl: comp   0.934, comm   0.964)  E  0.68  S 1.19 of 1.31
+gmm       + alltoall        256 MiB  (1 episodes released early and dropped)
+gmm       + alltoall        128 MiB  m1  comp   0.949->  1.054 ms (1.11x,  1741-> 1568 TF)  comm   0.150->  0.343 ms (2.28x, busbw   671->  294 GB/s)  [114, 353 calls]
+gmm       + alltoall        128 MiB  m2  x1   comp   0.889  comm   0.167  ovl   0.934 ms  (in ovl: comp   0.913, comm   0.928)  E  0.73  S 1.13 of 1.19
+[rank2]:[E1102 04:26:12.030436159 ProcessGroupNCCL.cpp:741] [PG GUID 0(default_pg) Rank 2] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=24180, OpType=ALLTOALL_BASE, NumelIn=33554432, NumelOut=33554432, Timeout(ms)=60000) ran for 60038 milliseconds before timing out.
+[rank2]:[E1102 04:26:12.030642909 ProcessGroupNCCL.cpp:2390] [PG ID 0 PG GUID 0(default_pg) Rank 2]  failure detected by watchdog at work sequence id: 24180 PG status: last enqueued work: 24189, last started work: -1 (), last completed work: 24179
+[rank0]:[E1102 04:26:12.064371035 ProcessGroupNCCL.cpp:741] [PG GUID 0(default_pg) Rank 0] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=24180, OpType=ALLTOALL_BASE, NumelIn=33554432, NumelOut=33554432, Timeout(ms)=60000) ran for 60072 milliseconds before timing out.
+[rank0]:[E1102 04:26:12.064653266 ProcessGroupNCCL.cpp:2390] [PG ID 0 PG GUID 0(default_pg) Rank 0]  failure detected by watchdog at work sequence id: 24180 PG status: last enqueued work: 24189, last started work: -1 (), last completed work: 24179
+[rank3]:[E1102 04:26:12.072095437 ProcessGroupNCCL.cpp:741] [PG GUID 0(default_pg) Rank 3] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=24180, OpType=ALLTOALL_BASE, NumelIn=33554432, NumelOut=33554432, Timeout(ms)=60000) ran for 60080 milliseconds before timing out.
+[rank3]:[E1102 04:26:12.072304597 ProcessGroupNCCL.cpp:2390] [PG ID 0 PG GUID 0(default_pg) Rank 3]  failure detected by watchdog at work sequence id: 24180 PG status: last enqueued work: 24189, last started work: -1 (), last completed work: 24179
+[rank1]:[E1102 04:26:12.085275379 ProcessGroupNCCL.cpp:741] [PG GUID 0(default_pg) Rank 1] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=24180, OpType=ALLTOALL_BASE, NumelIn=33554432, NumelOut=33554432, Timeout(ms)=60000) ran for 60093 milliseconds before timing out.
+[rank1]:[E1102 04:26:12.085623750 ProcessGroupNCCL.cpp:2390] [PG ID 0 PG GUID 0(default_pg) Rank 1]  failure detected by watchdog at work sequence id: 24180 PG status: last enqueued work: 24189, last started work: -1 (), last completed work: 24179
+[rank2]:[E1102 04:26:13.562526790 ProcessGroupNCCL.cpp:785] Stack trace of the failed collective: 
+#0 all_to_all_single from /opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:6122
+#1 wrapper from /opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83
+#2 <lambda> from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:190
+#3 run from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:285
+#4 window from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:350
+#5 plan from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:370
+#6 measure from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:393
+#7 main from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:579
+#8 <module> from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:648
+
+[rank2]:[E1102 04:26:13.562610330 ProcessGroupNCCL.cpp:2732] [PG ID 0 PG GUID 0(default_pg) Rank 2] First PG on this rank to signal dumping.
+[rank1]:[E1102 04:26:13.649658316 ProcessGroupNCCL.cpp:785] Stack trace of the failed collective: 
+#0 all_to_all_single from /opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:6122
+#1 wrapper from /opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83
+#2 <lambda> from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:190
+#3 run from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:285
+#4 window from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:350
+#5 plan from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:370
+#6 measure from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:393
+#7 main from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:579
+#8 <module> from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:648
+
+[rank1]:[E1102 04:26:13.649744966 ProcessGroupNCCL.cpp:2732] [PG ID 0 PG GUID 0(default_pg) Rank 1] First PG on this rank to signal dumping.
+[rank0]:[E1102 04:26:13.652444147 ProcessGroupNCCL.cpp:785] Stack trace of the failed collective: 
+#0 all_to_all_single from /opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:6122
+#1 wrapper from /opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83
+#2 <lambda> from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:190
+#3 run from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:285
+#4 window from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:350
+#5 plan from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:370
+#6 measure from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:393
+#7 main from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:579
+#8 <module> from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:648
+
+[rank0]:[E1102 04:26:13.652499727 ProcessGroupNCCL.cpp:2732] [PG ID 0 PG GUID 0(default_pg) Rank 0] First PG on this rank to signal dumping.
+[rank3]:[E1102 04:26:13.655437517 ProcessGroupNCCL.cpp:785] Stack trace of the failed collective: 
+#0 all_to_all_single from /opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:6122
+#1 wrapper from /opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83
+#2 <lambda> from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:190
+#3 run from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:285
+#4 window from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:350
+#5 plan from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:370
+#6 measure from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:393
+#7 main from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:579
+#8 <module> from /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/analysis/../../common/cco_bench.py:648
+
+[rank3]:[E1102 04:26:13.655512387 ProcessGroupNCCL.cpp:2732] [PG ID 0 PG GUID 0(default_pg) Rank 3] First PG on this rank to signal dumping.
+[rank3]:[E1102 04:26:14.528369683 ProcessGroupNCCL.cpp:1982] [PG ID 0 PG GUID 0(default_pg) Rank 3] Received a dump signal due to a collective timeout from this local rank and we will try our best to dump the debug info. Last enqueued NCCL work: 24189, last completed NCCL work: 24179.This is most likely caused by incorrect usages of collectives, e.g., wrong sizes used across ranks, the order of collectives is not same for all ranks or the scheduled collective, for some reason, didn't run. Additionally, this can be caused by GIL deadlock or other reasons such as network errors or bugs in the communications library (e.g. NCCL), etc. 
+[rank3]:[E1102 04:26:14.528554723 ProcessGroupNCCL.cpp:1694] [PG ID 0 PG GUID 0(default_pg) Rank 3] ProcessGroupNCCL preparing to dump debug info. Include stack trace: 1, only active collectives: 0
+[rank0]:[E1102 04:26:14.534681584 ProcessGroupNCCL.cpp:1982] [PG ID 0 PG GUID 0(default_pg) Rank 0] Received a dump signal due to a collective timeout from this local rank and we will try our best to dump the debug info. Last enqueued NCCL work: 24189, last completed NCCL work: 24179.This is most likely caused by incorrect usages of collectives, e.g., wrong sizes used across ranks, the order of collectives is not same for all ranks or the scheduled collective, for some reason, didn't run. Additionally, this can be caused by GIL deadlock or other reasons such as network errors or bugs in the communications library (e.g. NCCL), etc. 
+[rank0]:[E1102 04:26:14.534843774 ProcessGroupNCCL.cpp:1694] [PG ID 0 PG GUID 0(default_pg) Rank 0] ProcessGroupNCCL preparing to dump debug info. Include stack trace: 1, only active collectives: 0
+[rank2]:[E1102 04:26:14.539746875 ProcessGroupNCCL.cpp:1982] [PG ID 0 PG GUID 0(default_pg) Rank 2] Received a dump signal due to a collective timeout from this local rank and we will try our best to dump the debug info. Last enqueued NCCL work: 24189, last completed NCCL work: 24179.This is most likely caused by incorrect usages of collectives, e.g., wrong sizes used across ranks, the order of collectives is not same for all ranks or the scheduled collective, for some reason, didn't run. Additionally, this can be caused by GIL deadlock or other reasons such as network errors or bugs in the communications library (e.g. NCCL), etc. 
+[rank1]:[E1102 04:26:14.539773195 ProcessGroupNCCL.cpp:1982] [PG ID 0 PG GUID 0(default_pg) Rank 1] Received a dump signal due to a collective timeout from this local rank and we will try our best to dump the debug info. Last enqueued NCCL work: 24189, last completed NCCL work: 24179.This is most likely caused by incorrect usages of collectives, e.g., wrong sizes used across ranks, the order of collectives is not same for all ranks or the scheduled collective, for some reason, didn't run. Additionally, this can be caused by GIL deadlock or other reasons such as network errors or bugs in the communications library (e.g. NCCL), etc. 
+[rank2]:[E1102 04:26:14.539912675 ProcessGroupNCCL.cpp:1694] [PG ID 0 PG GUID 0(default_pg) Rank 2] ProcessGroupNCCL preparing to dump debug info. Include stack trace: 1, only active collectives: 0
+[rank1]:[E1102 04:26:14.539935875 ProcessGroupNCCL.cpp:1694] [PG ID 0 PG GUID 0(default_pg) Rank 1] ProcessGroupNCCL preparing to dump debug info. Include stack trace: 1, only active collectives: 0

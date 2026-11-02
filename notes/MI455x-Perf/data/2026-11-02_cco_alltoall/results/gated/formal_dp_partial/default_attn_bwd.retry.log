@@ -1,0 +1,233 @@
+W1102 05:12:01.135000 55891 torch/distributed/run.py:982] 
+W1102 05:12:01.135000 55891 torch/distributed/run.py:982] *****************************************
+W1102 05:12:01.135000 55891 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 05:12:01.135000 55891 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] LoadKernel: _ZN5aiter36fmha_bf16_pertokenBf16_hd128_128x256E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256.co
+[aiter] import [module_fmha_v3_bwd] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_v3_bwd.so
+[aiter] type hints mismatch, override to --> fmha_v3_bwd(dout: torch.Tensor, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, out: torch.Tensor, softmax_lse: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, deterministic: bool, is_v3_atomic_fp32: bool, how_v3_bf16_cvt: int, dq: Optional[torch.Tensor] = None, dk: Optional[torch.Tensor] = None, dv: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, rng_state: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] LoadKernel: _ZN5aiter23fmha_bwd_hd128_odo_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_odo_bf16.co
+[aiter] LoadKernel: _ZN5aiter28fmha_bwd_hd128_bf16_a32_psskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_bf16_a32_pssk.co
+[aiter] LoadKernel: _ZN5aiter30fmha_bwd_hd128_dq_convert_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_dq_convert_bf16.co
+[aiter] LoadKernel: _ZN5aiter36fmha_bf16_pertokenBf16_hd128_128x256E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256.co
+[aiter] import [module_fmha_v3_bwd] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_v3_bwd.so
+[aiter] type hints mismatch, override to --> fmha_v3_bwd(dout: torch.Tensor, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, out: torch.Tensor, softmax_lse: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, deterministic: bool, is_v3_atomic_fp32: bool, how_v3_bf16_cvt: int, dq: Optional[torch.Tensor] = None, dk: Optional[torch.Tensor] = None, dv: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, rng_state: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] LoadKernel: _ZN5aiter23fmha_bwd_hd128_odo_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_odo_bf16.co
+[aiter] LoadKernel: _ZN5aiter28fmha_bwd_hd128_bf16_a32_psskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_bf16_a32_pssk.co
+[aiter] LoadKernel: _ZN5aiter30fmha_bwd_hd128_dq_convert_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_dq_convert_bf16.co
+[aiter] LoadKernel: _ZN5aiter36fmha_bf16_pertokenBf16_hd128_128x256E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256.co
+[aiter] import [module_fmha_v3_bwd] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_v3_bwd.so
+[aiter] type hints mismatch, override to --> fmha_v3_bwd(dout: torch.Tensor, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, out: torch.Tensor, softmax_lse: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, deterministic: bool, is_v3_atomic_fp32: bool, how_v3_bf16_cvt: int, dq: Optional[torch.Tensor] = None, dk: Optional[torch.Tensor] = None, dv: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, rng_state: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] LoadKernel: _ZN5aiter23fmha_bwd_hd128_odo_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_odo_bf16.co
+[aiter] LoadKernel: _ZN5aiter28fmha_bwd_hd128_bf16_a32_psskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_bf16_a32_pssk.co
+[aiter] LoadKernel: _ZN5aiter30fmha_bwd_hd128_dq_convert_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_dq_convert_bf16.co
+[aiter] LoadKernel: _ZN5aiter36fmha_bf16_pertokenBf16_hd128_128x256E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256.co
+[aiter] import [module_fmha_v3_bwd] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_v3_bwd.so
+[aiter] type hints mismatch, override to --> fmha_v3_bwd(dout: torch.Tensor, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, out: torch.Tensor, softmax_lse: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, deterministic: bool, is_v3_atomic_fp32: bool, how_v3_bf16_cvt: int, dq: Optional[torch.Tensor] = None, dk: Optional[torch.Tensor] = None, dv: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, rng_state: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] LoadKernel: _ZN5aiter23fmha_bwd_hd128_odo_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_odo_bf16.co
+[aiter] LoadKernel: _ZN5aiter28fmha_bwd_hd128_bf16_a32_psskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_bf16_a32_pssk.co
+[aiter] LoadKernel: _ZN5aiter30fmha_bwd_hd128_dq_convert_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_dq_convert_bf16.co
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank1]:[E1102 05:15:15.271751049 ProcessGroupNCCL.cpp:741] [PG GUID 0(default_pg) Rank 1] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=5308, OpType=ALLTOALL_BASE, NumelIn=402653184, NumelOut=402653184, Timeout(ms)=180000) ran for 180005 milliseconds before timing out.
+[rank1]:[E1102 05:15:15.272056060 ProcessGroupNCCL.cpp:2390] [PG ID 0 PG GUID 0(default_pg) Rank 1]  failure detected by watchdog at work sequence id: 5308 PG status: last enqueued work: 5396, last started work: -1 (), last completed work: 5307
+[rank1]:[E1102 05:15:15.272355830 ProcessGroupNCCL.cpp:785] Stack trace of the failed collective: 
+#0 all_to_all_single from /opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:6122
+#1 wrapper from /opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83
+#2 <lambda> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:190
+#3 run from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:285
+#4 window from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:350
+#5 measure from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:399
+#6 main from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:579
+#7 <module> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:648
+
+[rank1]:[E1102 05:15:15.272418130 ProcessGroupNCCL.cpp:2732] [PG ID 0 PG GUID 0(default_pg) Rank 1] First PG on this rank to signal dumping.
+[rank2]:[E1102 05:15:15.310724913 ProcessGroupNCCL.cpp:741] [PG GUID 0(default_pg) Rank 2] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=5308, OpType=ALLTOALL_BASE, NumelIn=402653184, NumelOut=402653184, Timeout(ms)=180000) ran for 180043 milliseconds before timing out.
+[rank2]:[E1102 05:15:15.311159814 ProcessGroupNCCL.cpp:2390] [PG ID 0 PG GUID 0(default_pg) Rank 2]  failure detected by watchdog at work sequence id: 5308 PG status: last enqueued work: 5396, last started work: -1 (), last completed work: 5307
+[rank2]:[E1102 05:15:15.311554284 ProcessGroupNCCL.cpp:785] Stack trace of the failed collective: 
+#0 all_to_all_single from /opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:6122
+#1 wrapper from /opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83
+#2 <lambda> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:190
+#3 run from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:285
+#4 window from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:350
+#5 measure from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:399
+#6 main from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:579
+#7 <module> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:648
+
+[rank2]:[E1102 05:15:15.311643164 ProcessGroupNCCL.cpp:2732] [PG ID 0 PG GUID 0(default_pg) Rank 2] First PG on this rank to signal dumping.
+[rank0]:[E1102 05:15:15.316846020 ProcessGroupNCCL.cpp:741] [PG GUID 0(default_pg) Rank 0] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=5308, OpType=ALLTOALL_BASE, NumelIn=402653184, NumelOut=402653184, Timeout(ms)=180000) ran for 180052 milliseconds before timing out.
+[rank0]:[E1102 05:15:15.317132640 ProcessGroupNCCL.cpp:2390] [PG ID 0 PG GUID 0(default_pg) Rank 0]  failure detected by watchdog at work sequence id: 5308 PG status: last enqueued work: 5396, last started work: -1 (), last completed work: 5307
+[rank0]:[E1102 05:15:15.317569131 ProcessGroupNCCL.cpp:785] Stack trace of the failed collective: 
+#0 all_to_all_single from /opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:6122
+#1 wrapper from /opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83
+#2 <lambda> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:190
+#3 run from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:285
+#4 window from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:350
+#5 measure from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:399
+#6 main from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:579
+#7 <module> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:648
+
+[rank0]:[E1102 05:15:15.317613251 ProcessGroupNCCL.cpp:2732] [PG ID 0 PG GUID 0(default_pg) Rank 0] First PG on this rank to signal dumping.
+[rank3]:[E1102 05:15:15.359560198 ProcessGroupNCCL.cpp:741] [PG GUID 0(default_pg) Rank 3] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=5308, OpType=ALLTOALL_BASE, NumelIn=402653184, NumelOut=402653184, Timeout(ms)=180000) ran for 180092 milliseconds before timing out.
+[rank3]:[E1102 05:15:15.360074779 ProcessGroupNCCL.cpp:2390] [PG ID 0 PG GUID 0(default_pg) Rank 3]  failure detected by watchdog at work sequence id: 5308 PG status: last enqueued work: 5396, last started work: -1 (), last completed work: 5307
+[rank3]:[E1102 05:15:15.360546569 ProcessGroupNCCL.cpp:785] Stack trace of the failed collective: 
+#0 all_to_all_single from /opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:6122
+#1 wrapper from /opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83
+#2 <lambda> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:190
+#3 run from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:285
+#4 window from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:350
+#5 measure from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:399
+#6 main from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:579
+#7 <module> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:648
+
+[rank3]:[E1102 05:15:15.360924969 ProcessGroupNCCL.cpp:2732] [PG ID 0 PG GUID 0(default_pg) Rank 3] First PG on this rank to signal dumping.
+[rank2]:[E1102 05:15:15.573589998 ProcessGroupNCCL.cpp:1982] [PG ID 0 PG GUID 0(default_pg) Rank 2] Received a dump signal due to a collective timeout from this local rank and we will try our best to dump the debug info. Last enqueued NCCL work: 5396, last completed NCCL work: 5307.This is most likely caused by incorrect usages of collectives, e.g., wrong sizes used across ranks, the order of collectives is not same for all ranks or the scheduled collective, for some reason, didn't run. Additionally, this can be caused by GIL deadlock or other reasons such as network errors or bugs in the communications library (e.g. NCCL), etc. 
+[rank2]:[E1102 05:15:15.573719568 ProcessGroupNCCL.cpp:1694] [PG ID 0 PG GUID 0(default_pg) Rank 2] ProcessGroupNCCL preparing to dump debug info. Include stack trace: 1, only active collectives: 0
+[rank0]:[E1102 05:15:15.602610881 ProcessGroupNCCL.cpp:1982] [PG ID 0 PG GUID 0(default_pg) Rank 0] Received a dump signal due to a collective timeout from this local rank and we will try our best to dump the debug info. Last enqueued NCCL work: 5396, last completed NCCL work: 5307.This is most likely caused by incorrect usages of collectives, e.g., wrong sizes used across ranks, the order of collectives is not same for all ranks or the scheduled collective, for some reason, didn't run. Additionally, this can be caused by GIL deadlock or other reasons such as network errors or bugs in the communications library (e.g. NCCL), etc. 
+[rank0]:[E1102 05:15:15.602713271 ProcessGroupNCCL.cpp:1694] [PG ID 0 PG GUID 0(default_pg) Rank 0] ProcessGroupNCCL preparing to dump debug info. Include stack trace: 1, only active collectives: 0
+[rank1]:[E1102 05:15:15.614627085 ProcessGroupNCCL.cpp:1982] [PG ID 0 PG GUID 0(default_pg) Rank 1] Received a dump signal due to a collective timeout from this local rank and we will try our best to dump the debug info. Last enqueued NCCL work: 5396, last completed NCCL work: 5307.This is most likely caused by incorrect usages of collectives, e.g., wrong sizes used across ranks, the order of collectives is not same for all ranks or the scheduled collective, for some reason, didn't run. Additionally, this can be caused by GIL deadlock or other reasons such as network errors or bugs in the communications library (e.g. NCCL), etc. 
+[rank1]:[E1102 05:15:15.614750985 ProcessGroupNCCL.cpp:1694] [PG ID 0 PG GUID 0(default_pg) Rank 1] ProcessGroupNCCL preparing to dump debug info. Include stack trace: 1, only active collectives: 0
+[rank3]:[E1102 05:15:15.616977837 ProcessGroupNCCL.cpp:1982] [PG ID 0 PG GUID 0(default_pg) Rank 3] Received a dump signal due to a collective timeout from this local rank and we will try our best to dump the debug info. Last enqueued NCCL work: 5396, last completed NCCL work: 5307.This is most likely caused by incorrect usages of collectives, e.g., wrong sizes used across ranks, the order of collectives is not same for all ranks or the scheduled collective, for some reason, didn't run. Additionally, this can be caused by GIL deadlock or other reasons such as network errors or bugs in the communications library (e.g. NCCL), etc. 
+[rank3]:[E1102 05:15:15.617143147 ProcessGroupNCCL.cpp:1694] [PG ID 0 PG GUID 0(default_pg) Rank 3] ProcessGroupNCCL preparing to dump debug info. Include stack trace: 1, only active collectives: 0
+[rank3]:[E1102 05:16:15.064337292 ProcessGroupNCCL.cpp:802] [PG GUID 0(default_pg) Rank 3] Some NCCL operations have failed or timed out. Due to the asynchronous nature of CUDA kernels, subsequent GPU operations might run on corrupted/incomplete data.
+[rank3]:[E1102 05:16:15.064360142 ProcessGroupNCCL.cpp:816] [PG GUID 0(default_pg) Rank 3] To avoid data inconsistency, we are taking the entire process down.
+[rank3]:[E1102 05:16:15.065555543 ProcessGroupNCCL.cpp:2192] [PG ID 0 PG GUID 0(default_pg) Rank 3] Process group watchdog thread terminated with exception: [PG GUID 0(default_pg) Rank 3] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=5308, OpType=ALLTOALL_BASE, NumelIn=402653184, NumelOut=402653184, Timeout(ms)=180000) ran for 180092 milliseconds before timing out.
+Exception raised from checkTimeout at /__w/rockrel/rockrel/external-builds/pytorch/pytorch/torch/csrc/distributed/c10d/ProcessGroupNCCL.cpp:744 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x9d (0x77398d6f660d in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::DistError::DistError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x77398d6f75e2 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: c10::DistBackendError::DistBackendError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x77398d6f7712 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #3: c10d::ProcessGroupNCCL::WorkNCCL::checkTimeout(std::optional<std::chrono::duration<long, std::ratio<1l, 1000l> > >) + 0x2a7 (0x773990e60d87 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #4: c10d::ProcessGroupNCCL::Watchdog::runLoop() + 0x15b1 (0x773990e6d731 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #5: c10d::ProcessGroupNCCL::Watchdog::run() + 0x157 (0x773990e6e9a7 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #6: <unknown function> + 0xecdb4 (0x773a49622db4 in /lib/x86_64-linux-gnu/libstdc++.so.6)
+frame #7: <unknown function> + 0x9cb84 (0x773a57da8b84 in /lib/x86_64-linux-gnu/libc.so.6)
+frame #8: <unknown function> + 0x129ecc (0x773a57e35ecc in /lib/x86_64-linux-gnu/libc.so.6)
+
+terminate called after throwing an instance of 'c10::DistBackendError'
+  what():  [PG ID 0 PG GUID 0(default_pg) Rank 3] Process group watchdog thread terminated with exception: [PG GUID 0(default_pg) Rank 3] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=5308, OpType=ALLTOALL_BASE, NumelIn=402653184, NumelOut=402653184, Timeout(ms)=180000) ran for 180092 milliseconds before timing out.
+Exception raised from checkTimeout at /__w/rockrel/rockrel/external-builds/pytorch/pytorch/torch/csrc/distributed/c10d/ProcessGroupNCCL.cpp:744 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x9d (0x77398d6f660d in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::DistError::DistError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x77398d6f75e2 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: c10::DistBackendError::DistBackendError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x77398d6f7712 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #3: c10d::ProcessGroupNCCL::WorkNCCL::checkTimeout(std::optional<std::chrono::duration<long, std::ratio<1l, 1000l> > >) + 0x2a7 (0x773990e60d87 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #4: c10d::ProcessGroupNCCL::Watchdog::runLoop() + 0x15b1 (0x773990e6d731 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #5: c10d::ProcessGroupNCCL::Watchdog::run() + 0x157 (0x773990e6e9a7 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #6: <unknown function> + 0xecdb4 (0x773a49622db4 in /lib/x86_64-linux-gnu/libstdc++.so.6)
+frame #7: <unknown function> + 0x9cb84 (0x773a57da8b84 in /lib/x86_64-linux-gnu/libc.so.6)
+frame #8: <unknown function> + 0x129ecc (0x773a57e35ecc in /lib/x86_64-linux-gnu/libc.so.6)
+
+Exception raised from run at /__w/rockrel/rockrel/external-builds/pytorch/pytorch/torch/csrc/distributed/c10d/ProcessGroupNCCL.cpp:2198 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x9d (0x77398d6f660d in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::DistError::DistError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x77398d6f75e2 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: c10::DistBackendError::DistBackendError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x77398d6f7712 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #3: <unknown function> + 0xd3ff1a (0x77398e63af1a in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #4: <unknown function> + 0xecdb4 (0x773a49622db4 in /lib/x86_64-linux-gnu/libstdc++.so.6)
+frame #5: <unknown function> + 0x9cb84 (0x773a57da8b84 in /lib/x86_64-linux-gnu/libc.so.6)
+frame #6: <unknown function> + 0x129ecc (0x773a57e35ecc in /lib/x86_64-linux-gnu/libc.so.6)
+
+[rank0]:[E1102 05:16:15.067349145 ProcessGroupNCCL.cpp:802] [PG GUID 0(default_pg) Rank 0] Some NCCL operations have failed or timed out. Due to the asynchronous nature of CUDA kernels, subsequent GPU operations might run on corrupted/incomplete data.
+[rank0]:[E1102 05:16:15.067365755 ProcessGroupNCCL.cpp:816] [PG GUID 0(default_pg) Rank 0] To avoid data inconsistency, we are taking the entire process down.
+[rank0]:[E1102 05:16:15.068828006 ProcessGroupNCCL.cpp:2192] [PG ID 0 PG GUID 0(default_pg) Rank 0] Process group watchdog thread terminated with exception: [PG GUID 0(default_pg) Rank 0] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=5308, OpType=ALLTOALL_BASE, NumelIn=402653184, NumelOut=402653184, Timeout(ms)=180000) ran for 180052 milliseconds before timing out.
+Exception raised from checkTimeout at /__w/rockrel/rockrel/external-builds/pytorch/pytorch/torch/csrc/distributed/c10d/ProcessGroupNCCL.cpp:744 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x9d (0x7a8a72f5260d in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::DistError::DistError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x7a8a72f535e2 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: c10::DistBackendError::DistBackendError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x7a8a72f53712 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #3: c10d::ProcessGroupNCCL::WorkNCCL::checkTimeout(std::optional<std::chrono::duration<long, std::ratio<1l, 1000l> > >) + 0x2a7 (0x7a8a766bcd87 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #4: c10d::ProcessGroupNCCL::Watchdog::runLoop() + 0x15b1 (0x7a8a766c9731 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #5: c10d::ProcessGroupNCCL::Watchdog::run() + 0x157 (0x7a8a766ca9a7 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #6: <unknown function> + 0xecdb4 (0x7a8b2ee8adb4 in /lib/x86_64-linux-gnu/libstdc++.so.6)
+frame #7: <unknown function> + 0x9cb84 (0x7a8b3d610b84 in /lib/x86_64-linux-gnu/libc.so.6)
+frame #8: <unknown function> + 0x129ecc (0x7a8b3d69decc in /lib/x86_64-linux-gnu/libc.so.6)
+
+terminate called after throwing an instance of 'c10::DistBackendError'
+  what():  [PG ID 0 PG GUID 0(default_pg) Rank 0] Process group watchdog thread terminated with exception: [PG GUID 0(default_pg) Rank 0] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=5308, OpType=ALLTOALL_BASE, NumelIn=402653184, NumelOut=402653184, Timeout(ms)=180000) ran for 180052 milliseconds before timing out.
+Exception raised from checkTimeout at /__w/rockrel/rockrel/external-builds/pytorch/pytorch/torch/csrc/distributed/c10d/ProcessGroupNCCL.cpp:744 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x9d (0x7a8a72f5260d in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::DistError::DistError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x7a8a72f535e2 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: c10::DistBackendError::DistBackendError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x7a8a72f53712 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #3: c10d::ProcessGroupNCCL::WorkNCCL::checkTimeout(std::optional<std::chrono::duration<long, std::ratio<1l, 1000l> > >) + 0x2a7 (0x7a8a766bcd87 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #4: c10d::ProcessGroupNCCL::Watchdog::runLoop() + 0x15b1 (0x7a8a766c9731 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #5: c10d::ProcessGroupNCCL::Watchdog::run() + 0x157 (0x7a8a766ca9a7 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #6: <unknown function> + 0xecdb4 (0x7a8b2ee8adb4 in /lib/x86_64-linux-gnu/libstdc++.so.6)
+frame #7: <unknown function> + 0x9cb84 (0x7a8b3d610b84 in /lib/x86_64-linux-gnu/libc.so.6)
+frame #8: <unknown function> + 0x129ecc (0x7a8b3d69decc in /lib/x86_64-linux-gnu/libc.so.6)
+
+Exception raised from run at /__w/rockrel/rockrel/external-builds/pytorch/pytorch/torch/csrc/distributed/c10d/ProcessGroupNCCL.cpp:2198 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x9d (0x7a8a72f5260d in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::DistError::DistError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x7a8a72f535e2 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: c10::DistBackendError::DistBackendError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x7a8a72f53712 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #3: <unknown function> + 0xd3ff1a (0x7a8a73e96f1a in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #4: <unknown function> + 0xecdb4 (0x7a8b2ee8adb4 in /lib/x86_64-linux-gnu/libstdc++.so.6)
+frame #5: <unknown function> + 0x9cb84 (0x7a8b3d610b84 in /lib/x86_64-linux-gnu/libc.so.6)
+frame #6: <unknown function> + 0x129ecc (0x7a8b3d69decc in /lib/x86_64-linux-gnu/libc.so.6)
+
+W1102 05:16:16.053000 55891 torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 56060 closing signal SIGTERM
+W1102 05:16:16.054000 55891 torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 56061 closing signal SIGTERM
+E1102 05:16:16.217000 55891 torch/distributed/elastic/multiprocessing/api.py:1002] failed (exitcode: -6) local_rank: 0 (pid: 56059) of binary: /opt/venv/bin/python3
+Traceback (most recent call last):
+  File "/opt/venv/bin/torchrun", line 10, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 380, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/distributed/run.py", line 1138, in main
+    run(args)
+  File "/opt/venv/lib/python3.12/site-packages/torch/distributed/run.py", line 1129, in run
+    elastic_launch(
+  File "/opt/venv/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 197, in __call__
+    return launch_agent(
+           ^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 386, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+/home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-11-02_05:16:16
+  host      : ctheliosr-rck-g02-e15-01.rck.dcgpu
+  rank      : 3 (local_rank: 3)
+  exitcode  : -6 (pid: 56062)  (SIGABRT)
+  error_file: <N/A>
+  traceback : Signal 6 (SIGABRT) received by PID 56062
+[2]:
+  time      : 2026-11-02_05:16:16
+  host      : ctheliosr-rck-g02-e15-01.rck.dcgpu
+  rank      : 1 (local_rank: 1)
+  exitcode  : -15 (pid: 56060)  (SIGTERM)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 56060
+[3]:
+  time      : 2026-11-02_05:16:16
+  host      : ctheliosr-rck-g02-e15-01.rck.dcgpu
+  rank      : 2 (local_rank: 2)
+  exitcode  : -15 (pid: 56061)  (SIGTERM)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 56061
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-11-02_05:16:16
+  host      : ctheliosr-rck-g02-e15-01.rck.dcgpu
+  rank      : 0 (local_rank: 0)
+  exitcode  : -6 (pid: 56059)  (SIGABRT)
+  error_file: <N/A>
+  traceback : Signal 6 (SIGABRT) received by PID 56059
+============================================================

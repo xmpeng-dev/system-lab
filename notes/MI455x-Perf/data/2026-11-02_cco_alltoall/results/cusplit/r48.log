@@ -1,0 +1,22 @@
+W1102 04:07:16.757000 44352 torch/distributed/run.py:982] 
+W1102 04:07:16.757000 44352 torch/distributed/run.py:982] *****************************************
+W1102 04:07:16.757000 44352 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 04:07:16.757000 44352 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+gmm       + alltoall        768 MiB  m1  comp   1.083->  1.224 ms (1.13x,  1525-> 1350 TF)  comm   0.818->  2.199 ms (2.69x, busbw   738->  275 GB/s)  [99, 55 calls]
+gmm       + alltoall        768 MiB  m2  x1   comp   1.011  comm   0.819  ovl   1.768 ms  (in ovl: comp   1.046, comm   1.762)  E  0.08  S 1.04 of 1.81
+gmm       + alltoall        768 MiB  (3 episodes released early and dropped)
+gemm      + alltoall        768 MiB  m1  comp   1.187->  1.719 ms (1.45x,  2084-> 1439 TF)  comm   0.817->  1.097 ms (1.34x, busbw   740->  550 GB/s)  [80, 122 calls]
+gemm      + alltoall        768 MiB  m2  x1   comp   1.116  comm   0.821  ovl   1.503 ms  (in ovl: comp   1.493, comm   1.225)  E  0.53  S 1.29 of 1.74
+
+validation: all passed
+wrote results/ctheliosr-rck-g02-e15-01_20261102_cusplit/r48.json

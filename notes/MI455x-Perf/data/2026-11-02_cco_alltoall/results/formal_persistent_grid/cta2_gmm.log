@@ -1,0 +1,33 @@
+W1102 03:37:21.199000 30737 torch/distributed/run.py:982] 
+W1102 03:37:21.199000 30737 torch/distributed/run.py:982] *****************************************
+W1102 03:37:21.199000 30737 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 03:37:21.199000 30737 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+gmm       + alltoall        768 MiB  m1  comp   1.039->  1.263 ms (1.22x,  1590-> 1308 TF)  comm   0.813->  2.369 ms (2.91x, busbw   743->  255 GB/s)  [344, 184 calls]
+gmm       + alltoall        768 MiB  m2  x1   comp   0.893  comm   0.817  ovl   1.726 ms  (in ovl: comp   0.929, comm   1.720)  E -0.02  S 0.99 of 1.92
+gmm       + alltoall        768 MiB  m2  x2   comp   1.858  comm   0.817  ovl   2.234 ms  (in ovl: comp   2.202, comm   2.218)  E  0.54  S 1.20 of 1.44
+gmm       + alltoall        768 MiB  (2 episodes released early and dropped)
+gmm       + alltoall        384 MiB  m1  comp   1.001->  1.339 ms (1.34x,  1650-> 1234 TF)  comm   0.438->  1.462 ms (3.34x, busbw   689->  206 GB/s)  [343, 313 calls]
+gmm       + alltoall        384 MiB  m2  x1   comp   0.873  comm   0.445  ovl   1.340 ms  (in ovl: comp   0.921, comm   1.334)  E -0.05  S 0.98 of 1.51
+gmm       + alltoall        384 MiB  (2 episodes released early and dropped)
+gmm       + alltoall        256 MiB  m1  comp   1.007->  1.144 ms (1.14x,  1642-> 1445 TF)  comm   0.244->  2.403 ms (9.83x, busbw   824->   84 GB/s)  [339, 164 calls]
+gmm       + alltoall        256 MiB  m2  x1   comp   0.878  comm   0.253  ovl   1.107 ms  (in ovl: comp   0.903, comm   1.101)  E  0.09  S 1.02 of 1.29
+gmm       + alltoall        256 MiB  (1 episodes released early and dropped)
+gmm       + alltoall        128 MiB  m1  comp   0.996->  1.080 ms (1.08x,  1659-> 1530 TF)  comm   0.145->  2.205 ms (15.22x, busbw   695->   46 GB/s)  [340, 166 calls]
+gmm       + alltoall        128 MiB  m2  x1   comp   0.865  comm   0.154  ovl   1.020 ms  (in ovl: comp   0.899, comm   1.014)  E -0.00  S 1.00 of 1.18
+gmm       + alltoall        128 MiB  (1 episodes released early and dropped)
+gmm       + alltoall         64 MiB  m1  comp   1.007->  1.349 ms (1.34x,  1641-> 1225 TF)  comm   0.094->  0.399 ms (4.23x, busbw   533->  126 GB/s)  [340, 1147 calls]
+gmm       + alltoall         64 MiB  m2  x1   comp   0.870  comm   0.104  ovl   0.983 ms  (in ovl: comp   0.907, comm   0.977)  E -0.09  S 0.99 of 1.12
+gmm       + alltoall         64 MiB  (1 episodes released early and dropped)
+
+validation: all passed
+wrote /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/results/ctheliosr-rck-g02-e15-01_20261102/cta2_gmm.json

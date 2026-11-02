@@ -1,0 +1,13 @@
+host: ctheliosr-rck-g02-e15-01
+date: 2026-11-02T03:25:34+00:00
+args: --comm alltoall --sizes-mib 768,384,256,128,64 --compute gmm,attn_fwd,attn_bwd,gemm
+torch: 2.14.0+rocm10.2.0a20261011 hip: 7.17.26405 rccl: (2, 32, 3)
+HIP_ARCHITECTURES=gfx1250
+HIP_CLANG_PATH=/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/llvm/bin
+HIP_DEVICE_LIB_PATH=/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib/llvm/amdgcn/bitcode
+HIP_INCLUDE_PATH=/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/include
+HIP_LIB_PATH=/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib
+HIP_PATH=/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel
+HIP_PLATFORM=amd
+HSA_ENABLE_SCRATCH_ASYNC_RECLAIM=0
+HSA_NO_SCRATCH_RECLAIM=1

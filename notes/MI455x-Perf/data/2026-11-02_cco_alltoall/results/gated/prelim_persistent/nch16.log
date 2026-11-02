@@ -1,0 +1,51 @@
+gmm       + alltoall        768 MiB  m1  comp   1.011->  1.398 ms (1.38x,  1634-> 1182 TF)  comm   5.603->  6.911 ms (1.23x, busbw   108->   87 GB/s)  [93, 18 calls]
+gmm       + alltoall        768 MiB  m2  x3   comp   2.910  comm   5.585  ovl   6.696 ms  (in ovl: comp   3.836, comm   6.690)  E  0.62  S 1.27 of 1.52
+gmm       + alltoall        768 MiB  m2  x6   comp   5.301  comm   5.585  ovl   7.646 ms  (in ovl: comp   7.637, comm   7.271)  E  0.61  S 1.42 of 1.95
+gmm       + alltoall        768 MiB  m2  x13  comp  12.908  comm   5.585  ovl  14.410 ms  (in ovl: comp  14.401, comm   8.508)  E  0.73  S 1.28 of 1.43
+gmm       + alltoall        768 MiB  (1 episodes released early and dropped)
+gmm       + alltoall         64 MiB  m1  comp   0.956->  1.030 ms (1.08x,  1728-> 1604 TF)  comm   0.100->  1.937 ms (19.35x, busbw   503->   26 GB/s)  [113, 64 calls]
+gmm       + alltoall         64 MiB  m2  x1   comp   0.888  comm   0.156  ovl   1.022 ms  (in ovl: comp   0.870, comm   1.016)  E  0.14  S 1.02 of 1.18
+gmm       + alltoall         64 MiB  (3 episodes released early and dropped)
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] LoadKernel: _ZN5aiter36fmha_bf16_pertokenBf16_hd128_128x256E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256.co
+[aiter] LoadKernel: _ZN5aiter36fmha_bf16_pertokenBf16_hd128_128x256E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256.co
+[aiter] LoadKernel: _ZN5aiter36fmha_bf16_pertokenBf16_hd128_128x256E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256.co
+[aiter] LoadKernel: _ZN5aiter36fmha_bf16_pertokenBf16_hd128_128x256E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256.co
+attn_fwd  + alltoall        768 MiB  m1  comp   0.560->  0.589 ms (1.05x,  1962-> 1867 TF)  comm   5.691->  6.705 ms (1.18x, busbw   106->   90 GB/s)  [198, 17 calls]
+attn_fwd  + alltoall        768 MiB  m2  x6   comp   2.961  comm   5.611  ovl   6.425 ms  (in ovl: comp   3.306, comm   6.419)  E  0.73  S 1.33 of 1.53
+attn_fwd  + alltoall        768 MiB  m2  x11  comp   5.453  comm   5.611  ovl   7.064 ms  (in ovl: comp   5.827, comm   7.058)  E  0.73  S 1.57 of 1.97
+attn_fwd  + alltoall        768 MiB  m2  x22  comp  11.409  comm   5.611  ovl  12.440 ms  (in ovl: comp  12.101, comm  12.433)  E  0.82  S 1.37 of 1.49
+attn_fwd  + alltoall         64 MiB  m1  comp   0.529->  0.603 ms (1.14x,  2078-> 1824 TF)  comm   0.099->  0.251 ms (2.55x, busbw   511->  201 GB/s)  [197, 475 calls]
+attn_fwd  + alltoall         64 MiB  m2  x1   comp   0.494  comm   0.151  ovl   0.626 ms  (in ovl: comp   0.549, comm   0.620)  E  0.12  S 1.03 of 1.30
+[aiter] import [module_fmha_v3_bwd] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_v3_bwd.so
+[aiter] import [module_fmha_v3_bwd] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_v3_bwd.so
+[aiter] import [module_fmha_v3_bwd] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_v3_bwd.so
+[aiter] import [module_fmha_v3_bwd] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_v3_bwd.so
+[aiter] type hints mismatch, override to --> fmha_v3_bwd(dout: torch.Tensor, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, out: torch.Tensor, softmax_lse: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, deterministic: bool, is_v3_atomic_fp32: bool, how_v3_bf16_cvt: int, dq: Optional[torch.Tensor] = None, dk: Optional[torch.Tensor] = None, dv: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, rng_state: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] LoadKernel: _ZN5aiter23fmha_bwd_hd128_odo_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_odo_bf16.co
+[aiter] type hints mismatch, override to --> fmha_v3_bwd(dout: torch.Tensor, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, out: torch.Tensor, softmax_lse: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, deterministic: bool, is_v3_atomic_fp32: bool, how_v3_bf16_cvt: int, dq: Optional[torch.Tensor] = None, dk: Optional[torch.Tensor] = None, dv: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, rng_state: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] type hints mismatch, override to --> fmha_v3_bwd(dout: torch.Tensor, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, out: torch.Tensor, softmax_lse: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, deterministic: bool, is_v3_atomic_fp32: bool, how_v3_bf16_cvt: int, dq: Optional[torch.Tensor] = None, dk: Optional[torch.Tensor] = None, dv: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, rng_state: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] LoadKernel: _ZN5aiter23fmha_bwd_hd128_odo_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_odo_bf16.co
+[aiter] LoadKernel: _ZN5aiter23fmha_bwd_hd128_odo_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_odo_bf16.co
+[aiter] type hints mismatch, override to --> fmha_v3_bwd(dout: torch.Tensor, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, out: torch.Tensor, softmax_lse: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, deterministic: bool, is_v3_atomic_fp32: bool, how_v3_bf16_cvt: int, dq: Optional[torch.Tensor] = None, dk: Optional[torch.Tensor] = None, dv: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, rng_state: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] LoadKernel: _ZN5aiter23fmha_bwd_hd128_odo_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_odo_bf16.co
+[aiter] LoadKernel: _ZN5aiter28fmha_bwd_hd128_bf16_a32_psskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_bf16_a32_pssk.co
+[aiter] LoadKernel: _ZN5aiter28fmha_bwd_hd128_bf16_a32_psskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_bf16_a32_pssk.co
+[aiter] LoadKernel: _ZN5aiter28fmha_bwd_hd128_bf16_a32_psskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_bf16_a32_pssk.co
+[aiter] LoadKernel: _ZN5aiter28fmha_bwd_hd128_bf16_a32_psskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_bf16_a32_pssk.co
+[aiter] LoadKernel: _ZN5aiter30fmha_bwd_hd128_dq_convert_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_dq_convert_bf16.co
+[aiter] LoadKernel: _ZN5aiter30fmha_bwd_hd128_dq_convert_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_dq_convert_bf16.co
+[aiter] LoadKernel: _ZN5aiter30fmha_bwd_hd128_dq_convert_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_dq_convert_bf16.co
+[aiter] LoadKernel: _ZN5aiter30fmha_bwd_hd128_dq_convert_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_dq_convert_bf16.co
+attn_bwd  + alltoall        768 MiB  m1  comp   1.630->  1.668 ms (1.02x,  1687-> 1648 TF)  comm   5.665->  7.011 ms (1.24x, busbw   107->   86 GB/s)  [71, 16 calls]
+attn_bwd  + alltoall        768 MiB  m2  x2   comp   2.960  comm   5.608  ovl   6.256 ms  (in ovl: comp   3.076, comm   6.250)  E  0.78  S 1.37 of 1.53
+attn_bwd  + alltoall        768 MiB  m2  x4   comp   5.816  comm   5.608  ovl   6.818 ms  (in ovl: comp   6.475, comm   6.811)  E  0.82  S 1.68 of 1.96
+attn_bwd  + alltoall        768 MiB  m2  x8   comp  12.598  comm   5.608  ovl  13.009 ms  (in ovl: comp  12.997, comm   9.147)  E  0.93  S 1.40 of 1.45
+attn_bwd  + alltoall         64 MiB  m1  comp   1.552->  1.714 ms (1.10x,  1771-> 1604 TF)  comm   0.099->  0.284 ms (2.88x, busbw   511->  177 GB/s)  [68, 413 calls]
+attn_bwd  + alltoall         64 MiB  m2  x1   comp   1.506  comm   0.150  ovl   1.518 ms  (in ovl: comp   1.500, comm   1.511)  E  0.93  S 1.09 of 1.10
+
+validation: all passed
+wrote /home/xiaompen/minimax-poc/.scratch/e1sweep/nch16.json

@@ -25,6 +25,7 @@
 | [`primus-turbo/`](./primus-turbo/README.md) | Primus-Turbo **作为交付物**的 owner 视角规划与审计(库边界 / CI / 六栈治理 / 差异化) | active — 2026-10-28 接任 owner 首版 roadmap 成文:**最严重的是契约不是 kernel**(≥3 个 Primus import 指向 Turbo 零分支存在的模块)、CI 不测 gfx1250、静默数值回归靠 vendoring |
 | [`mlperf-llama/`](./mlperf-llama/README.md) | Llama-2-70B LoRA SFT, NeMo vs Primus | active — DataLoader fix + `fp8_param` A/B 待跑 |
 | [`pilot/`](./pilot/README.md) | Primus Pilot v2: agentic training-tuning system | active — bootstrap 工具落地,BASELINE 入口待排查 |
+| [`MI455x-Perf/`](./MI455x-Perf/README.md) | MI455X 计算 + 通信 overlap 性能分析（4 × MI455X） | active — GEMM + alltoall 根因定位（persistent grid 占满 CU），data-parallel grid E 0 → 0.56 |
 | [`moe-train/`](./moe-train/README.md) | Compact MoE training runtime：PithTrain DNA + AMD topology-aware 重写 | **设计** — v1 架构 2026-08-19 成文，repo 未创建 |
 
 ## 写 note 的两条 skill

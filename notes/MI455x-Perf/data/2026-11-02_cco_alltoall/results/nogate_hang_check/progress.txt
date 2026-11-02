@@ -1,0 +1,8 @@
+gmm run 1 exit 0 06:05:51
+gmm_flydsl run 1 exit 0 06:07:34
+gmm run 2 exit 0 06:09:22
+gmm_flydsl run 2 exit 0 06:11:05
+gmm run 3 exit 0 06:12:52
+gmm_flydsl run 3 exit 0 06:14:36
+gmm run 4 exit 0 06:16:23
+gmm_flydsl run 4 exit 0 06:18:07

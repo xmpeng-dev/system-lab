@@ -1,0 +1,44 @@
+W1102 03:29:11.183000 29917 torch/distributed/run.py:982] 
+W1102 03:29:11.183000 29917 torch/distributed/run.py:982] *****************************************
+W1102 03:29:11.183000 29917 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 03:29:11.183000 29917 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] LoadKernel: _ZN5aiter36fmha_bf16_pertokenBf16_hd128_128x256E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256.co
+[aiter] LoadKernel: _ZN5aiter36fmha_bf16_pertokenBf16_hd128_128x256E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256.co
+[aiter] [aiter] LoadKernel: LoadKernel: _ZN5aiter36fmha_bf16_pertokenBf16_hd128_128x256E_ZN5aiter36fmha_bf16_pertokenBf16_hd128_128x256E hsaco:  hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256.co/opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256.co
+
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+attn_fwd  + alltoall        768 MiB  m1  comp   0.579->  0.826 ms (1.43x,  1899-> 1331 TF)  comm   0.815->  1.072 ms (1.32x, busbw   741->  564 GB/s)  [492, 368 calls]
+attn_fwd  + alltoall        768 MiB  m2  x1   comp   0.480  comm   0.820  ovl   1.015 ms  (in ovl: comp   0.752, comm   1.009)  E  0.59  S 1.28 of 1.59
+attn_fwd  + alltoall        768 MiB  m2  x2   comp   0.965  comm   0.820  ovl   1.354 ms  (in ovl: comp   1.345, comm   1.123)  E  0.53  S 1.32 of 1.85
+attn_fwd  + alltoall        768 MiB  m2  x3   comp   1.470  comm   0.820  ovl   1.862 ms  (in ovl: comp   1.852, comm   1.176)  E  0.52  S 1.23 of 1.56
+attn_fwd  + alltoall        768 MiB  (4 episodes released early and dropped)
+attn_fwd  + alltoall        384 MiB  m1  comp   0.581->  0.791 ms (1.36x,  1894-> 1391 TF)  comm   0.439->  0.658 ms (1.50x, busbw   689->  459 GB/s)  [579, 674 calls]
+attn_fwd  + alltoall        384 MiB  m2  x1   comp   0.481  comm   0.446  ovl   0.693 ms  (in ovl: comp   0.673, comm   0.684)  E  0.52  S 1.34 of 1.93
+attn_fwd  + alltoall        384 MiB  m2  x2   comp   0.968  comm   0.446  ovl   1.188 ms  (in ovl: comp   1.179, comm   0.734)  E  0.51  S 1.19 of 1.46
+attn_fwd  + alltoall        256 MiB  m1  comp   0.565->  0.679 ms (1.20x,  1945-> 1620 TF)  comm   0.243->  0.469 ms (1.93x, busbw   827->  429 GB/s)  [581, 844 calls]
+attn_fwd  + alltoall        256 MiB  m2  x1   comp   0.481  comm   0.252  ovl   0.600 ms  (in ovl: comp   0.572, comm   0.594)  E  0.53  S 1.22 of 1.53
+attn_fwd  + alltoall        128 MiB  m1  comp   0.564->  0.646 ms (1.15x,  1951-> 1703 TF)  comm   0.144->  0.332 ms (2.31x, busbw   700->  303 GB/s)  [583, 1135 calls]
+attn_fwd  + alltoall        128 MiB  m2  x1   comp   0.481  comm   0.153  ovl   0.600 ms  (in ovl: comp   0.572, comm   0.594)  E  0.22  S 1.06 of 1.32
+attn_fwd  + alltoall         64 MiB  m1  comp   0.563->  0.626 ms (1.11x,  1954-> 1757 TF)  comm   0.094->  0.254 ms (2.71x, busbw   538->  198 GB/s)  [586, 1453 calls]
+attn_fwd  + alltoall         64 MiB  m2  x1   comp   0.492  comm   0.103  ovl   0.586 ms  (in ovl: comp   0.556, comm   0.580)  E  0.09  S 1.02 of 1.21
+attn_fwd  + alltoall         64 MiB  (1 episodes released early and dropped)
+
+validation: all passed
+wrote /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/results/ctheliosr-rck-g02-e15-01_20261102/default_attn_fwd.json

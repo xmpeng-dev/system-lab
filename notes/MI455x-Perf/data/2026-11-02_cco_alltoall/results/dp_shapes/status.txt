@@ -1,0 +1,17 @@
+default_gmm-up912 attempt 1 exit 0 2026-11-02T04:30:53Z
+dp_gmm-up912 attempt 1 exit 1 2026-11-02T04:33:01Z
+dp_gmm-up912 attempt 2 exit 0 2026-11-02T04:33:32Z
+default_gmm-down912 attempt 1 exit 0 2026-11-02T04:35:04Z
+dp_gmm-down912 attempt 1 exit 0 2026-11-02T04:35:28Z
+default_gmm-up456 attempt 1 exit 0 2026-11-02T04:36:34Z
+dp_gmm-up456 attempt 1 exit 0 2026-11-02T04:37:33Z
+default_gmm-down456 attempt 1 exit 0 2026-11-02T04:38:42Z
+dp_gmm-down456 attempt 1 exit 0 2026-11-02T04:39:46Z
+default_gemm-up8192 attempt 1 exit 0 2026-11-02T04:40:19Z
+dp_gemm-up8192 attempt 1 exit 0 2026-11-02T04:40:46Z
+default_gemm-up4096 attempt 1 exit 1 2026-11-02T04:43:06Z
+default_gemm-up4096 attempt 2 exit 0 2026-11-02T04:44:25Z
+dp_gemm-up4096 attempt 1 exit 0 2026-11-02T04:44:48Z
+default_gemm-down8192 attempt 1 exit 0 2026-11-02T04:45:50Z
+dp_gemm-down8192 attempt 1 exit 1 2026-11-02T04:49:12Z
+dp_gemm-down8192 attempt 2 exit 0 2026-11-02T04:49:44Z

@@ -1,0 +1,29 @@
+W1102 04:30:25.244000 50153 torch/distributed/run.py:982] 
+W1102 04:30:25.244000 50153 torch/distributed/run.py:982] *****************************************
+W1102 04:30:25.244000 50153 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 04:30:25.244000 50153 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+gmm       + alltoall        768 MiB  m1  comp   0.952->  1.245 ms (1.31x,  1736-> 1328 TF)  comm   0.815->  2.278 ms (2.79x, busbw   741->  265 GB/s)  [116, 62 calls]
+gmm       + alltoall        768 MiB  m2  x1   comp   0.892  comm   0.818  ovl   1.700 ms  (in ovl: comp   0.905, comm   1.694)  E  0.01  S 1.01 of 1.92
+gmm       + alltoall        768 MiB  (2 episodes released early and dropped)
+gmm       + alltoall        384 MiB  m1  comp   0.960->  1.174 ms (1.22x,  1721-> 1407 TF)  comm   0.443->  2.148 ms (4.85x, busbw   682->  141 GB/s)  [114, 62 calls]
+gmm       + alltoall        384 MiB  m2  x1   comp   0.897  comm   0.450  ovl   1.341 ms  (in ovl: comp   0.911, comm   1.334)  E  0.01  S 1.00 of 1.50
+gmm       + alltoall        384 MiB  (1 episodes released early and dropped)
+gmm       + alltoall        256 MiB  m1  comp   0.958->  1.072 ms (1.12x,  1725-> 1541 TF)  comm   0.249->  2.398 ms (9.65x, busbw   810->   84 GB/s)  [114, 51 calls]
+gmm       + alltoall        256 MiB  m2  x1   comp   0.894  comm   0.261  ovl   1.127 ms  (in ovl: comp   0.907, comm   1.119)  E  0.11  S 1.02 of 1.29
+gmm       + alltoall        256 MiB  (1 episodes released early and dropped)
+gmm       + alltoall        128 MiB  m1  comp   0.949->  1.073 ms (1.13x,  1742-> 1540 TF)  comm   0.151->  2.266 ms (15.03x, busbw   668->   44 GB/s)  [114, 54 calls]
+gmm       + alltoall        128 MiB  m2  x1   comp   0.905  comm   0.161  ovl   1.021 ms  (in ovl: comp   0.903, comm   1.014)  E  0.28  S 1.04 of 1.18
+gmm       + alltoall        128 MiB  (1 episodes released early and dropped)
+
+validation: all passed
+wrote /home/xiaompen/minimax-poc/.scratch/cco-analysis/dp/default_gmm-up912.json

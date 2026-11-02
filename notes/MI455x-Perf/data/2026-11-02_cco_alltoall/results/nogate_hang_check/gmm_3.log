@@ -1,0 +1,28 @@
+W1102 06:11:06.822000 63226 torch/distributed/run.py:982] 
+W1102 06:11:06.822000 63226 torch/distributed/run.py:982] *****************************************
+W1102 06:11:06.822000 63226 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 06:11:06.822000 63226 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+gmm       + alltoall        768 MiB  m1  comp   1.033->  1.416 ms (1.37x,  1600-> 1167 TF)  comm   0.817->  1.126 ms (1.38x, busbw   739->  536 GB/s)  [310, 366 calls]
+gmm       + alltoall        768 MiB  m2  x1   comp   1.028  comm   0.818  ovl   1.364 ms  (in ovl: comp   1.354, comm   1.325)  E  0.59  S 1.35 of 1.80
+gmm       + alltoall        768 MiB  m2  x2   comp   2.052  comm   0.818  ovl   2.381 ms  (in ovl: comp   2.372, comm   1.616)  E  0.60  S 1.21 of 1.40
+gmm       + alltoall        384 MiB  m1  comp   1.013->  1.343 ms (1.33x,  1632-> 1230 TF)  comm   0.436->  0.711 ms (1.63x, busbw   693->  425 GB/s)  [344, 651 calls]
+gmm       + alltoall        384 MiB  m2  x1   comp   1.028  comm   0.443  ovl   1.220 ms  (in ovl: comp   1.210, comm   0.988)  E  0.57  S 1.21 of 1.43
+gmm       + alltoall        256 MiB  m1  comp   1.008->  1.164 ms (1.15x,  1639-> 1420 TF)  comm   0.242->  0.520 ms (2.15x, busbw   831->  387 GB/s)  [326, 735 calls]
+gmm       + alltoall        256 MiB  m2  x1   comp   1.025  comm   0.250  ovl   1.118 ms  (in ovl: comp   1.107, comm   1.112)  E  0.63  S 1.14 of 1.24
+gmm       + alltoall        128 MiB  m1  comp   1.004->  1.119 ms (1.11x,  1646-> 1477 TF)  comm   0.145->  0.362 ms (2.49x, busbw   693->  278 GB/s)  [317, 982 calls]
+gmm       + alltoall        128 MiB  m2  x1   comp   1.021  comm   0.156  ovl   1.088 ms  (in ovl: comp   1.077, comm   1.082)  E  0.57  S 1.08 of 1.15
+gmm       + alltoall         64 MiB  m1  comp   1.003->  1.101 ms (1.10x,  1648-> 1501 TF)  comm   0.094->  0.299 ms (3.19x, busbw   538->  168 GB/s)  [312, 1149 calls]
+gmm       + alltoall         64 MiB  m2  x1   comp   1.019  comm   0.102  ovl   1.069 ms  (in ovl: comp   1.059, comm   1.062)  E  0.51  S 1.05 of 1.10
+
+validation: all passed
+wrote .scratch/nogate/gmm_3.json
