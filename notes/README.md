@@ -17,7 +17,7 @@
 | [`monolith-moe/`](./monolith-moe/README.md) | MoE super-kernel + CCO (MI355X) | 阶段性收尾 — HIP C++ IPC kernel 待落地 |
 | [`monolith-ep/`](./monolith-ep/) | MoE expert parallel super-kernel | placeholder — 待启动 |
 | [`rocmoe/`](./rocmoe/README.md) | MoE super-kernel v3：Layout-P + receiver-pull + MonolithEP hot loop (MI355X) | active — 设计冻结 (M0 待启动) |
-| [`megaattn/`](./megaattn/README.md) | DSA attention megakernel：indexer + top-k + sparse MLA 三段融合 (MI355X) | active — v1 设计成文，M0 摸底待启动 |
+| [`megaattn/`](./megaattn/README.md) | DSA attention megakernel：indexer + top-k + sparse MLA 三段融合 (MI355X) | active — M0 完成：decode 有条件 GO（B ≤ 16 过 15% 门槛）；训练（CP）NO-GO（128K 时 ≤ 5%） |
 | [`hk-attn-bwd/`](./hk-attn-bwd/README.md) | kernel-substrate：自主可控 GEMM 底座（原 attention backward 专项，2026-08-13 重写） | active — M0=GEMM epilogue 融 quant；attention 入口已关闭，见代码核查 |
 | [`peer-tiles/`](./peer-tiles/README.md) | 自有 repo：AMD 上融合 MoE 训练 kernel 的 tile 原语库（HK 形状，加第四条原语「所有权与可见性」） | **M0 设计中** — 立项文档已成文，三个待决问题未定 |
 | [`MegaMoeFlydsl/`](./MegaMoeFlydsl/mxfp8_moe_bwd_perf_summary.md) | MXFP8 Mega MoE fwd+bwd (FlyDSL, 8× MI355X) | active — e2e fwd+bwd 14.117 ms / FP8 净 1.41×；靶点是量化↔GEMM 格式缝 |

@@ -1,0 +1,16 @@
+B=1 N=8192 logits=0.03 MB
+  indexer    HBM/MALL fetch     1.19 MB  write     0.03 MB  L2 req     1.63 MB(x128B)  L2 hit  53.8%  fetch/logits 36.41  L2req/logits 49.75
+  topk       HBM/MALL fetch     0.04 MB  write     0.01 MB  L2 req     0.05 MB(x128B)  L2 hit  47.5%  fetch/logits  1.35  L2req/logits  1.39
+  sparse_mla HBM/MALL fetch     9.33 MB  write     6.97 MB  L2 req    10.64 MB(x128B)  L2 hit  41.8%  fetch/logits 284.65  L2req/logits 324.61
+B=1 N=131072 logits=0.52 MB
+  indexer    HBM/MALL fetch    17.47 MB  write     0.52 MB  L2 req    19.60 MB(x128B)  L2 hit  18.4%  fetch/logits 33.33  L2req/logits 37.38
+  topk       HBM/MALL fetch     2.35 MB  write     0.17 MB  L2 req     2.26 MB(x128B)  L2 hit   9.3%  fetch/logits  4.49  L2req/logits  4.32
+  sparse_mla HBM/MALL fetch     9.43 MB  write     6.97 MB  L2 req    10.74 MB(x128B)  L2 hit  41.6%  fetch/logits 17.98  L2req/logits 20.48
+B=16 N=131072 logits=8.39 MB
+  indexer    HBM/MALL fetch   277.43 MB  write     8.61 MB  L2 req   284.12 MB(x128B)  L2 hit   5.5%  fetch/logits 33.07  L2req/logits 33.87
+  topk       HBM/MALL fetch    36.33 MB  write     2.77 MB  L2 req    36.23 MB(x128B)  L2 hit  10.8%  fetch/logits  4.33  L2req/logits  4.32
+  sparse_mla HBM/MALL fetch    98.43 MB  write    65.35 MB  L2 req   109.61 MB(x128B)  L2 hit  36.0%  fetch/logits 11.73  L2req/logits 13.07
+B=64 N=131072 logits=33.55 MB
+  indexer    HBM/MALL fetch  1112.13 MB  write    36.25 MB  L2 req  1131.97 MB(x128B)  L2 hit   4.4%  fetch/logits 33.14  L2req/logits 33.74
+  topk       HBM/MALL fetch    34.36 MB  write     0.52 MB  L2 req    65.60 MB(x128B)  L2 hit  55.3%  fetch/logits  1.02  L2req/logits  1.96
+  sparse_mla HBM/MALL fetch   185.71 MB  write    77.19 MB  L2 req   190.67 MB(x128B)  L2 hit  27.5%  fetch/logits  5.53  L2req/logits  5.68

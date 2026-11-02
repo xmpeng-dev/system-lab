@@ -13,10 +13,11 @@
 
 | 维度 | 值 |
 |---|---|
-| 当前阶段 | **设计 2026-08-05 16:50 — v1 架构设计成文，M0 摸底待启动**。核心论点：`[next_n, S_kv]` fp32 logits 张量只有 top-k 一个消费者，不该落 HBM；用 LDS 在线阈值剪枝把 top-k 输入从 `N x 4B` 压到 `~24 KB`。骨架与 MegaMoE 同构（打分 → top-k → gather → 算），且**无跨卡通信**，比 MegaMoE 简单一档。详见 [v1 架构设计](./2026-08-05_1650_megaattn_v1_architecture_design.md);**下一步 P0**: M0 分段 profile，若 top-k + logits 往返合计 < 15% 则就地叫停 |
+| 当前阶段 | **M0 完成 2026-10-29 13:30 — GO（有条件），下一轮开 M1**。MI355X 上 aiter 三独立 kernel 基线（128 MLA heads）的「top-k + logits 往返」占单层 wall：@128K B = 1 / 4 / 16 / 32 / 64 为 45.8 / 33.8 / 21.5 / 14.0 / 11.5%，@8K B = 1 为 23.1%；B ≤ 4 全部 N 过 15% 门槛，B = 16 在 32K / 128K 过，B ≥ 32 不过。logits 写回本身 ≤ 2.4% wall，收益几乎全在 top-k 延迟（9–11 / 15–20 / 29–38 µs @8K / 32K / 128K，几乎不随 batch 变）。M3「@128K 降 ≥ 25%」只在 B ≤ 4 可达，B = 16 需要 M1 indexer 接近 roofline（aiter 2.7–3.9 TB/s）。详见 [M0 分段占比](./2026-10-29_1330_BASELINE_m0_dsa_decode_three_kernel_breakdown.md);**下一步 P0**: M1（FlyDSL FP8 paged MQA logits + k=2048 精确 radix top-k），并用「独立 top-k 极限」重算 M2 门槛 |
 | 前置缺口 | `pa_metadata.py:1242` 硬断言 `topk == -1`，FlyDSL 稀疏路径为零；attention 全栈无 backward |
 | 已有资产 | MLA m16x8 FP8 tile loop（`mla_fwd_decode_m16x8_fp8_fp8.py`，2096 行）与 split-KV reduce 已就绪，缺的只是「按索引取 KV」 |
-| M0 门槛 | N = 8K / 32K / 128K 三档分段 rocprof，量出 indexer / top-k / sparse MLA 实际 wall 占比 |
+| 训练场景（CP） | **M0-train 2026-10-29 14:00 — NO-GO**。128K / CP 8（生产 V4-Flash SFT 配置）下「top-k + logits 写回」只占一个 CSA 层 attention fwd+bwd 的 5.3%（V4-Flash）/ 2.5%（V4-Pro）/ 4.6%（V3.2），占整个 attention 栈 2.3% / 1.3%；占比与 mbs、CP 无关，只随上下文长度增长，V4-Flash 到 1M 才到 16%。训练大头是 sparse MLA 反向（66–73%）。详见 [M0 训练分段占比](./2026-10-29_1400_BASELINE_m0_train_cp_breakdown.md) |
+| M0 门槛 | N = 8K / 32K / 128K 三档分段 rocprof，量出 indexer / top-k / sparse MLA 实际 wall 占比 —— **已完成，B ≤ 16 通过**；基线 harness 在 Primus-Turbo 分支 `feat/megaattn/m0-dsa-decode-baseline`：`benchmark/ops/inference/bench_dsa_decode_breakdown_aiter.py` |
 | M3 目标 | 单层 attention wall 相对「三独立 kernel」基线降 ≥ 25% @ 128K，精确 top-k 逐位一致 |
 
 ## 设计核心（3 个改动 vs 三独立 kernel 基线）
@@ -42,6 +43,9 @@
 | 文件 | 内容 |
 |---|---|
 | [2026-08-05_1650_megaattn_v1_architecture_design.md](./2026-08-05_1650_megaattn_v1_architecture_design.md) | v1 架构设计：瓶颈分析、role-split 结构、与 MegaMoE 的同构映射、`work_info` 接口改动、分阶段计划与风险表 |
+| [2026-10-29_1255_handoff-prompt-for-turbo.md](./2026-10-29_1255_handoff-prompt-for-turbo.md) | M0 交接 prompt：范围、硬约束、交付物、15% 门槛 |
+| [2026-10-29_1330_BASELINE_m0_dsa_decode_three_kernel_breakdown.md](./2026-10-29_1330_BASELINE_m0_dsa_decode_three_kernel_breakdown.md) | **M0 BASELINE**：MI355X aiter 三独立 kernel（indexer / top-k / sparse MLA）分段占比，B 1–64 x N 8K / 32K / 128K x 128 / 16 heads；rocprof 读写量；max_split 扫描；GO（有条件）判定；aiter 两个 bug。数据在 [`data/2026-10-29-m0/`](./data/2026-10-29-m0/) |
+| [2026-10-29_1400_BASELINE_m0_train_cp_breakdown.md](./2026-10-29_1400_BASELINE_m0_train_cp_breakdown.md) | **M0 BASELINE（训练）**：CP 下单 rank 的 indexer / top-k / sparse MLA fwd+bwd 分段，V4-Flash / V4-Pro / V3.2 x S 4K–1M；mbs / CP 线性检验；整个 attention 栈占比；训练 NO-GO 判定。数据在 [`data/2026-10-29-m0-train/`](./data/2026-10-29-m0-train/) |
 
 ## 相关
 
