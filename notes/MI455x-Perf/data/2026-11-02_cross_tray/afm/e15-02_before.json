@@ -1,0 +1,573 @@
+{
+    "device": [
+        {
+            "bdf": "0001:01:00.1",
+            "spec": {
+                "accelerator_id": "4",
+                "config_phase": "ACTIVE",
+                "virtualization_mode": "bare-metal",
+                "encap_type": "IFoE-ethernet",
+                "failover_mode": "disabled",
+                "loopback_mode": "none",
+                "crypto_mode": "off",
+                "local_accelerators": [
+                    "4",
+                    "5",
+                    "6",
+                    "7"
+                ],
+                "vpod_accelerators": [
+                    "4",
+                    "5",
+                    "6",
+                    "7"
+                ],
+                "whitelisted_accelerators": [
+                    "4",
+                    "5",
+                    "6",
+                    "7"
+                ],
+                "capability": {
+                    "num_ual_station": "18",
+                    "num_accelerator": "96",
+                    "num_network_port_per_station": "2",
+                    "num_path_per_station": "2",
+                    "num_serdes_lanes_per_station": "4",
+                    "num_network_port": "36"
+                },
+                "scaleup_fabric": {
+                    "physical_pod": {
+                        "id": "a674683c-423e-4398-91fe-4f132ece26fa",
+                        "size": "72",
+                        "local_accelerators": [
+                            "4",
+                            "5",
+                            "6",
+                            "7"
+                        ]
+                    },
+                    "virtual_pod": {
+                        "id": "3",
+                        "npa_address_mode": "source-aliasing"
+                    },
+                    "stations": [
+                        {
+                            "station": "1",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "2",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "3",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "4",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "5",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "6",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "7",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "8",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "9",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "10",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "11",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "12",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "13",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "14",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "15",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "16",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "17",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "18",
+                            "bandwidth_mask": "0x0f"
+                        }
+                    ]
+                }
+            },
+            "status": {
+                "lib_version": "0.5.0",
+                "firmware_version": "1.0.0.0000",
+                "build_name": "fw.mi450-a0.silicon.benchtop",
+                "firmware_revision": "0d4a635",
+                "mcdi_version": "2",
+                "telemetry_version": "16908288.0.0",
+                "identity": {
+                    "compute_tray_type": "HELIOS_R",
+                    "num_gpus": "4",
+                    "physical_id": "3",
+                    "oam_id": "0"
+                }
+            }
+        },
+        {
+            "bdf": "0002:01:00.1",
+            "spec": {
+                "accelerator_id": "5",
+                "config_phase": "ACTIVE",
+                "virtualization_mode": "bare-metal",
+                "encap_type": "IFoE-ethernet",
+                "failover_mode": "disabled",
+                "loopback_mode": "none",
+                "crypto_mode": "off",
+                "local_accelerators": [
+                    "4",
+                    "5",
+                    "6",
+                    "7"
+                ],
+                "vpod_accelerators": [
+                    "4",
+                    "5",
+                    "6",
+                    "7"
+                ],
+                "whitelisted_accelerators": [
+                    "4",
+                    "5",
+                    "6",
+                    "7"
+                ],
+                "capability": {
+                    "num_ual_station": "18",
+                    "num_accelerator": "96",
+                    "num_network_port_per_station": "2",
+                    "num_path_per_station": "2",
+                    "num_serdes_lanes_per_station": "4",
+                    "num_network_port": "36"
+                },
+                "scaleup_fabric": {
+                    "physical_pod": {
+                        "id": "a674683c-423e-4398-91fe-4f132ece26fa",
+                        "size": "72",
+                        "local_accelerators": [
+                            "4",
+                            "5",
+                            "6",
+                            "7"
+                        ]
+                    },
+                    "virtual_pod": {
+                        "id": "3",
+                        "npa_address_mode": "source-aliasing"
+                    },
+                    "stations": [
+                        {
+                            "station": "1",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "2",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "3",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "4",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "5",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "6",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "7",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "8",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "9",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "10",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "11",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "12",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "13",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "14",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "15",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "16",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "17",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "18",
+                            "bandwidth_mask": "0x0f"
+                        }
+                    ]
+                }
+            },
+            "status": {
+                "lib_version": "0.5.0",
+                "firmware_version": "1.0.0.0000",
+                "build_name": "fw.mi450-a0.silicon.benchtop",
+                "firmware_revision": "0d4a635",
+                "mcdi_version": "2",
+                "telemetry_version": "16908288.0.0",
+                "identity": {
+                    "compute_tray_type": "HELIOS_R",
+                    "num_gpus": "4",
+                    "physical_id": "2",
+                    "oam_id": "1"
+                }
+            }
+        },
+        {
+            "bdf": "0003:01:00.1",
+            "spec": {
+                "accelerator_id": "6",
+                "config_phase": "ACTIVE",
+                "virtualization_mode": "bare-metal",
+                "encap_type": "IFoE-ethernet",
+                "failover_mode": "disabled",
+                "loopback_mode": "none",
+                "crypto_mode": "off",
+                "local_accelerators": [
+                    "4",
+                    "5",
+                    "6",
+                    "7"
+                ],
+                "vpod_accelerators": [
+                    "4",
+                    "5",
+                    "6",
+                    "7"
+                ],
+                "whitelisted_accelerators": [
+                    "4",
+                    "5",
+                    "6",
+                    "7"
+                ],
+                "capability": {
+                    "num_ual_station": "18",
+                    "num_accelerator": "96",
+                    "num_network_port_per_station": "2",
+                    "num_path_per_station": "2",
+                    "num_serdes_lanes_per_station": "4",
+                    "num_network_port": "36"
+                },
+                "scaleup_fabric": {
+                    "physical_pod": {
+                        "id": "a674683c-423e-4398-91fe-4f132ece26fa",
+                        "size": "72",
+                        "local_accelerators": [
+                            "4",
+                            "5",
+                            "6",
+                            "7"
+                        ]
+                    },
+                    "virtual_pod": {
+                        "id": "3",
+                        "npa_address_mode": "source-aliasing"
+                    },
+                    "stations": [
+                        {
+                            "station": "1",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "2",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "3",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "4",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "5",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "6",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "7",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "8",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "9",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "10",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "11",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "12",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "13",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "14",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "15",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "16",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "17",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "18",
+                            "bandwidth_mask": "0x0f"
+                        }
+                    ]
+                }
+            },
+            "status": {
+                "lib_version": "0.5.0",
+                "firmware_version": "1.0.0.0000",
+                "build_name": "fw.mi450-a0.silicon.benchtop",
+                "firmware_revision": "0d4a635",
+                "mcdi_version": "2",
+                "telemetry_version": "16908288.0.0",
+                "identity": {
+                    "compute_tray_type": "HELIOS_R",
+                    "num_gpus": "4",
+                    "physical_id": "1",
+                    "oam_id": "2"
+                }
+            }
+        },
+        {
+            "bdf": "0004:01:00.1",
+            "spec": {
+                "accelerator_id": "7",
+                "config_phase": "ACTIVE",
+                "virtualization_mode": "bare-metal",
+                "encap_type": "IFoE-ethernet",
+                "failover_mode": "disabled",
+                "loopback_mode": "none",
+                "crypto_mode": "off",
+                "local_accelerators": [
+                    "4",
+                    "5",
+                    "6",
+                    "7"
+                ],
+                "vpod_accelerators": [
+                    "4",
+                    "5",
+                    "6",
+                    "7"
+                ],
+                "whitelisted_accelerators": [
+                    "4",
+                    "5",
+                    "6",
+                    "7"
+                ],
+                "capability": {
+                    "num_ual_station": "18",
+                    "num_accelerator": "96",
+                    "num_network_port_per_station": "2",
+                    "num_path_per_station": "2",
+                    "num_serdes_lanes_per_station": "4",
+                    "num_network_port": "36"
+                },
+                "scaleup_fabric": {
+                    "physical_pod": {
+                        "id": "a674683c-423e-4398-91fe-4f132ece26fa",
+                        "size": "72",
+                        "local_accelerators": [
+                            "4",
+                            "5",
+                            "6",
+                            "7"
+                        ]
+                    },
+                    "virtual_pod": {
+                        "id": "3",
+                        "npa_address_mode": "source-aliasing"
+                    },
+                    "stations": [
+                        {
+                            "station": "1",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "2",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "3",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "4",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "5",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "6",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "7",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "8",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "9",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "10",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "11",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "12",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "13",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "14",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "15",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "16",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "17",
+                            "bandwidth_mask": "0x0f"
+                        },
+                        {
+                            "station": "18",
+                            "bandwidth_mask": "0x0f"
+                        }
+                    ]
+                }
+            },
+            "status": {
+                "lib_version": "0.5.0",
+                "firmware_version": "1.0.0.0000",
+                "build_name": "fw.mi450-a0.silicon.benchtop",
+                "firmware_revision": "0d4a635",
+                "mcdi_version": "2",
+                "telemetry_version": "16908288.0.0",
+                "identity": {
+                    "compute_tray_type": "HELIOS_R",
+                    "num_gpus": "4",
+                    "physical_id": "0",
+                    "oam_id": "3"
+                }
+            }
+        }
+    ]
+}
+

@@ -1,0 +1,31 @@
+W1102 12:47:47.265000 80241 torch/distributed/run.py:982] 
+W1102 12:47:47.265000 80241 torch/distributed/run.py:982] *****************************************
+W1102 12:47:47.265000 80241 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 12:47:47.265000 80241 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] LoadKernel: _ZN5aiter41fmha_bf16_pertokenBf16_hd128_128x256_maskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256_mask.co
+[aiter] LoadKernel: _ZN5aiter41fmha_bf16_pertokenBf16_hd128_128x256_maskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256_mask.co
+[aiter] LoadKernel: _ZN5aiter41fmha_bf16_pertokenBf16_hd128_128x256_maskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256_mask.co
+[aiter] LoadKernel: _ZN5aiter41fmha_bf16_pertokenBf16_hd128_128x256_maskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256_mask.co
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+layer_mlp_bwd + alltoall        192 MiB  m1  comp   3.074->  3.439 ms (1.12x,  1509-> 1349 TF)  comm   0.193->  0.296 ms (1.53x, busbw   782->  510 GB/s)  [98, 1133 calls]
+layer_mlp_bwd + alltoall        192 MiB  m2  x1   comp   3.089  comm   0.201  ovl   3.128 ms  (in ovl: comp   3.118, comm   2.968)  E  0.81  S 1.05 of 1.07
+
+validation: all passed
+wrote /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/results/ctheliosr-rck-g02-e15-01_20261102/minimax_m3/default_layer_mlp_bwd.json

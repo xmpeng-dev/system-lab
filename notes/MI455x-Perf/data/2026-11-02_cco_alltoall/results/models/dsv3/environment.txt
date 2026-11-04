@@ -1,0 +1,15 @@
+host: ctheliosr-rck-g02-e15-01
+date: 2026-11-02T07:50:56+00:00
+args: --comm alltoall --model dsv3 --compute gmm_flydsl,gmm_down_flydsl,attn_fwd,gemm
+torch: 2.14.0+rocm10.2.0a20261011 hip: 7.17.26405 rccl: (2, 32, 3)
+GPU_ARCHS=native
+HIP_ARCHITECTURES=gfx1250
+HIP_CLANG_PATH=/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/llvm/bin
+HIP_DEVICE_LIB_PATH=/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib/llvm/amdgcn/bitcode
+HIP_INCLUDE_PATH=/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/include
+HIP_LIB_PATH=/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib
+HIP_PATH=/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel
+HIP_PLATFORM=amd
+HSA_ENABLE_SCRATCH_ASYNC_RECLAIM=0
+HSA_NO_SCRATCH_RECLAIM=1
+TENSILE_PERSISTENT_FIXED_GRID=1000000

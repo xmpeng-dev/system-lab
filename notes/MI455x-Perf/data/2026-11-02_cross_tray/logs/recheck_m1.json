@@ -1,0 +1,129 @@
+{
+ "config": {
+  "comm": "alltoall",
+  "model": "minimax_m3",
+  "sizes_mib": "192",
+  "comm_dtype": "bf16",
+  "compute": "layer_attn_fwd",
+  "modes": "m1",
+  "ratios": "0.5,1,2",
+  "cu_reserve": 0,
+  "comm_priority": "default",
+  "gemm": "4096,6144,24576",
+  "gmm": "32,512,6144,6144",
+  "gmm_down": "32,512,3072,6144",
+  "attn": "1,4096,64,4,128,128,1",
+  "shared": "3072",
+  "warmup_ms": 1000.0,
+  "target_ms": 300.0,
+  "rounds": 3,
+  "pg_timeout_s": 180.0,
+  "no_telemetry": false,
+  "output": "/home/xiaompen/minimax-poc/.scratch/multinode/out/recheck_m1.json"
+ },
+ "world": 4,
+ "ranks": [
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 0,
+   "bdf": "0001:01:00"
+  },
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 1,
+   "bdf": "0002:01:00"
+  },
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 2,
+   "bdf": "0003:01:00"
+  },
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 3,
+   "bdf": "0004:01:00"
+  }
+ ],
+ "environment": {
+  "torch": "2.14.0+rocm10.2.0a20261011",
+  "hip": "7.17.26405",
+  "rccl": "2.32.3",
+  "image": null,
+  "env": {
+   "GPU_ARCHS": "native",
+   "HIP_ARCHITECTURES": "gfx1250",
+   "HIP_CLANG_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/llvm/bin",
+   "HIP_DEVICE_LIB_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib/llvm/amdgcn/bitcode",
+   "HIP_INCLUDE_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/include",
+   "HIP_LIB_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib",
+   "HIP_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel",
+   "HIP_PLATFORM": "amd",
+   "HSA_ENABLE_SCRATCH_ASYNC_RECLAIM": "0",
+   "HSA_NO_SCRATCH_RECLAIM": "1",
+   "TORCH_NCCL_ASYNC_ERROR_HANDLING": "1"
+  }
+ },
+ "comp_stream_cus": null,
+ "failed": [],
+ "cases": [
+  {
+   "compute": "layer_attn_fwd",
+   "compute_label": "layer attn fwd: QKV + attention + O proj fwd (beside combine bwd)",
+   "comm": "alltoall",
+   "size_mib": 192,
+   "comm_bytes": 201326592,
+   "results": {
+    "m1 comp alone": {
+     "n_comp": 542,
+     "n_comm": 0,
+     "episodes": 1,
+     "comp": 332.3254089355469,
+     "ovl": 332.33355712890625,
+     "gfx_mhz": 1433.75,
+     "power_w": 2468.5
+    },
+    "m1 comm alone": {
+     "n_comp": 0,
+     "n_comm": 1493,
+     "episodes": 1,
+     "comm": 287.77032470703125,
+     "ovl": 287.7760314941406,
+     "gfx_mhz": 1992.375,
+     "power_w": 1828
+    },
+    "m1 both": {
+     "n_comp": 542,
+     "n_comm": 1493,
+     "episodes": 1,
+     "comm": 560.904296875,
+     "comm_under": 0.6186629399584324,
+     "comm_under_calls": 638.0,
+     "comp": 393.5177001953125,
+     "comp_under": 0.7258741608372441,
+     "comp_under_calls": 541.0,
+     "ovl": 560.9114990234375,
+     "gfx_mhz": 1678.0,
+     "power_w": 2370
+    }
+   },
+   "summary": {
+    "m1": {
+     "t_comp": 0.6131465109511935,
+     "t_comm": 0.19274636618019508,
+     "t_comp_under": 0.7258741608372441,
+     "t_comm_under": 0.6186629399584324,
+     "comp_slowdown": 1.1838510826901267,
+     "comm_slowdown": 3.2097255695085614,
+     "calls_under": [
+      541,
+      638
+     ],
+     "tflops": 1877.285795106846,
+     "tflops_under": 1585.7448817303878,
+     "busbw": 783.3867221073189,
+     "busbw_under": 244.0665736501774
+    }
+   }
+  }
+ ]
+}

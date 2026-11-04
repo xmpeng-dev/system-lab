@@ -1,0 +1,40 @@
+W1102 07:54:21.185000 77341 torch/distributed/run.py:982] 
+W1102 07:54:21.185000 77341 torch/distributed/run.py:982] *****************************************
+W1102 07:54:21.185000 77341 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 07:54:21.185000 77341 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] LoadKernel: _ZN5aiter52fmha_bf16_pertokenBf16_hd192x128_128x128_mask_varlenE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16_varlen/fmha_bf16_pertokenBf16_hd192x128_128x128_mask_varlen.co
+[aiter] LoadKernel: _ZN5aiter52fmha_bf16_pertokenBf16_hd192x128_128x128_mask_varlenE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16_varlen/fmha_bf16_pertokenBf16_hd192x128_128x128_mask_varlen.co
+[aiter] LoadKernel: _ZN5aiter52fmha_bf16_pertokenBf16_hd192x128_128x128_mask_varlenE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16_varlen/fmha_bf16_pertokenBf16_hd192x128_128x128_mask_varlen.co
+[aiter] LoadKernel: _ZN5aiter52fmha_bf16_pertokenBf16_hd192x128_128x128_mask_varlenE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16_varlen/fmha_bf16_pertokenBf16_hd192x128_128x128_mask_varlen.co
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+attn_fwd  + alltoall        896 MiB  m1  comp   0.935->  1.407 ms (1.51x,  1471->  977 TF)  comm   0.937->  1.248 ms (1.33x, busbw   752->  565 GB/s)  [296, 318 calls]
+attn_fwd  + alltoall        896 MiB  m2  x1   comp   0.930  comm   0.942  ovl   1.386 ms  (in ovl: comp   1.374, comm   1.365)  E  0.52  S 1.35 of 1.99
+attn_fwd  + alltoall        896 MiB  m2  x2   comp   1.843  comm   0.942  ovl   2.324 ms  (in ovl: comp   2.313, comm   1.650)  E  0.49  S 1.20 of 1.51
+attn_fwd  + alltoall        448 MiB  m1  comp   0.912->  1.343 ms (1.47x,  1508-> 1023 TF)  comm   0.501->  0.737 ms (1.47x, busbw   703->  478 GB/s)  [331, 579 calls]
+attn_fwd  + alltoall        448 MiB  m2  x1   comp   0.932  comm   0.509  ovl   1.239 ms  (in ovl: comp   1.228, comm   1.128)  E  0.40  S 1.16 of 1.55
+attn_fwd  + alltoall        256 MiB  m1  comp   0.911->  1.169 ms (1.28x,  1508-> 1176 TF)  comm   0.246->  0.481 ms (1.95x, busbw   817->  418 GB/s)  [377, 917 calls]
+attn_fwd  + alltoall        256 MiB  m2  x1   comp   0.914  comm   0.258  ovl   1.093 ms  (in ovl: comp   1.082, comm   1.087)  E  0.30  S 1.07 of 1.28
+attn_fwd  + alltoall        128 MiB  m1  comp   0.907->  1.114 ms (1.23x,  1516-> 1234 TF)  comm   0.147->  0.320 ms (2.17x, busbw   683->  315 GB/s)  [363, 1259 calls]
+attn_fwd  + alltoall        128 MiB  m2  x1   comp   0.919  comm   0.160  ovl   1.036 ms  (in ovl: comp   1.025, comm   1.030)  E  0.27  S 1.04 of 1.17
+attn_fwd  + alltoall         64 MiB  m1  comp   0.908->  1.065 ms (1.17x,  1514-> 1290 TF)  comm   0.098->  0.236 ms (2.42x, busbw   515->  213 GB/s)  [356, 1593 calls]
+attn_fwd  + alltoall         64 MiB  m2  x1   comp   0.922  comm   0.111  ovl   0.999 ms  (in ovl: comp   0.986, comm   0.993)  E  0.31  S 1.03 of 1.12
+
+validation: all passed
+wrote /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/results/ctheliosr-rck-g02-e15-01_20261102/dsv3/default_attn_fwd.json

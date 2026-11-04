@@ -1,0 +1,174 @@
+W1102 07:35:57.613000 74669 torch/distributed/run.py:982] 
+W1102 07:35:57.613000 74669 torch/distributed/run.py:982] *****************************************
+W1102 07:35:57.613000 74669 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 07:35:57.613000 74669 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+gemm      + alltoall        192 MiB  m1  comp   0.617->  0.718 ms (1.16x,  2005-> 1723 TF)  comm   0.192->  0.472 ms (2.45x, busbw   785->  320 GB/s)  [549, 834 calls]
+gemm      + alltoall        192 MiB  m2  x1   comp   0.623  comm   0.200  ovl   0.716 ms  (in ovl: comp   0.707, comm   0.711)  E  0.53  S 1.15 of 1.32
+gemm      + alltoall         96 MiB  m1  comp   0.615->  0.700 ms (1.14x,  2010-> 1768 TF)  comm   0.118->  0.350 ms (2.97x, busbw   640->  216 GB/s)  [529, 1058 calls]
+gemm      + alltoall         96 MiB  m2  x1   comp   0.621  comm   0.126  ovl   0.689 ms  (in ovl: comp   0.680, comm   0.683)  E  0.46  S 1.08 of 1.20
+gemm      + alltoall         64 MiB  m1  comp   0.616->  0.701 ms (1.14x,  2009-> 1764 TF)  comm   0.093->  0.318 ms (3.40x, busbw   539->  158 GB/s)  [524, 1156 calls]
+gemm      + alltoall         64 MiB  m2  x1   comp   0.623  comm   0.102  ovl   0.683 ms  (in ovl: comp   0.673, comm   0.677)  E  0.41  S 1.06 of 1.16
+gemm      + alltoall         32 MiB  m1  comp   0.614->  0.805 ms (1.31x,  2013-> 1536 TF)  comm   0.068->  0.200 ms (2.93x, busbw   368->  126 GB/s)  [518, 2079 calls]
+gemm      + alltoall         32 MiB  m2  x1   comp   0.621  comm   0.090  ovl   0.670 ms  (in ovl: comp   0.660, comm   0.659)  E  0.45  S 1.06 of 1.14
+[rank1]:[E1102 07:40:14.234465642 ProcessGroupNCCL.cpp:741] [PG GUID 0(default_pg) Rank 1] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=263780, OpType=ALLTOALL_BASE, NumelIn=8388608, NumelOut=8388608, Timeout(ms)=180000) ran for 180038 milliseconds before timing out.
+[rank1]:[E1102 07:40:14.234652162 ProcessGroupNCCL.cpp:2390] [PG ID 0 PG GUID 0(default_pg) Rank 1]  failure detected by watchdog at work sequence id: 263780 PG status: last enqueued work: 265589, last started work: -1 (), last completed work: 263779
+[rank0]:[E1102 07:40:14.243105476 ProcessGroupNCCL.cpp:741] [PG GUID 0(default_pg) Rank 0] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=263780, OpType=ALLTOALL_BASE, NumelIn=8388608, NumelOut=8388608, Timeout(ms)=180000) ran for 180046 milliseconds before timing out.
+[rank0]:[E1102 07:40:14.243266296 ProcessGroupNCCL.cpp:2390] [PG ID 0 PG GUID 0(default_pg) Rank 0]  failure detected by watchdog at work sequence id: 263780 PG status: last enqueued work: 265589, last started work: -1 (), last completed work: 263779
+[rank2]:[E1102 07:40:15.276600731 ProcessGroupNCCL.cpp:741] [PG GUID 0(default_pg) Rank 2] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=263780, OpType=ALLTOALL_BASE, NumelIn=8388608, NumelOut=8388608, Timeout(ms)=180000) ran for 180080 milliseconds before timing out.
+[rank2]:[E1102 07:40:15.276786571 ProcessGroupNCCL.cpp:2390] [PG ID 0 PG GUID 0(default_pg) Rank 2]  failure detected by watchdog at work sequence id: 263780 PG status: last enqueued work: 265589, last started work: -1 (), last completed work: 263779
+[rank3]:[E1102 07:40:15.280826603 ProcessGroupNCCL.cpp:741] [PG GUID 0(default_pg) Rank 3] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=263780, OpType=ALLREDUCE, NumelIn=2, NumelOut=2, Timeout(ms)=180000) ran for 180084 milliseconds before timing out.
+[rank3]:[E1102 07:40:15.280984993 ProcessGroupNCCL.cpp:2390] [PG ID 0 PG GUID 0(default_pg) Rank 3]  failure detected by watchdog at work sequence id: 263780 PG status: last enqueued work: 263780, last started work: -1 (), last completed work: 263779
+[rank0]:[E1102 07:40:15.788689099 ProcessGroupNCCL.cpp:785] Stack trace of the failed collective: 
+#0 all_to_all_single from /opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:6122
+#1 wrapper from /opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83
+#2 <lambda> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:276
+#3 run from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:349
+#4 window from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:404
+#5 measure from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:446
+#6 main from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:625
+#7 <module> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:691
+
+[rank0]:[E1102 07:40:15.788734019 ProcessGroupNCCL.cpp:2732] [PG ID 0 PG GUID 0(default_pg) Rank 0] First PG on this rank to signal dumping.
+[rank1]:[E1102 07:40:15.810310079 ProcessGroupNCCL.cpp:785] Stack trace of the failed collective: 
+#0 all_to_all_single from /opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:6122
+#1 wrapper from /opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83
+#2 <lambda> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:276
+#3 run from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:349
+#4 window from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:404
+#5 measure from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:446
+#6 main from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:625
+#7 <module> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:691
+
+[rank1]:[E1102 07:40:15.810451099 ProcessGroupNCCL.cpp:2732] [PG ID 0 PG GUID 0(default_pg) Rank 1] First PG on this rank to signal dumping.
+[rank3]:[E1102 07:40:15.851066387 ProcessGroupNCCL.cpp:785] Stack trace of the failed collective: 
+#0 all_reduce from /opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:3906
+#1 wrapper from /opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83
+#2 _all_max from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:388
+#3 window from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:410
+#4 plan from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:417
+#5 measure from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:440
+#6 main from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:625
+#7 <module> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:691
+
+[rank3]:[E1102 07:40:15.851124807 ProcessGroupNCCL.cpp:2732] [PG ID 0 PG GUID 0(default_pg) Rank 3] First PG on this rank to signal dumping.
+[rank2]:[E1102 07:40:15.858593690 ProcessGroupNCCL.cpp:785] Stack trace of the failed collective: 
+#0 all_to_all_single from /opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:6122
+#1 wrapper from /opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83
+#2 <lambda> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:276
+#3 run from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:349
+#4 window from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:404
+#5 measure from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:446
+#6 main from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:625
+#7 <module> from /home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py:691
+
+[rank2]:[E1102 07:40:15.858686520 ProcessGroupNCCL.cpp:2732] [PG ID 0 PG GUID 0(default_pg) Rank 2] First PG on this rank to signal dumping.
+[rank2]:[E1102 07:40:15.189781457 ProcessGroupNCCL.cpp:1982] [PG ID 0 PG GUID 0(default_pg) Rank 2] Received a dump signal due to a collective timeout from this local rank and we will try our best to dump the debug info. Last enqueued NCCL work: 265589, last completed NCCL work: 263779.This is most likely caused by incorrect usages of collectives, e.g., wrong sizes used across ranks, the order of collectives is not same for all ranks or the scheduled collective, for some reason, didn't run. Additionally, this can be caused by GIL deadlock or other reasons such as network errors or bugs in the communications library (e.g. NCCL), etc. 
+[rank2]:[E1102 07:40:15.189905628 ProcessGroupNCCL.cpp:1694] [PG ID 0 PG GUID 0(default_pg) Rank 2] ProcessGroupNCCL preparing to dump debug info. Include stack trace: 1, only active collectives: 0
+[rank0]:[E1102 07:40:15.210169627 ProcessGroupNCCL.cpp:1982] [PG ID 0 PG GUID 0(default_pg) Rank 0] Received a dump signal due to a collective timeout from this local rank and we will try our best to dump the debug info. Last enqueued NCCL work: 265589, last completed NCCL work: 263779.This is most likely caused by incorrect usages of collectives, e.g., wrong sizes used across ranks, the order of collectives is not same for all ranks or the scheduled collective, for some reason, didn't run. Additionally, this can be caused by GIL deadlock or other reasons such as network errors or bugs in the communications library (e.g. NCCL), etc. 
+[rank0]:[E1102 07:40:15.210337117 ProcessGroupNCCL.cpp:1694] [PG ID 0 PG GUID 0(default_pg) Rank 0] ProcessGroupNCCL preparing to dump debug info. Include stack trace: 1, only active collectives: 0
+[rank1]:[E1102 07:40:15.224668483 ProcessGroupNCCL.cpp:1982] [PG ID 0 PG GUID 0(default_pg) Rank 1] Received a dump signal due to a collective timeout from this local rank and we will try our best to dump the debug info. Last enqueued NCCL work: 265589, last completed NCCL work: 263779.This is most likely caused by incorrect usages of collectives, e.g., wrong sizes used across ranks, the order of collectives is not same for all ranks or the scheduled collective, for some reason, didn't run. Additionally, this can be caused by GIL deadlock or other reasons such as network errors or bugs in the communications library (e.g. NCCL), etc. 
+[rank1]:[E1102 07:40:15.224840293 ProcessGroupNCCL.cpp:1694] [PG ID 0 PG GUID 0(default_pg) Rank 1] ProcessGroupNCCL preparing to dump debug info. Include stack trace: 1, only active collectives: 0
+[rank3]:[E1102 07:40:15.227201284 ProcessGroupNCCL.cpp:1982] [PG ID 0 PG GUID 0(default_pg) Rank 3] Received a dump signal due to a collective timeout from this local rank and we will try our best to dump the debug info. Last enqueued NCCL work: 263780, last completed NCCL work: 263779.This is most likely caused by incorrect usages of collectives, e.g., wrong sizes used across ranks, the order of collectives is not same for all ranks or the scheduled collective, for some reason, didn't run. Additionally, this can be caused by GIL deadlock or other reasons such as network errors or bugs in the communications library (e.g. NCCL), etc. 
+[rank3]:[E1102 07:40:15.227344094 ProcessGroupNCCL.cpp:1694] [PG ID 0 PG GUID 0(default_pg) Rank 3] ProcessGroupNCCL preparing to dump debug info. Include stack trace: 1, only active collectives: 0
+[rank3]:[E1102 07:41:16.587252774 ProcessGroupNCCL.cpp:802] [PG GUID 0(default_pg) Rank 3] Some NCCL operations have failed or timed out. Due to the asynchronous nature of CUDA kernels, subsequent GPU operations might run on corrupted/incomplete data.
+[rank3]:[E1102 07:41:16.587274944 ProcessGroupNCCL.cpp:816] [PG GUID 0(default_pg) Rank 3] To avoid data inconsistency, we are taking the entire process down.
+[rank3]:[E1102 07:41:16.588459984 ProcessGroupNCCL.cpp:2192] [PG ID 0 PG GUID 0(default_pg) Rank 3] Process group watchdog thread terminated with exception: [PG GUID 0(default_pg) Rank 3] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=263780, OpType=ALLREDUCE, NumelIn=2, NumelOut=2, Timeout(ms)=180000) ran for 180084 milliseconds before timing out.
+Exception raised from checkTimeout at /__w/rockrel/rockrel/external-builds/pytorch/pytorch/torch/csrc/distributed/c10d/ProcessGroupNCCL.cpp:744 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x9d (0x73a351d9760d in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::DistError::DistError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x73a351d985e2 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: c10::DistBackendError::DistBackendError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x73a351d98712 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #3: c10d::ProcessGroupNCCL::WorkNCCL::checkTimeout(std::optional<std::chrono::duration<long, std::ratio<1l, 1000l> > >) + 0x2a7 (0x73a355501d87 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #4: c10d::ProcessGroupNCCL::Watchdog::runLoop() + 0x15b1 (0x73a35550e731 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #5: c10d::ProcessGroupNCCL::Watchdog::run() + 0x157 (0x73a35550f9a7 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #6: <unknown function> + 0xecdb4 (0x73a40dcd9db4 in /lib/x86_64-linux-gnu/libstdc++.so.6)
+frame #7: <unknown function> + 0x9cb84 (0x73a41c47db84 in /lib/x86_64-linux-gnu/libc.so.6)
+frame #8: <unknown function> + 0x129ecc (0x73a41c50aecc in /lib/x86_64-linux-gnu/libc.so.6)
+
+terminate called after throwing an instance of 'c10::DistBackendError'
+  what():  [PG ID 0 PG GUID 0(default_pg) Rank 3] Process group watchdog thread terminated with exception: [PG GUID 0(default_pg) Rank 3] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=263780, OpType=ALLREDUCE, NumelIn=2, NumelOut=2, Timeout(ms)=180000) ran for 180084 milliseconds before timing out.
+Exception raised from checkTimeout at /__w/rockrel/rockrel/external-builds/pytorch/pytorch/torch/csrc/distributed/c10d/ProcessGroupNCCL.cpp:744 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x9d (0x73a351d9760d in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::DistError::DistError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x73a351d985e2 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: c10::DistBackendError::DistBackendError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x73a351d98712 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #3: c10d::ProcessGroupNCCL::WorkNCCL::checkTimeout(std::optional<std::chrono::duration<long, std::ratio<1l, 1000l> > >) + 0x2a7 (0x73a355501d87 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #4: c10d::ProcessGroupNCCL::Watchdog::runLoop() + 0x15b1 (0x73a35550e731 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #5: c10d::ProcessGroupNCCL::Watchdog::run() + 0x157 (0x73a35550f9a7 in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #6: <unknown function> + 0xecdb4 (0x73a40dcd9db4 in /lib/x86_64-linux-gnu/libstdc++.so.6)
+frame #7: <unknown function> + 0x9cb84 (0x73a41c47db84 in /lib/x86_64-linux-gnu/libc.so.6)
+frame #8: <unknown function> + 0x129ecc (0x73a41c50aecc in /lib/x86_64-linux-gnu/libc.so.6)
+
+Exception raised from run at /__w/rockrel/rockrel/external-builds/pytorch/pytorch/torch/csrc/distributed/c10d/ProcessGroupNCCL.cpp:2198 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x9d (0x73a351d9760d in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::DistError::DistError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x73a351d985e2 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: c10::DistBackendError::DistBackendError(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x72 (0x73a351d98712 in /opt/venv/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #3: <unknown function> + 0xd3ff1a (0x73a352cdbf1a in /opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_hip.so)
+frame #4: <unknown function> + 0xecdb4 (0x73a40dcd9db4 in /lib/x86_64-linux-gnu/libstdc++.so.6)
+frame #5: <unknown function> + 0x9cb84 (0x73a41c47db84 in /lib/x86_64-linux-gnu/libc.so.6)
+frame #6: <unknown function> + 0x129ecc (0x73a41c50aecc in /lib/x86_64-linux-gnu/libc.so.6)
+
+W1102 07:41:16.515000 74669 torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 74837 closing signal SIGTERM
+W1102 07:41:16.515000 74669 torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 74838 closing signal SIGTERM
+W1102 07:41:16.515000 74669 torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 74839 closing signal SIGTERM
+E1102 07:41:16.782000 74669 torch/distributed/elastic/multiprocessing/api.py:1002] failed (exitcode: -6) local_rank: 3 (pid: 74840) of binary: /opt/venv/bin/python3
+Traceback (most recent call last):
+  File "/opt/venv/bin/torchrun", line 10, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 380, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/distributed/run.py", line 1138, in main
+    run(args)
+  File "/opt/venv/lib/python3.12/site-packages/torch/distributed/run.py", line 1129, in run
+    elastic_launch(
+  File "/opt/venv/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 197, in __call__
+    return launch_agent(
+           ^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 386, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+/home/xiaompen/minimax-poc/examples-phase2/training/common/cco_bench.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-11-02_07:41:16
+  host      : ctheliosr-rck-g02-e15-01.rck.dcgpu
+  rank      : 0 (local_rank: 0)
+  exitcode  : -15 (pid: 74837)  (SIGTERM)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 74837
+[2]:
+  time      : 2026-11-02_07:41:16
+  host      : ctheliosr-rck-g02-e15-01.rck.dcgpu
+  rank      : 1 (local_rank: 1)
+  exitcode  : -15 (pid: 74838)  (SIGTERM)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 74838
+[3]:
+  time      : 2026-11-02_07:41:16
+  host      : ctheliosr-rck-g02-e15-01.rck.dcgpu
+  rank      : 2 (local_rank: 2)
+  exitcode  : -15 (pid: 74839)  (SIGTERM)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 74839
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-11-02_07:41:16
+  host      : ctheliosr-rck-g02-e15-01.rck.dcgpu
+  rank      : 3 (local_rank: 3)
+  exitcode  : -6 (pid: 74840)  (SIGABRT)
+  error_file: <N/A>
+  traceback : Signal 6 (SIGABRT) received by PID 74840
+============================================================

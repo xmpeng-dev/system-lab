@@ -1,0 +1,1 @@
+IBVERBS_1.1 { global: ibv_create_qp; local: *; };

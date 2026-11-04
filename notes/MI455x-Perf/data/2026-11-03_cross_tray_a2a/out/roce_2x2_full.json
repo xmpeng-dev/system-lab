@@ -1,0 +1,139 @@
+{
+ "meta": {
+  "hosts": [
+   [
+    "ctheliosr-rck-g02-e15-01",
+    "2,3"
+   ],
+   [
+    "ctheliosr-rck-g02-e15-01",
+    "2,3"
+   ],
+   [
+    "ctheliosr-rck-g02-e15-02",
+    "2,3"
+   ],
+   [
+    "ctheliosr-rck-g02-e15-02",
+    "2,3"
+   ]
+  ],
+  "iters": 20,
+  "eps": 10,
+  "rccl": "2.32.3",
+  "torch": "2.14.0+rocm10.2.0a20261011",
+  "env": {
+   "NCCL_IB_HCA": "ionic_0",
+   "NCCL_IB_GID_INDEX": "1",
+   "HIP_VISIBLE_DEVICES": "2,3",
+   "NCCL_SOCKET_IFNAME": "enp4s0np0",
+   "NCCL_DEBUG": "INFO",
+   "NCCL_DEBUG_SUBSYS": "INIT,NET,GRAPH",
+   "NCCL_IBVERBS_LIB": "/home/xiaompen/minimax-poc/.scratch/multinode/libibv_rq1.so",
+   "NCCL_NET": "IB",
+   "NCCL_IB_PCI_RELAXED_ORDERING": "0",
+   "NCCL_NET_GDR_LEVEL": "SYS",
+   "NCCL_RMA_DISABLE": "1",
+   "NCCL_IB_TIMEOUT": "22",
+   "NCCL_IB_RETRY_CNT": "7",
+   "RCCL_SATURATE_P2P_NCHANNELS": "0"
+  }
+ },
+ "rows": [
+  {
+   "scope": "global",
+   "ranks": 4,
+   "mib_per_rank": 12,
+   "steady_ms": 0.4485,
+   "single_ms": 0.4908,
+   "busbw_GBps": 21.0,
+   "correct": true,
+   "xnode_GBps_per_node": 28.1
+  },
+  {
+   "scope": "local",
+   "ranks": 2,
+   "mib_per_rank": 12,
+   "steady_ms": 0.0604,
+   "single_ms": 0.0817,
+   "busbw_GBps": 104.2,
+   "correct": true
+  },
+  {
+   "scope": "global",
+   "ranks": 4,
+   "mib_per_rank": 48,
+   "steady_ms": 1.8254,
+   "single_ms": 1.8203,
+   "busbw_GBps": 20.7,
+   "correct": true,
+   "xnode_GBps_per_node": 27.6
+  },
+  {
+   "scope": "local",
+   "ranks": 2,
+   "mib_per_rank": 48,
+   "steady_ms": 0.0695,
+   "single_ms": 0.1109,
+   "busbw_GBps": 362.2,
+   "correct": true
+  },
+  {
+   "scope": "global",
+   "ranks": 4,
+   "mib_per_rank": 96,
+   "steady_ms": 3.6841,
+   "single_ms": 3.6089,
+   "busbw_GBps": 20.5,
+   "correct": true,
+   "xnode_GBps_per_node": 27.3
+  },
+  {
+   "scope": "local",
+   "ranks": 2,
+   "mib_per_rank": 96,
+   "steady_ms": 0.0978,
+   "single_ms": 0.1332,
+   "busbw_GBps": 514.9,
+   "correct": true
+  },
+  {
+   "scope": "global",
+   "ranks": 4,
+   "mib_per_rank": 192,
+   "steady_ms": 7.3425,
+   "single_ms": 7.1321,
+   "busbw_GBps": 20.6,
+   "correct": true,
+   "xnode_GBps_per_node": 27.4
+  },
+  {
+   "scope": "local",
+   "ranks": 2,
+   "mib_per_rank": 192,
+   "steady_ms": 1.4238,
+   "single_ms": 1.4603,
+   "busbw_GBps": 70.7,
+   "correct": true
+  },
+  {
+   "scope": "global",
+   "ranks": 4,
+   "mib_per_rank": 384,
+   "steady_ms": 14.5713,
+   "single_ms": 14.7729,
+   "busbw_GBps": 20.7,
+   "correct": true,
+   "xnode_GBps_per_node": 27.6
+  },
+  {
+   "scope": "local",
+   "ranks": 2,
+   "mib_per_rank": 384,
+   "steady_ms": 2.8477,
+   "single_ms": 2.8706,
+   "busbw_GBps": 70.7,
+   "correct": true
+  }
+ ]
+}

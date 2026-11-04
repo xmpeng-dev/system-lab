@@ -1,0 +1,23 @@
+RCCL version : 2.32.3-HEAD:2f2a927
+    AllGather |    -1.0/  -1.0 |    -1.0/  -1.0 |    -1.0/  -1.0 |     8.4/ 106.7 |    19.7/ 196.3 |    18.6/ 213.3 |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |
+    AllGather |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |
+    AllGather |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |
+    AllGather |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |    14.4/  17.1 |    14.4/  17.1 |    23.3/ 213.3 |    14.4/   0.0 |    14.4/   0.0 |    41.3/   0.0 |
+AG DDA disqualified: totalBytes=134217728 > entryThreshold=67108864
+Taking CE collective path for AllGather via DDA scratch, count=16777216
+AllGather [Copy Engine]: 33554432 Bytes -> hipMemcpy
+AG DDA disqualified: totalBytes=268435456 > entryThreshold=67108864
+Taking CE collective path for AllGather via DDA scratch, count=33554432
+AllGather [Copy Engine]: 67108864 Bytes -> hipMemcpy
+AG DDA disqualified: totalBytes=536870912 > entryThreshold=67108864
+AG CE-scratch disqualified: ceScratch=1 hasSysmem=0 ddaScratch=0x7348cdc00000 totalBytes=536870912 ddaScratchBytes=268435456 forceCe=1 agCeNonRegWindow=0
+AG CE-registered disqualified: ceAvailable=0 hasSysmem=0 symEligible=0 ceRegWindow=0
+pre-adjustment threadThreshold:64 nBytes:536870912 nc:256
+post-adjustment based on threadThreshold:64 nBytes:536870912 nc:256
+RCCL Channel Tuning not applied for gfx1250 (pending sweep data, AICOMRCCL-1756)
+AllGather: 134217728 Bytes -> Algo RING proto SIMPLE channel{Lo..Hi}={0..255} cgaClusterSize 0
+AG DDA disqualified: totalBytes=1073741824 > entryThreshold=67108864
+AG CE-scratch disqualified: ceScratch=1 hasSysmem=0 ddaScratch=0x7348cdc00000 totalBytes=1073741824 ddaScratchBytes=268435456 forceCe=1 agCeNonRegWindow=0
+pre-adjustment threadThreshold:64 nBytes:1073741824 nc:256
+post-adjustment based on threadThreshold:64 nBytes:1073741824 nc:256
+AllGather: 268435456 Bytes -> Algo RING proto SIMPLE channel{Lo..Hi}={0..255} cgaClusterSize 0

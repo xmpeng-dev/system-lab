@@ -1,0 +1,131 @@
+{
+ "meta": {
+  "hosts": [
+   [
+    "ctheliosr-rck-g02-e15-01",
+    "2,3"
+   ],
+   [
+    "ctheliosr-rck-g02-e15-01",
+    "2,3"
+   ],
+   [
+    "ctheliosr-rck-g02-e15-02",
+    "2,3"
+   ],
+   [
+    "ctheliosr-rck-g02-e15-02",
+    "2,3"
+   ]
+  ],
+  "iters": 20,
+  "eps": 10,
+  "rccl": "2.32.3",
+  "torch": "2.14.0+rocm10.2.0a20261011",
+  "env": {
+   "NCCL_IB_DISABLE": "1",
+   "HIP_VISIBLE_DEVICES": "2,3",
+   "NCCL_SOCKET_IFNAME": "enp4s0np0",
+   "NCCL_DEBUG": "INFO",
+   "NCCL_DEBUG_SUBSYS": "INIT,NET,GRAPH",
+   "NCCL_RMA_DISABLE": "1"
+  }
+ },
+ "rows": [
+  {
+   "scope": "global",
+   "ranks": 4,
+   "mib_per_rank": 12,
+   "steady_ms": 2.51,
+   "single_ms": 2.015,
+   "busbw_GBps": 3.8,
+   "correct": true,
+   "xnode_GBps_per_node": 5.0
+  },
+  {
+   "scope": "local",
+   "ranks": 2,
+   "mib_per_rank": 12,
+   "steady_ms": 0.0618,
+   "single_ms": 0.0819,
+   "busbw_GBps": 101.8,
+   "correct": true
+  },
+  {
+   "scope": "global",
+   "ranks": 4,
+   "mib_per_rank": 48,
+   "steady_ms": 16.4936,
+   "single_ms": 8.2449,
+   "busbw_GBps": 2.3,
+   "correct": true,
+   "xnode_GBps_per_node": 3.1
+  },
+  {
+   "scope": "local",
+   "ranks": 2,
+   "mib_per_rank": 48,
+   "steady_ms": 0.3255,
+   "single_ms": 0.0992,
+   "busbw_GBps": 77.3,
+   "correct": true
+  },
+  {
+   "scope": "global",
+   "ranks": 4,
+   "mib_per_rank": 96,
+   "steady_ms": 26.4446,
+   "single_ms": 15.8424,
+   "busbw_GBps": 2.9,
+   "correct": true,
+   "xnode_GBps_per_node": 3.8
+  },
+  {
+   "scope": "local",
+   "ranks": 2,
+   "mib_per_rank": 96,
+   "steady_ms": 0.0995,
+   "single_ms": 0.1269,
+   "busbw_GBps": 505.8,
+   "correct": true
+  },
+  {
+   "scope": "global",
+   "ranks": 4,
+   "mib_per_rank": 192,
+   "steady_ms": 46.6789,
+   "single_ms": 60.8059,
+   "busbw_GBps": 3.2,
+   "correct": true,
+   "xnode_GBps_per_node": 4.3
+  },
+  {
+   "scope": "local",
+   "ranks": 2,
+   "mib_per_rank": 192,
+   "steady_ms": 0.169,
+   "single_ms": 0.2046,
+   "busbw_GBps": 595.6,
+   "correct": true
+  },
+  {
+   "scope": "global",
+   "ranks": 4,
+   "mib_per_rank": 384,
+   "steady_ms": 84.8091,
+   "single_ms": 68.5113,
+   "busbw_GBps": 3.6,
+   "correct": true,
+   "xnode_GBps_per_node": 4.7
+  },
+  {
+   "scope": "local",
+   "ranks": 2,
+   "mib_per_rank": 384,
+   "steady_ms": 0.2818,
+   "single_ms": 0.3139,
+   "busbw_GBps": 714.4,
+   "correct": true
+  }
+ ]
+}

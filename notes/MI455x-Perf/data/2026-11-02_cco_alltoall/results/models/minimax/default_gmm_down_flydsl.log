@@ -1,0 +1,30 @@
+W1102 07:22:38.913000 72322 torch/distributed/run.py:982] 
+W1102 07:22:38.913000 72322 torch/distributed/run.py:982] *****************************************
+W1102 07:22:38.913000 72322 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 07:22:38.913000 72322 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+gmm_down_flydsl + alltoall        768 MiB  m1  comp   0.585->  0.874 ms (1.49x,  1413->  945 TF)  comm   0.820->  0.905 ms (1.10x, busbw   736->  668 GB/s)  [398, 369 calls]
+gmm_down_flydsl + alltoall        768 MiB  m2  x1   comp   0.584  comm   0.816  ovl   0.915 ms  (in ovl: comp   0.896, comm   0.909)  E  0.83  S 1.53 of 1.72
+gmm_down_flydsl + alltoall        768 MiB  m2  x2   comp   1.164  comm   0.816  ovl   1.476 ms  (in ovl: comp   1.467, comm   1.063)  E  0.62  S 1.34 of 1.70
+gmm_down_flydsl + alltoall        768 MiB  m2  x3   comp   1.756  comm   0.816  ovl   2.062 ms  (in ovl: comp   2.053, comm   1.069)  E  0.63  S 1.25 of 1.46
+gmm_down_flydsl + alltoall        384 MiB  m1  comp   0.584->  0.835 ms (1.43x,  1414->  989 TF)  comm   0.435->  0.509 ms (1.17x, busbw   694->  593 GB/s)  [425, 681 calls]
+gmm_down_flydsl + alltoall        384 MiB  m2  x1   comp   0.586  comm   0.443  ovl   0.749 ms  (in ovl: comp   0.740, comm   0.557)  E  0.63  S 1.37 of 1.76
+gmm_down_flydsl + alltoall        384 MiB  m2  x2   comp   1.165  comm   0.443  ovl   1.331 ms  (in ovl: comp   1.322, comm   0.669)  E  0.63  S 1.21 of 1.38
+gmm_down_flydsl + alltoall        256 MiB  m1  comp   0.575->  0.676 ms (1.18x,  1438-> 1223 TF)  comm   0.241->  0.332 ms (1.38x, busbw   834->  606 GB/s)  [572, 1162 calls]
+gmm_down_flydsl + alltoall        256 MiB  m2  x1   comp   0.584  comm   0.249  ovl   0.640 ms  (in ovl: comp   0.631, comm   0.633)  E  0.78  S 1.30 of 1.43
+gmm_down_flydsl + alltoall        128 MiB  m1  comp   0.575->  0.654 ms (1.14x,  1438-> 1263 TF)  comm   0.143->  0.194 ms (1.36x, busbw   705->  518 GB/s)  [564, 1896 calls]
+gmm_down_flydsl + alltoall        128 MiB  m2  x1   comp   0.585  comm   0.151  ovl   0.614 ms  (in ovl: comp   0.604, comm   0.607)  E  0.80  S 1.20 of 1.26
+gmm_down_flydsl + alltoall         64 MiB  m1  comp   0.575->  0.632 ms (1.10x,  1436-> 1308 TF)  comm   0.093->  0.127 ms (1.36x, busbw   541->  396 GB/s)  [554, 2761 calls]
+gmm_down_flydsl + alltoall         64 MiB  m2  x1   comp   0.583  comm   0.102  ovl   0.605 ms  (in ovl: comp   0.596, comm   0.599)  E  0.78  S 1.13 of 1.17
+
+validation: all passed
+wrote /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/results/ctheliosr-rck-g02-e15-01_20261102/minimax/default_gmm_down_flydsl.json

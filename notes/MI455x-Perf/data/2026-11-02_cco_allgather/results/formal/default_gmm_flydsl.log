@@ -1,0 +1,38 @@
+W1102 06:56:38.827000 67352 torch/distributed/run.py:982] 
+W1102 06:56:38.827000 67352 torch/distributed/run.py:982] *****************************************
+W1102 06:56:38.827000 67352 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 06:56:38.827000 67352 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+gmm_flydsl + allgather      1024 MiB  m1  comp   0.963->  1.940 ms (2.02x,  1717->  852 TF)  comm   0.658->  0.971 ms (1.48x, busbw  1223->  829 GB/s)  [225, 450 calls]
+gmm_flydsl + allgather      1024 MiB  m2  x1   comp   0.966  comm   0.664  ovl   1.432 ms  (in ovl: comp   1.424, comm   1.087)  E  0.30  S 1.14 of 1.69
+gmm_flydsl + allgather      1024 MiB  m2  x2   comp   1.927  comm   0.664  ovl   2.363 ms  (in ovl: comp   2.355, comm   1.177)  E  0.34  S 1.10 of 1.34
+gmm_flydsl + allgather       512 MiB  m1  comp   0.943->  1.552 ms (1.65x,  1752-> 1065 TF)  comm   0.378->  0.700 ms (1.85x, busbw  1066->  575 GB/s)  [356, 770 calls]
+gmm_flydsl + allgather       512 MiB  m2  x1   comp   0.956  comm   0.385  ovl   1.220 ms  (in ovl: comp   1.211, comm   0.812)  E  0.32  S 1.10 of 1.40
+gmm_flydsl + allgather       256 MiB  m1  comp   0.943->  1.097 ms (1.16x,  1752-> 1506 TF)  comm   0.243->  0.366 ms (1.51x, busbw   830->  550 GB/s)  [350, 1044 calls]
+gmm_flydsl + allgather       256 MiB  m2  x1   comp   0.963  comm   0.251  ovl   1.026 ms  (in ovl: comp   1.015, comm   1.018)  E  0.75  S 1.18 of 1.26
+gmm_flydsl + allgather       128 MiB  m1  comp   0.943->  1.065 ms (1.13x,  1753-> 1551 TF)  comm   0.143->  0.216 ms (1.50x, busbw   702->  467 GB/s)  [341, 1687 calls]
+gmm_flydsl + allgather       128 MiB  m2  x1   comp   0.963  comm   0.152  ovl   0.993 ms  (in ovl: comp   0.982, comm   0.986)  E  0.81  S 1.12 of 1.16
+gmm_flydsl + allgather        64 MiB  m1  comp   0.945->  1.111 ms (1.18x,  1749-> 1487 TF)  comm   0.072->  0.249 ms (3.46x, busbw   700->  202 GB/s)  [333, 1497 calls]
+gmm_flydsl + allgather        64 MiB  m2  x1   comp   0.942  comm   0.081  ovl   1.005 ms  (in ovl: comp   0.996, comm   0.533)  E  0.22  S 1.02 of 1.09
+gmm_flydsl + allgather        16 MiB  m1  comp   0.936->  1.120 ms (1.20x,  1765-> 1475 TF)  comm   0.038->  0.108 ms (2.82x, busbw   330->  117 GB/s)  [328, 3429 calls]
+gmm_flydsl + allgather        16 MiB  m2  x1   comp   0.954  comm   0.060  ovl   0.998 ms  (in ovl: comp   0.988, comm   0.394)  E  0.27  S 1.02 of 1.06
+
+validation: all passed
+wrote /home/xiaompen/minimax-poc/examples-phase2/training/cco-allgather/results/ctheliosr-rck-g02-e15-01_20261102/default_gmm_flydsl.json

@@ -1,0 +1,574 @@
+{
+ "config": {
+  "comm": "alltoall",
+  "model": "dsv3",
+  "sizes_mib": "896,448,256,128,64",
+  "comm_dtype": "bf16",
+  "compute": "attn_bwd_flydsl",
+  "modes": "m1,m2",
+  "ratios": "0.5,1,2",
+  "cu_reserve": 0,
+  "comm_priority": "default",
+  "gemm": "8192,7168,36864",
+  "gmm": "64,1024,7168,4096",
+  "gmm_down": "64,1024,2048,7168",
+  "attn": "2,4096,128,128,192,128,1",
+  "warmup_ms": 1000.0,
+  "target_ms": 300.0,
+  "rounds": 10,
+  "pg_timeout_s": 180.0,
+  "no_telemetry": false,
+  "output": ".scratch/shapes/dsv3_flydsl_attn/default_attn_bwd_flydsl.json"
+ },
+ "world": 4,
+ "ranks": [
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 0,
+   "bdf": "0001:01:00"
+  },
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 1,
+   "bdf": "0002:01:00"
+  },
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 2,
+   "bdf": "0003:01:00"
+  },
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 3,
+   "bdf": "0004:01:00"
+  }
+ ],
+ "environment": {
+  "torch": "2.14.0+rocm10.2.0a20261011",
+  "hip": "7.17.26405",
+  "rccl": "2.32.3",
+  "image": null,
+  "env": {
+   "GPU_ARCHS": "native",
+   "HIP_ARCHITECTURES": "gfx1250",
+   "HIP_CLANG_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/llvm/bin",
+   "HIP_DEVICE_LIB_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib/llvm/amdgcn/bitcode",
+   "HIP_INCLUDE_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/include",
+   "HIP_LIB_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib",
+   "HIP_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel",
+   "HIP_PLATFORM": "amd",
+   "HSA_ENABLE_SCRATCH_ASYNC_RECLAIM": "0",
+   "HSA_NO_SCRATCH_RECLAIM": "1",
+   "TORCH_NCCL_ASYNC_ERROR_HANDLING": "1"
+  }
+ },
+ "comp_stream_cus": null,
+ "failed": [],
+ "cases": [
+  {
+   "compute": "attn_bwd_flydsl",
+   "compute_label": "Primus-Turbo FlyDSL bwd B2 L4096 h128/128 d192/128 causal",
+   "comm": "alltoall",
+   "size_mib": 896,
+   "comm_bytes": 939524096,
+   "results": {
+    "m1 comp alone": {
+     "n_comp": 91,
+     "n_comm": 0,
+     "episodes": 1,
+     "comp": 318.0399475097656,
+     "ovl": 318.04542541503906,
+     "gfx_mhz": 1647.875,
+     "power_w": 2439.5
+    },
+    "m1 comm alone": {
+     "n_comp": 0,
+     "n_comm": 315,
+     "episodes": 1,
+     "comm": 296.9611358642578,
+     "ovl": 296.96746826171875,
+     "gfx_mhz": 2030.875,
+     "power_w": 1860
+    },
+    "m1 both": {
+     "n_comp": 91,
+     "n_comm": 315,
+     "episodes": 1,
+     "comm": 572.9864807128906,
+     "comm_under": 3.9547513582286764,
+     "comm_under_calls": 89.0,
+     "comp": 361.02610778808594,
+     "comp_under": 3.9723711603143244,
+     "comp_under_calls": 89.0,
+     "ovl": 572.9932250976562,
+     "gfx_mhz": 1802.625,
+     "power_w": 2359.0
+    },
+    "m2 x1 comp": {
+     "n_comp": 1,
+     "n_comm": 0,
+     "episodes": 83,
+     "comp": 3.5435664653778076,
+     "ovl": 3.5505573749542236,
+     "gfx_mhz": 1681.375,
+     "power_w": 2411.0
+    },
+    "m2 x1 both": {
+     "n_comp": 1,
+     "n_comm": 1,
+     "episodes": 83,
+     "comm": 3.263032078742981,
+     "comp": 4.106353759765625,
+     "ovl": 4.116705894470215,
+     "gfx_mhz": 1627.625,
+     "power_w": 2500.0
+    },
+    "m2 comm": {
+     "n_comp": 0,
+     "n_comm": 1,
+     "episodes": 240,
+     "comm": 0.9424832463264465,
+     "ovl": 0.9479817450046539,
+     "gfx_mhz": 1989.375,
+     "power_w": 1952
+    }
+   },
+   "summary": {
+    "m1": {
+     "t_comp": 3.4949444781292924,
+     "t_comm": 0.9427337646484375,
+     "t_comp_under": 3.9723711603143244,
+     "t_comm_under": 3.9547513582286764,
+     "comp_slowdown": 1.1366049404139833,
+     "comm_slowdown": 4.194982195958023,
+     "calls_under": [
+      89,
+      89
+     ],
+     "tflops": 1022.4519481307207,
+     "tflops_under": 899.5666935587268,
+     "busbw": 747.4465203468916,
+     "busbw_under": 178.17632720040532
+    },
+    "m2": [
+     {
+      "n_comp": 1,
+      "ratio": 3.7598190516273937,
+      "t_comp": 3.5435664653778076,
+      "t_comm": 0.9424832463264465,
+      "t_ovl": 4.116705894470215,
+      "t_comp_in": 4.106353759765625,
+      "t_comm_in": 3.263032078742981,
+      "efficiency": 0.3918836951995115,
+      "speedup": 1.089718290959323,
+      "ideal_speedup": 1.2659702465115075
+     }
+    ]
+   }
+  },
+  {
+   "compute": "attn_bwd_flydsl",
+   "compute_label": "Primus-Turbo FlyDSL bwd B2 L4096 h128/128 d192/128 causal",
+   "comm": "alltoall",
+   "size_mib": 448,
+   "comm_bytes": 469762048,
+   "results": {
+    "m1 comp alone": {
+     "n_comp": 88,
+     "n_comm": 0,
+     "episodes": 1,
+     "comp": 308.0268249511719,
+     "ovl": 308.03428649902344,
+     "gfx_mhz": 1643.5,
+     "power_w": 2433
+    },
+    "m1 comm alone": {
+     "n_comp": 0,
+     "n_comm": 576,
+     "episodes": 1,
+     "comm": 288.22747802734375,
+     "ovl": 288.2349090576172,
+     "gfx_mhz": 2022.125,
+     "power_w": 1858
+    },
+    "m1 both": {
+     "n_comp": 88,
+     "n_comm": 576,
+     "episodes": 1,
+     "comm": 579.6443481445312,
+     "comm_under": 1.9579388441183627,
+     "comm_under_calls": 195.0,
+     "comp": 388.0460205078125,
+     "comp_under": 4.42947884215865,
+     "comp_under_calls": 86.0,
+     "ovl": 579.6519775390625,
+     "gfx_mhz": 1860.1875,
+     "power_w": 2363.5
+    },
+    "m2 x1 comp": {
+     "n_comp": 1,
+     "n_comm": 0,
+     "episodes": 81,
+     "comp": 3.543947458267212,
+     "ovl": 3.551238536834717,
+     "gfx_mhz": 1702.75,
+     "power_w": 2402
+    },
+    "m2 x1 both": {
+     "n_comp": 1,
+     "n_comm": 1,
+     "episodes": 81,
+     "comm": 2.8006794452667236,
+     "comp": 3.912927985191345,
+     "ovl": 3.926748037338257,
+     "gfx_mhz": 1611.625,
+     "power_w": 2499.0
+    },
+    "m2 comm": {
+     "n_comp": 0,
+     "n_comm": 1,
+     "episodes": 366,
+     "comm": 0.509022980928421,
+     "ovl": 0.5143509805202484,
+     "gfx_mhz": 1946.75,
+     "power_w": 1989
+    }
+   },
+   "summary": {
+    "m1": {
+     "t_comp": 3.5003048289905894,
+     "t_comm": 0.5003949271308051,
+     "t_comp_under": 4.42947884215865,
+     "t_comm_under": 1.9579388441183627,
+     "comp_slowdown": 1.265455169924733,
+     "comm_slowdown": 3.9127871566262904,
+     "calls_under": [
+      86,
+      195
+     ],
+     "tflops": 1020.8861698775227,
+     "tflops_under": 806.7343625758336,
+     "busbw": 704.0869459252169,
+     "busbw_under": 179.94511782549895
+    },
+    "m2": [
+     {
+      "n_comp": 1,
+      "ratio": 6.962254340272238,
+      "t_comp": 3.543947458267212,
+      "t_comm": 0.509022980928421,
+      "t_ovl": 3.926748037338257,
+      "t_comp_in": 3.912927985191345,
+      "t_comm_in": 2.8006794452667236,
+      "efficiency": 0.2479699475005148,
+      "speedup": 1.0321442579603186,
+      "ideal_speedup": 1.1436316387086913
+     }
+    ]
+   }
+  },
+  {
+   "compute": "attn_bwd_flydsl",
+   "compute_label": "Primus-Turbo FlyDSL bwd B2 L4096 h128/128 d192/128 causal",
+   "comm": "alltoall",
+   "size_mib": 256,
+   "comm_bytes": 268435456,
+   "results": {
+    "m1 comp alone": {
+     "n_comp": 86,
+     "n_comm": 0,
+     "episodes": 1,
+     "comp": 301.92799377441406,
+     "ovl": 301.9351806640625,
+     "gfx_mhz": 1632.625,
+     "power_w": 2435
+    },
+    "m1 comm alone": {
+     "n_comp": 0,
+     "n_comm": 1152,
+     "episodes": 1,
+     "comm": 283.8263702392578,
+     "ovl": 283.8328399658203,
+     "gfx_mhz": 2020.875,
+     "power_w": 1896
+    },
+    "m1 both": {
+     "n_comp": 86,
+     "n_comm": 1152,
+     "episodes": 1,
+     "comm": 358.92893981933594,
+     "comm_under": 0.3143847329293514,
+     "comm_under_calls": 1083.0,
+     "comp": 344.1737365722656,
+     "comp_under": 4.007854154530694,
+     "comp_under_calls": 85.0,
+     "ovl": 358.9366455078125,
+     "gfx_mhz": 1514.25,
+     "power_w": 2416
+    },
+    "m2 x1 comp": {
+     "n_comp": 1,
+     "n_comm": 0,
+     "episodes": 79,
+     "comp": 3.571068525314331,
+     "ovl": 3.5785794258117676,
+     "gfx_mhz": 1543.875,
+     "power_w": 2497
+    },
+    "m2 x1 both": {
+     "n_comp": 1,
+     "n_comm": 1,
+     "episodes": 79,
+     "comm": 3.6150825023651123,
+     "comp": 3.611709475517273,
+     "ovl": 3.622906446456909,
+     "gfx_mhz": 1547.125,
+     "power_w": 2501
+    },
+    "m2 comm": {
+     "n_comp": 0,
+     "n_comm": 1,
+     "episodes": 536,
+     "comm": 0.25867800414562225,
+     "ovl": 0.264055997133255,
+     "gfx_mhz": 1877.375,
+     "power_w": 2041
+    }
+   },
+   "summary": {
+    "m1": {
+     "t_comp": 3.5107906252838843,
+     "t_comm": 0.24637705749935573,
+     "t_comp_under": 4.007854154530694,
+     "t_comm_under": 0.3143847329293514,
+     "comp_slowdown": 1.1415816499187037,
+     "comm_slowdown": 1.2760308777134148,
+     "calls_under": [
+      85,
+      1083
+     ],
+     "tflops": 1017.8370548608411,
+     "tflops_under": 891.6025016110983,
+     "busbw": 817.1482931219214,
+     "busbw_under": 640.3828523226736
+    },
+    "m2": [
+     {
+      "n_comp": 1,
+      "ratio": 13.80507220592287,
+      "t_comp": 3.571068525314331,
+      "t_comm": 0.25867800414562225,
+      "t_ovl": 3.622906446456909,
+      "t_comp_in": 3.611709475517273,
+      "t_comm_in": 3.6150825023651123,
+      "efficiency": 0.7996044491150625,
+      "speedup": 1.0570923058764952,
+      "ideal_speedup": 1.0724371437601727
+     }
+    ]
+   }
+  },
+  {
+   "compute": "attn_bwd_flydsl",
+   "compute_label": "Primus-Turbo FlyDSL bwd B2 L4096 h128/128 d192/128 causal",
+   "comm": "alltoall",
+   "size_mib": 128,
+   "comm_bytes": 134217728,
+   "results": {
+    "m1 comp alone": {
+     "n_comp": 86,
+     "n_comm": 0,
+     "episodes": 1,
+     "comp": 301.6546173095703,
+     "ovl": 301.66046142578125,
+     "gfx_mhz": 1622.25,
+     "power_w": 2445.0
+    },
+    "m1 comm alone": {
+     "n_comp": 0,
+     "n_comm": 1902,
+     "episodes": 1,
+     "comm": 280.4117431640625,
+     "ovl": 280.41822814941406,
+     "gfx_mhz": 2027.25,
+     "power_w": 1834.0
+    },
+    "m1 both": {
+     "n_comp": 86,
+     "n_comm": 1902,
+     "episodes": 1,
+     "comm": 355.17405700683594,
+     "comm_under": 0.18889710358269984,
+     "comm_under_calls": 1757.5,
+     "comp": 335.7835235595703,
+     "comp_under": 3.909199626305524,
+     "comp_under_calls": 85.0,
+     "ovl": 355.1815948486328,
+     "gfx_mhz": 1554.375,
+     "power_w": 2395
+    },
+    "m2 x1 comp": {
+     "n_comp": 1,
+     "n_comm": 0,
+     "episodes": 79,
+     "comp": 3.569566488265991,
+     "ovl": 3.576576590538025,
+     "gfx_mhz": 1556.25,
+     "power_w": 2491
+    },
+    "m2 x1 both": {
+     "n_comp": 1,
+     "n_comm": 1,
+     "episodes": 79,
+     "comm": 3.602743983268738,
+     "comp": 3.600392460823059,
+     "ovl": 3.611813545227051,
+     "gfx_mhz": 1553.3125,
+     "power_w": 2501.0
+    },
+    "m2 comm": {
+     "n_comp": 0,
+     "n_comm": 1,
+     "episodes": 656,
+     "comm": 0.15617399662733078,
+     "ovl": 0.16168249398469925,
+     "gfx_mhz": 1804.375,
+     "power_w": 2099.5
+    }
+   },
+   "summary": {
+    "m1": {
+     "t_comp": 3.5076118291810503,
+     "t_comm": 0.1474299385720623,
+     "t_comp_under": 3.909199626305524,
+     "t_comm_under": 0.18889710358269984,
+     "comp_slowdown": 1.1144903759827482,
+     "comm_slowdown": 1.2812669218495862,
+     "calls_under": [
+      85,
+      1757
+     ],
+     "tflops": 1018.7594763318816,
+     "tflops_under": 914.1034308470794,
+     "busbw": 682.7873427539737,
+     "busbw_under": 532.9001561738041
+    },
+    "m2": [
+     {
+      "n_comp": 1,
+      "ratio": 22.856343343660768,
+      "t_comp": 3.569566488265991,
+      "t_comm": 0.15617399662733078,
+      "t_ovl": 3.611813545227051,
+      "t_comp_in": 3.600392460823059,
+      "t_comm_in": 3.602743983268738,
+      "efficiency": 0.7294872522096534,
+      "speedup": 1.031542862952276,
+      "ideal_speedup": 1.0437515303723048
+     }
+    ]
+   }
+  },
+  {
+   "compute": "attn_bwd_flydsl",
+   "compute_label": "Primus-Turbo FlyDSL bwd B2 L4096 h128/128 d192/128 causal",
+   "comm": "alltoall",
+   "size_mib": 64,
+   "comm_bytes": 67108864,
+   "results": {
+    "m1 comp alone": {
+     "n_comp": 85,
+     "n_comm": 0,
+     "episodes": 1,
+     "comp": 298.79119873046875,
+     "ovl": 298.7969055175781,
+     "gfx_mhz": 1607.5,
+     "power_w": 2449.0
+    },
+    "m1 comm alone": {
+     "n_comp": 0,
+     "n_comm": 2875,
+     "episodes": 1,
+     "comm": 268.8179016113281,
+     "ovl": 268.8235626220703,
+     "gfx_mhz": 2022.5,
+     "power_w": 1781
+    },
+    "m1 both": {
+     "n_comp": 85,
+     "n_comm": 2875,
+     "episodes": 1,
+     "comm": 347.4169464111328,
+     "comm_under": 0.12302707665057304,
+     "comm_under_calls": 2598.0,
+     "comp": 322.88743591308594,
+     "comp_under": 3.8025150767394473,
+     "comp_under_calls": 84.0,
+     "ovl": 347.4238586425781,
+     "gfx_mhz": 1579.5,
+     "power_w": 2384.0
+    },
+    "m2 x1 comp": {
+     "n_comp": 1,
+     "n_comm": 0,
+     "episodes": 79,
+     "comp": 3.568945527076721,
+     "ovl": 3.576536536216736,
+     "gfx_mhz": 1577.125,
+     "power_w": 2481.0
+    },
+    "m2 x1 both": {
+     "n_comp": 1,
+     "n_comm": 1,
+     "episodes": 79,
+     "comm": 3.5905044078826904,
+     "comp": 3.5879935026168823,
+     "ovl": 3.599350929260254,
+     "gfx_mhz": 1554.0,
+     "power_w": 2501.0
+    },
+    "m2 comm": {
+     "n_comp": 0,
+     "n_comm": 1,
+     "episodes": 742,
+     "comm": 0.1023934967815876,
+     "ovl": 0.10790199786424637,
+     "gfx_mhz": 1770.625,
+     "power_w": 2123
+    }
+   },
+   "summary": {
+    "m1": {
+     "t_comp": 3.5151905732996322,
+     "t_comm": 0.09350187882133153,
+     "t_comp_under": 3.8025150767394473,
+     "t_comm_under": 0.12302707665057304,
+     "comp_slowdown": 1.081737959137194,
+     "comm_slowdown": 1.3157711716751688,
+     "calls_under": [
+      84,
+      2598
+     ],
+     "tflops": 1016.5630328593297,
+     "tflops_under": 939.7498019484788,
+     "busbw": 538.295579024422,
+     "busbw_under": 409.1103305896976
+    },
+    "m2": [
+     {
+      "n_comp": 1,
+      "ratio": 34.855197246457244,
+      "t_comp": 3.568945527076721,
+      "t_comm": 0.1023934967815876,
+      "t_ovl": 3.599350929260254,
+      "t_comp_in": 3.5879935026168823,
+      "t_comm_in": 3.5905044078826904,
+      "efficiency": 0.7030533858181488,
+      "speedup": 1.0200002989463575,
+      "ideal_speedup": 1.0286901259783185
+     }
+    ]
+   }
+  }
+ ]
+}

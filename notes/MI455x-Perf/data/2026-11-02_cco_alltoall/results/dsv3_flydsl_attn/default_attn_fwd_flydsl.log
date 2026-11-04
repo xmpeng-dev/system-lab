@@ -1,0 +1,64 @@
+W1102 12:16:36.882000 78850 torch/distributed/run.py:982] 
+W1102 12:16:36.882000 78850 torch/distributed/run.py:982] *****************************************
+W1102 12:16:36.882000 78850 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 12:16:36.882000 78850 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+[rank3]:W1102 12:16:39.568000 79021 torch/_opaque_base.py:6] torch._opaque_base is deprecated, use torch._custom_class_base instead
+[rank2]:W1102 12:16:39.569000 79020 torch/_opaque_base.py:6] torch._opaque_base is deprecated, use torch._custom_class_base instead
+[rank3]:W1102 12:16:39.570000 79021 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+[rank3]:W1102 12:16:39.570000 79021 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+[rank3]:W1102 12:16:39.570000 79021 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+[rank3]:W1102 12:16:39.570000 79021 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+[rank3]:W1102 12:16:39.570000 79021 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+[rank1]:W1102 12:16:39.570000 79019 torch/_opaque_base.py:6] torch._opaque_base is deprecated, use torch._custom_class_base instead
+[rank3]:W1102 12:16:39.570000 79021 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+[rank2]:W1102 12:16:39.571000 79020 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+[rank2]:W1102 12:16:39.571000 79020 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+[rank2]:W1102 12:16:39.571000 79020 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+[rank2]:W1102 12:16:39.571000 79020 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+[rank2]:W1102 12:16:39.571000 79020 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+[rank2]:W1102 12:16:39.571000 79020 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+[rank1]:W1102 12:16:39.572000 79019 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+[rank1]:W1102 12:16:39.572000 79019 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+[rank1]:W1102 12:16:39.572000 79019 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+[rank1]:W1102 12:16:39.572000 79019 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+[rank1]:W1102 12:16:39.572000 79019 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+[rank1]:W1102 12:16:39.572000 79019 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+[rank0]:W1102 12:16:39.601000 79018 torch/_opaque_base.py:6] torch._opaque_base is deprecated, use torch._custom_class_base instead
+[rank0]:W1102 12:16:39.603000 79018 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+[rank0]:W1102 12:16:39.603000 79018 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+[rank0]:W1102 12:16:39.603000 79018 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+[rank0]:W1102 12:16:39.603000 79018 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+[rank0]:W1102 12:16:39.603000 79018 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+[rank0]:W1102 12:16:39.603000 79018 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+/opt/venv/lib/python3.12/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/opt/venv/lib/python3.12/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/opt/venv/lib/python3.12/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/opt/venv/lib/python3.12/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+attn_fwd_flydsl + alltoall        896 MiB  m1  comp   0.864->  1.228 ms (1.42x,  1591-> 1119 TF)  comm   0.948->  1.131 ms (1.19x, busbw   743->  623 GB/s)  [300, 319 calls]
+attn_fwd_flydsl + alltoall        896 MiB  m2  x1   comp   0.863  comm   0.942  ovl   1.214 ms  (in ovl: comp   1.203, comm   1.205)  E  0.68  S 1.49 of 1.92
+attn_fwd_flydsl + alltoall        896 MiB  m2  x2   comp   1.724  comm   0.942  ovl   2.069 ms  (in ovl: comp   2.060, comm   1.357)  E  0.63  S 1.29 of 1.55
+attn_fwd_flydsl + alltoall        448 MiB  m1  comp   0.850->  1.173 ms (1.38x,  1616-> 1172 TF)  comm   0.500->  0.661 ms (1.32x, busbw   705->  533 GB/s)  [340, 591 calls]
+attn_fwd_flydsl + alltoall        448 MiB  m2  x1   comp   0.865  comm   0.508  ovl   1.057 ms  (in ovl: comp   1.048, comm   0.787)  E  0.62  S 1.30 of 1.59
+attn_fwd_flydsl + alltoall        256 MiB  m1  comp   0.851->  1.012 ms (1.19x,  1614-> 1359 TF)  comm   0.242->  0.326 ms (1.35x, busbw   831->  617 GB/s)  [374, 1160 calls]
+attn_fwd_flydsl + alltoall        256 MiB  m2  x1   comp   0.866  comm   0.250  ovl   0.934 ms  (in ovl: comp   0.925, comm   0.928)  E  0.73  S 1.19 of 1.29
+attn_fwd_flydsl + alltoall        128 MiB  m1  comp   0.851->  0.969 ms (1.14x,  1616-> 1418 TF)  comm   0.143->  0.210 ms (1.47x, busbw   704->  479 GB/s)  [366, 1689 calls]
+attn_fwd_flydsl + alltoall        128 MiB  m2  x1   comp   0.864  comm   0.152  ovl   0.910 ms  (in ovl: comp   0.901, comm   0.904)  E  0.70  S 1.12 of 1.18
+attn_fwd_flydsl + alltoall         64 MiB  m1  comp   0.850->  0.930 ms (1.09x,  1618-> 1478 TF)  comm   0.093->  0.154 ms (1.66x, busbw   541->  326 GB/s)  [363, 2189 calls]
+attn_fwd_flydsl + alltoall         64 MiB  m2  x1   comp   0.861  comm   0.101  ovl   0.891 ms  (in ovl: comp   0.882, comm   0.885)  E  0.70  S 1.08 of 1.12
+
+validation: all passed
+wrote .scratch/shapes/dsv3_flydsl_attn/default_attn_fwd_flydsl.json

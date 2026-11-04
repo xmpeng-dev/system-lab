@@ -1,0 +1,27 @@
+W1102 07:50:58.257000 76829 torch/distributed/run.py:982] 
+W1102 07:50:58.257000 76829 torch/distributed/run.py:982] *****************************************
+W1102 07:50:58.257000 76829 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 07:50:58.257000 76829 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+gmm_flydsl + alltoall        896 MiB  m1  comp   1.985->  2.746 ms (1.38x,  1939-> 1402 TF)  comm   0.935->  1.309 ms (1.40x, busbw   753->  538 GB/s)  [159, 313 calls]
+gmm_flydsl + alltoall        896 MiB  m2  x1   comp   2.003  comm   0.942  ovl   2.406 ms  (in ovl: comp   2.396, comm   1.925)  E  0.57  S 1.22 of 1.47
+gmm_flydsl + alltoall        448 MiB  m1  comp   1.978->  2.572 ms (1.30x,  1945-> 1496 TF)  comm   0.499->  0.800 ms (1.60x, busbw   706->  441 GB/s)  [166, 535 calls]
+gmm_flydsl + alltoall        448 MiB  m2  x1   comp   2.025  comm   0.507  ovl   2.264 ms  (in ovl: comp   2.255, comm   1.432)  E  0.53  S 1.12 of 1.25
+gmm_flydsl + alltoall        256 MiB  m1  comp   1.975->  2.266 ms (1.15x,  1949-> 1698 TF)  comm   0.242->  0.369 ms (1.52x, busbw   832->  546 GB/s)  [159, 973 calls]
+gmm_flydsl + alltoall        256 MiB  m2  x1   comp   2.036  comm   0.250  ovl   2.094 ms  (in ovl: comp   2.084, comm   2.088)  E  0.77  S 1.09 of 1.12
+gmm_flydsl + alltoall        128 MiB  m1  comp   1.951->  2.230 ms (1.14x,  1973-> 1726 TF)  comm   0.144->  0.220 ms (1.53x, busbw   699->  458 GB/s)  [156, 1582 calls]
+gmm_flydsl + alltoall        128 MiB  m2  x1   comp   2.031  comm   0.155  ovl   2.055 ms  (in ovl: comp   2.044, comm   2.049)  E  0.85  S 1.06 of 1.08
+gmm_flydsl + alltoall         64 MiB  m1  comp   1.939->  2.148 ms (1.11x,  1985-> 1792 TF)  comm   0.096->  0.143 ms (1.49x, busbw   524->  352 GB/s)  [155, 2325 calls]
+gmm_flydsl + alltoall         64 MiB  m2  x1   comp   2.033  comm   0.108  ovl   2.047 ms  (in ovl: comp   2.036, comm   2.041)  E  0.87  S 1.05 of 1.05
+
+validation: all passed
+wrote /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/results/ctheliosr-rck-g02-e15-01_20261102/dsv3/default_gmm_flydsl.json

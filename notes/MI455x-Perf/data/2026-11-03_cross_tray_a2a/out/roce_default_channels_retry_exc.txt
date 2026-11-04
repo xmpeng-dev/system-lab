@@ -1,0 +1,1 @@
+ctheliosr-rck-g02-e15-01:2883:2914 [1] /__w/rockrel/rockrel/build/comm-libs/rccl/build/hipify/src/transport/net_ib/p2p_tmp.cc:925 NCCL WARN NET/IB: Got completion from peer 10.190.224.232<53701> with status=IBV_WC_RETRY_EXC_ERR(12) opcode=IBV_WC_SEND(0) vendor_err=11 qp_num=562  localGid ::ffff:10.190.224.68 remoteGids::ffff:10.190.224.232 hca ionic_0

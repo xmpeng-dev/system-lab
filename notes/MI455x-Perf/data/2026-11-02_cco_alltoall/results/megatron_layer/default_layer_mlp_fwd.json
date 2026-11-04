@@ -1,0 +1,171 @@
+{
+ "config": {
+  "comm": "alltoall",
+  "model": "minimax_m3",
+  "sizes_mib": "192",
+  "comm_dtype": "bf16",
+  "compute": "layer_mlp_fwd",
+  "modes": "m1,m2",
+  "ratios": "0.5,1,2",
+  "cu_reserve": 0,
+  "comm_priority": "default",
+  "gemm": "4096,6144,24576",
+  "gmm": "32,512,6144,6144",
+  "gmm_down": "32,512,3072,6144",
+  "attn": "1,4096,64,4,128,128,1",
+  "shared": "3072",
+  "warmup_ms": 1000.0,
+  "target_ms": 300.0,
+  "rounds": 10,
+  "pg_timeout_s": 180.0,
+  "no_telemetry": false,
+  "output": "/home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/results/ctheliosr-rck-g02-e15-01_20261102/minimax_m3/default_layer_mlp_fwd.json"
+ },
+ "world": 4,
+ "ranks": [
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 0,
+   "bdf": "0001:01:00"
+  },
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 1,
+   "bdf": "0002:01:00"
+  },
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 2,
+   "bdf": "0003:01:00"
+  },
+  {
+   "host": "ctheliosr-rck-g02-e15-01",
+   "local": 3,
+   "bdf": "0004:01:00"
+  }
+ ],
+ "environment": {
+  "torch": "2.14.0+rocm10.2.0a20261011",
+  "hip": "7.17.26405",
+  "rccl": "2.32.3",
+  "image": null,
+  "env": {
+   "GPU_ARCHS": "native",
+   "HIP_ARCHITECTURES": "gfx1250",
+   "HIP_CLANG_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/llvm/bin",
+   "HIP_DEVICE_LIB_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib/llvm/amdgcn/bitcode",
+   "HIP_INCLUDE_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/include",
+   "HIP_LIB_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib",
+   "HIP_PATH": "/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel",
+   "HIP_PLATFORM": "amd",
+   "HSA_ENABLE_SCRATCH_ASYNC_RECLAIM": "0",
+   "HSA_NO_SCRATCH_RECLAIM": "1",
+   "TORCH_NCCL_ASYNC_ERROR_HANDLING": "1"
+  }
+ },
+ "comp_stream_cus": null,
+ "failed": [],
+ "cases": [
+  {
+   "compute": "layer_mlp_fwd",
+   "compute_label": "layer mlp fwd: shared expert + experts fwd (beside dispatch bwd)",
+   "comm": "alltoall",
+   "size_mib": 192,
+   "comm_bytes": 201326592,
+   "results": {
+    "m1 comp alone": {
+     "n_comp": 253,
+     "n_comm": 0,
+     "episodes": 1,
+     "comp": 325.90785217285156,
+     "ovl": 325.9154815673828,
+     "gfx_mhz": 1460.0625,
+     "power_w": 2446.5
+    },
+    "m1 comm alone": {
+     "n_comp": 0,
+     "n_comm": 1459,
+     "episodes": 1,
+     "comm": 282.4296417236328,
+     "ovl": 282.43585205078125,
+     "gfx_mhz": 1977.5625,
+     "power_w": 1839.5
+    },
+    "m1 both": {
+     "n_comp": 253,
+     "n_comm": 1459,
+     "episodes": 1,
+     "comm": 441.75672912597656,
+     "comm_under": 0.33246870393653727,
+     "comm_under_calls": 1133.0,
+     "comp": 378.7258758544922,
+     "comp_under": 1.4966589649991384,
+     "comp_under_calls": 252.0,
+     "ovl": 441.7637023925781,
+     "gfx_mhz": 1449.375,
+     "power_w": 2411.5
+    },
+    "m2 x1 comp": {
+     "n_comp": 1,
+     "n_comm": 0,
+     "episodes": 202,
+     "comp": 1.3078500032424927,
+     "ovl": 1.3140687346458435,
+     "gfx_mhz": 1479.5625,
+     "power_w": 2461.0
+    },
+    "m2 x1 both": {
+     "n_comp": 1,
+     "n_comm": 1,
+     "episodes": 202,
+     "comm": 1.3801304996013641,
+     "comp": 1.3761122524738312,
+     "ovl": 1.3865984976291656,
+     "gfx_mhz": 1444.375,
+     "power_w": 2499.0
+    },
+    "m2 comm": {
+     "n_comp": 0,
+     "n_comm": 1,
+     "episodes": 594,
+     "comm": 0.20190300047397614,
+     "ovl": 0.2072407491505146,
+     "gfx_mhz": 1772.0,
+     "power_w": 2055.5
+    }
+   },
+   "summary": {
+    "m1": {
+     "t_comp": 1.288173328746449,
+     "t_comm": 0.19357754744594435,
+     "t_comp_under": 1.4966589649991384,
+     "t_comm_under": 0.33246870393653727,
+     "comp_slowdown": 1.1618459500753455,
+     "comm_slowdown": 1.7174962092614467,
+     "calls_under": [
+      252,
+      1133
+     ],
+     "tflops": 1800.4427572622908,
+     "tflops_under": 1549.6398271608489,
+     "busbw": 780.023024323958,
+     "busbw_under": 454.162879730245
+    },
+    "m2": [
+     {
+      "n_comp": 1,
+      "ratio": 6.477615489478896,
+      "t_comp": 1.3078500032424927,
+      "t_comm": 0.20190300047397614,
+      "t_ovl": 1.3865984976291656,
+      "t_comp_in": 1.3761122524738312,
+      "t_comm_in": 1.3801304996013641,
+      "efficiency": 0.6099686770290316,
+      "speedup": 1.0888177120470528,
+      "ideal_speedup": 1.1543777955984305
+     }
+    ]
+   }
+  }
+ ]
+}

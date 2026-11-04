@@ -1,0 +1,59 @@
+W1102 07:34:21.429000 74377 torch/distributed/run.py:982] 
+W1102 07:34:21.429000 74377 torch/distributed/run.py:982] *****************************************
+W1102 07:34:21.429000 74377 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1102 07:34:21.429000 74377 torch/distributed/run.py:982] *****************************************
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:2874: UserWarning: backend_options._timeout was specified, but timeout kwarg has a default value that will always override it. 
+  backend_result = creator_fn(dist_backend_opts, backend_options)
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] WARNING: NUMA balancing is enabled, which may cause errors. It is recommended to disable NUMA balancing by running "sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'" for more details: https://rocm.docs.amd.com/en/latest/how-to/system-optimization/mi300x.html#disable-numa-auto-balancing
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] LoadKernel: _ZN5aiter41fmha_bf16_pertokenBf16_hd128_128x256_maskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256_mask.co
+[aiter] import [module_fmha_v3_bwd] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_v3_bwd.so
+[aiter] type hints mismatch, override to --> fmha_v3_bwd(dout: torch.Tensor, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, out: torch.Tensor, softmax_lse: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, deterministic: bool, is_v3_atomic_fp32: bool, how_v3_bf16_cvt: int, dq: Optional[torch.Tensor] = None, dk: Optional[torch.Tensor] = None, dv: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, rng_state: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] LoadKernel: _ZN5aiter23fmha_bwd_hd128_odo_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_odo_bf16.co
+[aiter] LoadKernel: _ZN5aiter38fmha_bwd_hd128_bf16_causal_br_a32_psskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_bf16_causal_br_a32_pssk.co
+[aiter] LoadKernel: _ZN5aiter30fmha_bwd_hd128_dq_convert_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_dq_convert_bf16.co
+[aiter] LoadKernel: _ZN5aiter41fmha_bf16_pertokenBf16_hd128_128x256_maskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256_mask.co
+[aiter] import [module_fmha_v3_bwd] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_v3_bwd.so
+[aiter] type hints mismatch, override to --> fmha_v3_bwd(dout: torch.Tensor, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, out: torch.Tensor, softmax_lse: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, deterministic: bool, is_v3_atomic_fp32: bool, how_v3_bf16_cvt: int, dq: Optional[torch.Tensor] = None, dk: Optional[torch.Tensor] = None, dv: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, rng_state: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] LoadKernel: _ZN5aiter23fmha_bwd_hd128_odo_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_odo_bf16.co
+[aiter] LoadKernel: _ZN5aiter38fmha_bwd_hd128_bf16_causal_br_a32_psskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_bf16_causal_br_a32_pssk.co
+[aiter] LoadKernel: _ZN5aiter30fmha_bwd_hd128_dq_convert_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_dq_convert_bf16.co
+[aiter] LoadKernel: _ZN5aiter41fmha_bf16_pertokenBf16_hd128_128x256_maskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256_mask.co
+[aiter] import [module_fmha_v3_bwd] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_v3_bwd.so
+[aiter] type hints mismatch, override to --> fmha_v3_bwd(dout: torch.Tensor, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, out: torch.Tensor, softmax_lse: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, deterministic: bool, is_v3_atomic_fp32: bool, how_v3_bf16_cvt: int, dq: Optional[torch.Tensor] = None, dk: Optional[torch.Tensor] = None, dv: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, rng_state: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] LoadKernel: _ZN5aiter23fmha_bwd_hd128_odo_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_odo_bf16.co
+[aiter] LoadKernel: _ZN5aiter38fmha_bwd_hd128_bf16_causal_br_a32_psskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_bf16_causal_br_a32_pssk.co
+[aiter] LoadKernel: _ZN5aiter30fmha_bwd_hd128_dq_convert_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_dq_convert_bf16.co
+[aiter] LoadKernel: _ZN5aiter41fmha_bf16_pertokenBf16_hd128_128x256_maskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_fwd_bf16/fmha_bf16_pertokenBf16_hd128_128x256_mask.co
+[aiter] import [module_fmha_v3_bwd] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_v3_bwd.so
+[aiter] type hints mismatch, override to --> fmha_v3_bwd(dout: torch.Tensor, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, out: torch.Tensor, softmax_lse: torch.Tensor, dropout_p: float, softmax_scale: float, is_causal: bool, window_size_left: int, window_size_right: int, deterministic: bool, is_v3_atomic_fp32: bool, how_v3_bf16_cvt: int, dq: Optional[torch.Tensor] = None, dk: Optional[torch.Tensor] = None, dv: Optional[torch.Tensor] = None, alibi_slopes: Optional[torch.Tensor] = None, rng_state: Optional[torch.Tensor] = None, gen: Optional[torch.Generator] = None) -> List[torch.Tensor]
+[aiter] LoadKernel: _ZN5aiter23fmha_bwd_hd128_odo_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_odo_bf16.co
+[aiter] LoadKernel: _ZN5aiter38fmha_bwd_hd128_bf16_causal_br_a32_psskE hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_bf16_causal_br_a32_pssk.co
+[aiter] LoadKernel: _ZN5aiter30fmha_bwd_hd128_dq_convert_bf16E hsaco: /opt/venv/lib/python3.12/site-packages/aiter_meta/hsa//gfx1250/fmha_v3_bwd/bwd_hd128_dq_convert_bf16.co
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+attn_bwd  + alltoall        192 MiB  m1  comp   0.528->  0.611 ms (1.16x,  1301-> 1125 TF)  comm   0.193->  0.451 ms (2.33x, busbw   782->  335 GB/s)  [645, 875 calls]
+attn_bwd  + alltoall        192 MiB  m2  x1   comp   0.533  comm   0.201  ovl   0.608 ms  (in ovl: comp   0.598, comm   0.602)  E  0.63  S 1.21 of 1.38
+attn_bwd  + alltoall         96 MiB  m1  comp   0.530->  0.589 ms (1.11x,  1297-> 1166 TF)  comm   0.118->  0.346 ms (2.92x, busbw   637->  218 GB/s)  [647, 1103 calls]
+attn_bwd  + alltoall         96 MiB  m2  x1   comp   0.533  comm   0.127  ovl   0.584 ms  (in ovl: comp   0.573, comm   0.577)  E  0.60  S 1.13 of 1.24
+attn_bwd  + alltoall         64 MiB  m1  comp   0.529->  0.582 ms (1.10x,  1298-> 1182 TF)  comm   0.093->  0.321 ms (3.44x, busbw   539->  157 GB/s)  [638, 1152 calls]
+attn_bwd  + alltoall         64 MiB  m2  x1   comp   0.533  comm   0.102  ovl   0.572 ms  (in ovl: comp   0.557, comm   0.562)  E  0.62  S 1.11 of 1.19
+attn_bwd  + alltoall         32 MiB  m1  comp   0.528->  0.665 ms (1.26x,  1300-> 1034 TF)  comm   0.068->  0.202 ms (2.95x, busbw   368->  125 GB/s)  [626, 2058 calls]
+attn_bwd  + alltoall         32 MiB  m2  x1   comp   0.534  comm   0.093  ovl   0.568 ms  (in ovl: comp   0.556, comm   0.545)  E  0.64  S 1.11 of 1.17
+attn_bwd  + alltoall         16 MiB  m1  comp   0.530->  0.671 ms (1.27x,  1298-> 1024 TF)  comm   0.068->  0.184 ms (2.72x, busbw   186->   68 GB/s)  [631, 2297 calls]
+attn_bwd  + alltoall         16 MiB  m2  x1   comp   0.533  comm   0.088  ovl   0.565 ms  (in ovl: comp   0.555, comm   0.544)  E  0.64  S 1.10 of 1.17
+
+validation: all passed
+wrote /home/xiaompen/minimax-poc/examples-phase2/training/cco-alltoall/results/ctheliosr-rck-g02-e15-01_20261102/minimax_m3/default_attn_bwd.json
