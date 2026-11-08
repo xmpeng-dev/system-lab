@@ -1,0 +1,13 @@
+peaks: GEMM 1242 TFLOP/s (hipBLASLt 8192^3), link 145 GB/s per rank off-rank (RCCL 1 GiB a2a)
+== qwen3-30b-a3b seq=16384 ulysses=4 mbs=1  (us, max over ranks)
+  op                               gemm    wgrad      a2a     pack   serial  unfused  overlap    fused roofline  hidden fused/roof
+  fwd QKV (GemmA2A)                  86        0      249      110      335      439      249      255      217    94%      1.17x
+  fwd o_proj (A2AGemm)               76        0      215       37      292      319      215      238      174    70%      1.37x
+  bwd o_proj (GemmA2A+wgrad)         67       77      213       37      358      386      213      227      174    91%      1.30x
+  bwd QKV (A2AGemm+wgrad)            88       84      252       74      424      530      252      323      217    58%      1.49x
+== qwen3-30b-a3b seq=32768 ulysses=4 mbs=1  (us, max over ranks)
+  op                               gemm    wgrad      a2a     pack   serial  unfused  overlap    fused roofline  hidden fused/roof
+  fwd QKV (GemmA2A)                 163        0      471      185      633      828      471      462      435   105%      1.06x
+  fwd o_proj (A2AGemm)              131        0      390       65      520      575      390      410      348    85%      1.18x
+  bwd o_proj (GemmA2A+wgrad)        127      144      387       65      658      714      387      416      348    89%      1.20x
+  bwd QKV (A2AGemm+wgrad)           146      155      472      124      773      976      472      556      435    72%      1.28x

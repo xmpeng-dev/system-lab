@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ulysses GemmA2A / A2AGemm on MI355X：Primus-Turbo 融合 kernel 工作总结</title>
+<style>
+:root{
+  --bg:#141518; --panel:#1d1f23; --panel2:#24272c; --line:#2e3238;
+  --text:#e9e8e5; --muted:#9ca0a8; --dim:#6b7078;
+  --red:#e2353d; --gray:#7d766e; --green:#5ccb8f; --amber:#f2a64a; --blue:#79aef7;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.7 "Segoe UI","Microsoft YaHei","PingFang SC","Noto Sans CJK SC","Noto Sans SC","WenQuanYi Micro Hei",sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 32px 64px}
+a{color:var(--blue);text-decoration:none} a:hover{text-decoration:underline}
+code{font-family:Consolas,"JetBrains Mono","DejaVu Sans Mono",monospace;font-size:.88em;background:#26292e;border:1px solid #33373d;border-radius:4px;padding:0 5px;color:#e6d3b3}
+header{position:relative;padding-top:18px;margin-bottom:26px}
+header:before{content:"";position:absolute;top:0;left:0;width:150px;height:3px;background:var(--red)}
+h1{font-family:Cambria,"Noto Serif","DejaVu Serif","Microsoft YaHei","WenQuanYi Micro Hei",serif;font-size:34px;line-height:1.3;margin:0 0 10px}
+.meta{color:var(--muted);font-size:14px}
+.meta span{margin-right:18px}
+h2{font-size:24px;margin:46px 0 16px;display:flex;align-items:center;gap:12px}
+h2 .n{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--red);color:#fff;font-size:17px}
+h3{font-size:17.5px;margin:28px 0 10px;padding-left:11px;border-left:3px solid var(--red)}
+p{margin:8px 0}
+.muted{color:var(--muted)} .dim{color:var(--dim)} .red{color:var(--red)} .green{color:var(--green)} .amber{color:var(--amber)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 22px;margin:14px 0}
+.tldr{border-left:4px solid var(--red)}
+.tldr ul{margin:6px 0 0;padding-left:20px}
+.tldr li{margin:5px 0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi .k{font-size:28px;font-weight:800;line-height:1.15;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5}
+figure{margin:18px 0}
+figure img{width:100%;border-radius:10px;border:1px solid var(--line);display:block}
+figcaption{font-size:13px;color:var(--dim);margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+th,td{padding:8px 10px;border-bottom:1px solid #2a2d32;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:13px;border-bottom:1px solid #3a3e45;white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.hl td{background:#24191b}
+tr.sub td{color:var(--dim)}
+.tag{display:inline-block;font-size:12px;line-height:1;padding:3px 6px;border-radius:4px;border:1px solid;white-space:nowrap;margin:1px 2px 1px 0}
+.tag.t{color:#ff8a8f;border-color:#7a2a2f;background:#2a1719}
+.tag.p{color:var(--blue);border-color:#2f4a6e;background:#17202c}
+.tag.n{color:var(--dim);border-color:#3a3e45}
+.bar{height:12px;background:#2a2d32;border-radius:2px;position:relative;min-width:120px}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--gray);border-radius:2px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0}
+.flow span{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 12px;font-size:14px}
+.flow em{color:var(--dim);font-style:normal}
+.timeline{list-style:none;margin:8px 0;padding:0;border-left:2px solid #3a3e45}
+.timeline li{position:relative;padding:4px 0 12px 22px}
+.timeline li:before{content:"";position:absolute;left:-7px;top:11px;width:12px;height:12px;border-radius:50%;background:var(--red);border:2px solid var(--bg)}
+.timeline b{color:var(--text);margin-right:8px}
+ul.dot{padding-left:20px;margin:6px 0} ul.dot li{margin:5px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ladder{display:flex;flex-direction:column;gap:7px;margin:8px 0 4px}
+.lrow{display:grid;grid-template-columns:250px 1fr 74px 64px;gap:12px;align-items:center;font-size:14px}
+.lrow .track{height:20px;position:relative;background:#22252a;border-radius:2px}
+.lrow .track i{position:absolute;top:0;bottom:0;border-radius:2px}
+.lrow .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.lrow .d{text-align:right;color:var(--green);font-weight:700}
+.target{position:absolute;top:-4px;bottom:-4px;border-left:1.5px dashed var(--amber)}
+.note{font-size:13px;color:var(--dim);margin-top:6px}
+footer{margin-top:50px;padding-top:14px;border-top:1px solid #2a2d32;font-size:13px;color:var(--dim)}
+@media (max-width:900px){.kpis{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}.lrow{grid-template-columns:150px 1fr 64px 54px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Ulysses GemmA2A / A2AGemm on MI355X：Primus-Turbo 融合 kernel 工作总结</h1>
+  <div class="meta"><span>时间：2026-11-06 → 11-07</span><span>硬件：单节点 8× MI355X（gfx950，256 CU）</span><span>软件：Primus-Turbo <code>feat/ulysses-gemm-a2a</code>（FlyDSL）+ Primus <code>feat/ulysses-fused-a2a</code></span></div>
+</header>
+
+<div class="panel tldr">
+  <b>一句话：</b>用 FlyDSL 实现了 Ulysses attention 前后两次 all-to-all 与投影 GEMM 的融合 kernel（GemmA2A / A2AGemm），覆盖前向和反向四个位置。以 Qwen3-30B-A3B CP4 为主线：四个位置 kernel <b class="red">1.68×</b>，端到端训练每步 <b class="red">−10.8% / −9.2% / −7.8% / −5.3%（16K / 32K / 64K / 128K）</b>，loss 与基线一致。
+  <ul>
+    <li><b>出发点：</b>Qwen3-30B-A3B CP4 上，这四个位置不融合时 70% 的时间花在交换（pack + RCCL a2a），GEMM 与交换完全串行。</li>
+    <li><b>kernel：</b>四个位置 16K + 32K 耗时之和从不融合的 4,778 µs 降到 2,841 µs（64K / 128K 为 1.78× / 1.74×，已贴近 roofline）。首版融合降 31.6%，之后 13 轮单变量优化（保留 5 轮）再降 13.1%；最大的一步是把两个 wgrad 放进融合 kernel，不用 side stream。</li>
+    <li><b>端到端：</b>Qwen3-30B-A3B 完整 48 层 16K 3,157 → 2,815、32K 6,581 → 5,979、64K 17,350 → 16,004、128K 55,942 → 53,005 ms/iter。序列越长 attention 占比越大，相对收益下降，但每步省下的时间从 342 ms 增长到 2,937 ms。</li>
+    <li><b>其它模型（同一份最终代码）：</b>Qwen3-235B-A22B、GLM-4.7、MiniMax-M2.5 CP4 每步快 4.8–6.7%（4 层 proxy），Llama3.1-8B 快 3.6–4.3%，GLM-4.7 CP8 快 1.9–3.7%。</li>
+  </ul>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="k red">1.68×</div><div class="d">Qwen3-30B-A3B CP4 四个位置 kernel<br>4,778 → 2,841 µs（16K + 32K）</div></div>
+  <div class="kpi"><div class="k red">−10.8% / −9.2%</div><div class="d">Qwen3-30B-A3B CP4 端到端<br>16K / 32K</div></div>
+  <div class="kpi"><div class="k red">−7.8% / −5.3%</div><div class="d">Qwen3-30B-A3B CP4 端到端<br>64K / 128K</div></div>
+  <div class="kpi"><div class="k">−4.8 ~ −6.7%</div><div class="d">其它 CP4 MoE 模型端到端<br>Qwen3-235B / GLM-4.7 / MiniMax</div></div>
+</div>
+
+<figure>
+  <img src="summary_figure.png" alt="工作总结图">
+  <figcaption>总结图（源文件 <code>summary_figure.html</code>，1920×1080）。</figcaption>
+</figure>
+
+<!-- ================= 出发点 ================= -->
+<h2><span class="n">1</span>出发点</h2>
+
+<h3>问题</h3>
+<p>Ulysses 序列并行（Megatron <code>cp_comm_type=a2a</code>）在每层 attention 前后各做一次 all-to-all。Turbo 现有路径（<code>flash_attn_usp_func</code>）全部串行：</p>
+<div class="flow"><span>QKV GEMM</span><em>→</em><span>pack（拷贝两遍）</span><em>→</em><span>RCCL a2a</span><em>→</em><span>unpack</span><em>→</em><span>RoPE + attention</span><em>→</em><span>pack</span><em>→</em><span>RCCL a2a</span><em>→</em><span>unpack</span><em>→</em><span>o_proj + residual</span></div>
+<p>反向再来一遍。GEMM 和通信都在关键路径上，pack / unpack 是纯开销。以 Qwen3-30B-A3B CP4 为例，四个位置不融合时的耗时构成（µs，各 rank 最大值，<code>bench_ulysses_overlap.py</code>）：</p>
+<table>
+  <tr><th>位置</th><th>长度</th><th class="num">GEMM</th><th class="num">wgrad</th><th class="num">pack / unpack</th><th class="num">RCCL a2a</th><th class="num">不融合合计</th><th class="num">完全重叠下限</th></tr>
+  <tr><td>前向 QKV</td><td>16K / 32K</td><td class="num">86 / 162</td><td class="num">—</td><td class="num">110 / 185</td><td class="num">249 / 473</td><td class="num">439 / 829</td><td class="num">249 / 473</td></tr>
+  <tr><td>前向 o_proj</td><td>16K / 32K</td><td class="num">76 / 131</td><td class="num">—</td><td class="num">37 / 65</td><td class="num">215 / 386</td><td class="num">319 / 579</td><td class="num">215 / 386</td></tr>
+  <tr><td>反向 o_proj</td><td>16K / 32K</td><td class="num">67 / 128</td><td class="num">78 / 145</td><td class="num">37 / 65</td><td class="num">212 / 388</td><td class="num">386 / 714</td><td class="num">212 / 388</td></tr>
+  <tr><td>反向 QKV</td><td>16K / 32K</td><td class="num">88 / 146</td><td class="num">85 / 156</td><td class="num">74 / 123</td><td class="num">252 / 474</td><td class="num">531 / 981</td><td class="num">252 / 474</td></tr>
+  <tr class="hl"><td><b>合计</b></td><td>16K / 32K</td><td class="num" colspan="4">交换（pack + a2a）占 <b>71% / 70%</b></td><td class="num"><b>1,675 / 3,103</b></td><td class="num"><b>928 / 1,721</b></td></tr>
+</table>
+<p class="note">完全重叠下限 = max(GEMM + wgrad, a2a)，即交换全部藏到计算后面时的耗时。这个模型 hidden 只有 2048，GEMM 很轻，交换占比高，所以选它作为主线和优化验证集。</p>
+
+<h3>目标</h3>
+<p>实现两个融合 kernel，反向复用同样的模板：</p>
+<table>
+  <tr><th style="width:150px">kernel</th><th>做法</th><th>覆盖位置</th></tr>
+  <tr><td><b>GemmA2A</b></td><td>GEMM 的每个输出 tile 算完直接送到目标 rank，落地就是 a2a 之后的 <code>[s, b, h/n, d]</code> 布局；沿 N（head）维切，tile 之间无依赖</td><td>前向 QKV；反向 o_proj dgrad</td></tr>
+  <tr><td><b>A2AGemm</b></td><td>直接接收各 rank 的 attention 输出，数据到一块算一块，epilogue 加 residual；沿 K 维切，最后到达的那一片无法隐藏</td><td>前向 o_proj；反向 QKV dgrad</td></tr>
+</table>
+<p>kernel 的目标是逼近上表的"完全重叠下限"（Qwen3-30B-A3B CP4 16K 四项合计 928 µs，不融合 1,675 µs），端到端的目标是这部分节省能落到训练每步上。</p>
+
+<h3>必须避开的问题（另一个实现的教训）</h3>
+<table>
+  <tr><th style="width:280px">问题</th><th>本实现的处理</th></tr>
+  <tr><td>没改的 kernel 变慢（flash-attn 慢 17–23%）</td><td>交给 attention 的张量全是普通 caching-allocator 张量；对称内存只放单次调用内用完的 staging / recv；op 返回后不留常驻或自旋 kernel。实测 attention / MLP 变化在 ±2% 以内</td></tr>
+  <tr><td>post 侧全局 barrier（26–45 µs）</td><td>无全局 barrier：逐 tile flag，值为单调递增 epoch，双 bank 交替；epoch 由最后退出的 block 推进，不需要 host 参与</td></tr>
+  <tr><td>post_pack 拷贝（约 20 µs）</td><td>A2AGemm 的发送方按 flash-attn 原生 strided 布局原地读取 O，直接写进目标 rank 的 recv bank</td></tr>
+</table>
+
+<h3>约束</h3>
+<ul class="dot">
+  <li>无 D2H 同步；所有自旋有超时诊断（打印 rank / op / epoch / src / tile / flag 值后 trap）；容忍 rank 间约 5% 的进度差。</li>
+  <li>结果按位确定：A2AGemm 按固定 K 顺序累加，wgrad 不跨 rank 归约。</li>
+  <li>过程中追加：不用 CUDA graph（在 AMD GPU 上不合适）；不用多 stream 重叠（MI355X 上不可控），参考 MegaMoE 在一次 launch 里按 block 分角色。</li>
+  <li>优化按 <code>iteration_rules</code> 单变量迭代：每轮跑全验证集和正确性，变差即回退，每轮留快照和 summary。</li>
+</ul>
+
+<!-- ================= 实现 ================= -->
+<h2><span class="n">2</span>实现</h2>
+
+<h3>push 还是 pull</h3>
+<table>
+  <tr><th style="width:150px">kernel</th><th style="width:80px">模式</th><th>原因</th></tr>
+  <tr><td>GemmA2A</td><td><span class="tag p">pull</span></td><td>GEMM epilogue 原样写本地对称 staging 并置本地 flag；接收方通信 block 轮询远端 flag，读 peer staging，直接按 a2a 之后的布局写进普通张量。push 的话目的地只能是对称内存，还要再拷一次</td></tr>
+  <tr><td>A2AGemm</td><td><span class="tag t">push</span></td><td>数据源是 flash-attn 输出的普通张量，peer 拿不到地址；发送方原地读、写进目标 rank 的 recv bank，再对目标 flag 做 atomic</td></tr>
+</table>
+<p class="note">实测 8 卡 all-to-all：用到 56 个 CU 时读和写都在 350–380 GB/s 饱和，pull 可行；CU 少时 pull 吃亏（远端读延迟高）。</p>
+
+<h3>kernel 结构</h3>
+<ul class="dot">
+  <li><b>CU 分角色（一次 launch）：</b>GemmA2A 先派发第一波 GEMM block，pull block 排在第一波之后（之前没数据可拉），tail pull block 排在所有 GEMM block 之后填最后一波的空 CU；pull unit 用原子计数器按 <code>(m_tile, src=(me+i)%n)</code> 领取，7 条链路同时忙。</li>
+  <li><b>A2AGemm：</b>前 <code>num_push</code> 个 block 先推数据，推完去算最后几个 tile；每个 GEMM tile 等齐本 m-tile 所有来源的 flag 后跑 K 循环；residual 在 epilogue 以 fp32 加到累加器上，只舍入一次。</li>
+  <li><b>wgrad 也在融合 kernel 里：</b>用生产的 FlyDSL MoE wgrad tile <code>grouped_gemm_bf16_variable_k_tile</code>，加了 <code>a_base</code>、<code>k_hook</code>、<code>persistent="staggered"</code> 三个可选参数。反向 QKV 的 dW 按来源 rank 天然可分，直接读 recv bank；反向 o_proj 的 dW_o 不依赖交换，插在 GEMM tile 序列中间。</li>
+  <li><b>权重布局：</b>Megatron 交错布局 <code>[ng, hq/ng+2, d]</code> 下每个 rank 的 head 就是连续的行，不用重排；concat 布局按 rank 重排一次并缓存。</li>
+  <li><b>缓冲区：</b>对称堆 2 bank × max(QKV, O) 大小，首次调用分配；Llama-8B 32K n=8 共 96 MiB。</li>
+</ul>
+
+<h3>API 与接入</h3>
+<table>
+  <tr><th style="width:320px">接口</th><th>说明</th></tr>
+  <tr><td><code>ulysses_qkv_gemm_a2a(x, w_qkv, hq, hkv, d, group, qkv_format)</code></td><td>返回本地 head、完整序列的 q / k / v；反向是 A2AGemm（dx + dW_qkv 同一 kernel）</td></tr>
+  <tr><td><code>ulysses_a2a_o_gemm(o, w_o, residual, group, qkv_format)</code></td><td>返回本地序列、全部 hidden 的 y；反向是 GemmA2A（dO + dW_o 同一 kernel）</td></tr>
+  <tr><td>Primus <code>ulysses_fused_a2a_patches.py</code></td><td><code>PRIMUS_ULYSSES_FUSED_A2A=1</code> 开启：CP 切分改为 contiguous，RoPE 放到 a2a 之后按全长序列做，attention 用本地 <code>flash_attn_func</code>；不满足条件时回退原路径。<code>PRIMUS_ULYSSES_FUSED_A2A_IMPL=serial</code> 为同路径串行对照</td></tr>
+</table>
+<p>支持范围：bf16，n ∈ {2, 4, 8}，sbhd / bshd，b ≥ 1，GQA / MHA，d 64 / 128，交错 / concat 权重。</p>
+
+<h3>正确性</h3>
+<ul class="dot">
+  <li><code>tests/pytorch/ops/test_ulysses_fused_a2a.py</code>（torchrun）：fp32 <code>F.linear</code> → Turbo 现有 pack / <code>all_to_all_single</code> / unpack 作参考，比前向输出和全部梯度（dx、dW_qkv、dW_o、d_residual）。</li>
+  <li>形状矩阵：GQA 32/8、MHA 40/40、hkv == n；d 64 / 128；b 1 / 2；s/n 不是 tile 整数倍；sbhd / bshd；交错 / concat；n = 2 / 4 / 8。</li>
+  <li>场景：同一 op 连续多次（缓冲复用）、三层串联、非默认 stream；buffer poisoning（每次调用前把 recv bank 填成 NaN，读到未写的行就会暴露）。</li>
+</ul>
+<p class="note">首版另按任务给定的单算子目标验收过（Llama3.1-8B 32K n=8 四个位置），全部达标。</p>
+
+<!-- ================= 优化 ================= -->
+<h2><span class="n">3</span>优化</h2>
+
+<h3>方法</h3>
+<div class="flow"><span>trace 定位（s_memrealtime 逐 tile 时间线）</span><em>→</em><span>单变量改动</span><em>→</em><span>正确性 quick</span><em>→</em><span>全验证集 A/B</span><em>→</em><span>保留 / 回退</span></div>
+<p>测量口径：每次计时前 barrier 对齐、往 GPU 队列塞 <code>_sleep</code> 藏住 host 下发时间，取中位数再取各 rank 最大值。<code>bench_ulysses_overlap.py</code> 在同一口径下给出 GEMM、wgrad、a2a、pack 单独时间，串行、理想重叠、fused 和 roofline（实测峰值 GEMM 1,241 TFLOP/s、链路 n=4 每 rank 145 GB/s）。</p>
+
+<h3>时间线</h3>
+<ul class="timeline">
+  <li><b>11-06</b>设计说明 → 前向 GemmA2A（<code>3fd085a2</code>）→ 前向 A2AGemm + residual epilogue、反向 o_proj（<code>2ffa6317</code>）→ 反向 QKV（<code>a7925bfe</code>），四个位置单算子全部达标。发现之前的计时混入约 75 µs 的 <code>flyc.jit</code> host 开销，改用 <code>run_launcher</code> 缓存后降到约 26 µs，基线也用同一口径重测。</li>
+  <li><b>11-06</b>验证模型换成交换占比最高的 Qwen3-30B-A3B（CP4）；新写 overlap / roofline benchmark；o_proj wgrad 放 side stream 与 dgrad 重叠（<code>63c6c077</code>，540 → 430 µs）；第 3、4 轮（<code>94d83cca</code>、<code>29ee6148</code>）。</li>
+  <li><b>11-06</b>接入 Primus 跑通端到端训练（patch <code>PRIMUS_ULYSSES_FUSED_A2A=1</code>）；写 2 节点和多模型 proxy 测试 prompt（<code>402171e4</code>、<code>60687e12</code>）。</li>
+  <li><b>11-07</b>多模型 proxy 报告（<code>183450cc</code>）；MegaAttn 第 1–5 轮（分支 <code>feat/mega-attn</code>），收益小，暂停。</li>
+  <li><b>11-07</b>按“不用多 stream”的约束把两个 wgrad 放进融合 kernel（第 9 轮 <code>789d51d1</code>），bwd QKV push block 32 → 16（第 10 轮 <code>5d3e68e6</code>）。第 11–13 轮回退（<code>935d9ca0</code>、<code>69991df7</code>）。最后按 wgrad tile 数切换 launch 参数，修好 GLM-4.7 宽形状（<code>50d6c80a</code>）。</li>
+</ul>
+
+<h3>kernel 最终收益（Qwen3-30B-A3B CP4，µs，不融合 → 融合）</h3>
+<table>
+  <tr><th>位置</th><th>kernel</th><th class="num">16K</th><th class="num">32K</th><th class="num">64K</th><th class="num">128K</th></tr>
+  <tr><td>前向 QKV</td><td>GemmA2A</td><td class="num">439 → 256 <span class="green">1.71×</span></td><td class="num">829 → 471 <span class="green">1.76×</span></td><td class="num">1,573 → 867 <span class="green">1.81×</span></td><td class="num">3,057 → 1,821 <span class="green">1.68×</span></td></tr>
+  <tr><td>前向 o_proj + residual</td><td>A2AGemm</td><td class="num">319 → 236 <span class="green">1.35×</span></td><td class="num">579 → 410 <span class="green">1.41×</span></td><td class="num">1,112 → 731 <span class="green">1.52×</span></td><td class="num">2,163 → 1,391 <span class="green">1.55×</span></td></tr>
+  <tr><td>反向 o_proj（dgrad + dW_o）</td><td>GemmA2A</td><td class="num">386 → 240 <span class="green">1.61×</span></td><td class="num">714 → 412 <span class="green">1.73×</span></td><td class="num">1,341 → 781 <span class="green">1.72×</span></td><td class="num">2,552 → 1,558 <span class="green">1.64×</span></td></tr>
+  <tr><td>反向 QKV（dgrad + dW_qkv）</td><td>A2AGemm</td><td class="num">531 → 302 <span class="green">1.76×</span></td><td class="num">981 → 514 <span class="green">1.91×</span></td><td class="num">1,901 → 951 <span class="green">2.00×</span></td><td class="num">3,717 → 1,828 <span class="green">2.03×</span></td></tr>
+  <tr class="hl"><td><b>合计</b></td><td></td><td class="num"><b>1,675 → 1,034 <span class="green">1.62×</span></b></td><td class="num"><b>3,103 → 1,807 <span class="green">1.72×</span></b></td><td class="num"><b>5,927 → 3,330 <span class="green">1.78×</span></b></td><td class="num"><b>11,489 → 6,598 <span class="green">1.74×</span></b></td></tr>
+</table>
+<p class="note">16K / 32K 为 R10 代码，64K / 128K 为最终代码，每个长度的不融合和融合都在同一次运行里测。合计 16K + 32K 为 4,778 → 2,841 µs（1.68×）；距完全重叠下限 928 / 1,721 µs 还差 11% / 5%；64K / 128K 的 fused 是 roofline 的 1.00–1.13×。最终提交 <code>50d6c80a</code> 只改了 wgrad tile 多的形状的 launch 参数，Qwen3-30B-A3B 的数据不变。</p>
+
+<h3>逐轮优化（验证集：Qwen3-30B-A3B CP4，16K / 32K，fused µs）</h3>
+<div class="panel">
+  <div class="ladder" id="ladder"></div>
+  <p class="note">指标 = 四个位置在 16K、32K 下的耗时之和（越低越好）。灰色为这一步的结果，红色为这一步减少的部分。</p>
+</div>
+<table>
+  <tr><th>轮</th><th>状态</th><th>改动</th><th class="num">fwd QKV</th><th class="num">fwd o</th><th class="num">bwd o</th><th class="num">bwd QKV</th><th class="num">之和</th><th>结论</th></tr>
+  <tr><td>1</td><td><span class="tag n">基线</span></td><td>pull GemmA2A + push A2AGemm，o_proj wgrad 在 side stream（<code>63c6c077</code>）</td><td class="num">271 / 479</td><td class="num">269 / 435</td><td class="num">277 / 430</td><td class="num">418 / 691</td><td class="num">3,270</td><td>受交换限制；A2AGemm 尾巴是最后到达后的一整个 256×256 tile</td></tr>
+  <tr class="sub"><td>2</td><td>回退</td><td>A2AGemm 剩余 tile 做 split-K</td><td class="num" colspan="5">—</td><td>每个 item 约 40 µs，部分和合并慢</td></tr>
+  <tr><td>3</td><td><span class="tag p">保留</span></td><td>各源从不同 m-tile 错位推送，tile 按到达顺序走 K（<code>94d83cca</code>）</td><td class="num">270 / 481</td><td class="num">235 / 437</td><td class="num">275 / 431</td><td class="num">372 / 722</td><td class="num">3,223</td><td>16K fwd o −13%、bwd QKV −11%</td></tr>
+  <tr><td>4</td><td><span class="tag p">保留</span></td><td>按形状选 BM：A2AGemm tile 多于 CU 时 128 行；GemmA2A 128 行（<code>29ee6148</code>）</td><td class="num">252 / 461</td><td class="num">235 / 405</td><td class="num">246 / 437</td><td class="num">374 / 662</td><td class="num">3,072</td><td>首批 pull 提前（55 → 30 µs），最后一个 tile 的尾巴减半</td></tr>
+  <tr class="sub"><td>5</td><td>回退</td><td>bwd o wgrad 用 mega tn tile 放进 GemmA2A grid</td><td class="num" colspan="5">bwd o 269–300 / 509–544</td><td>tn tile K 循环全展开，kernel 内慢约 3 倍</td></tr>
+  <tr class="sub"><td>6</td><td>回退</td><td>bwd QKV wgrad 按 M 分块放 side stream，<code>hipStreamWaitValue64</code> 门控</td><td class="num" colspan="5">bwd QKV 457–662 / 746–933</td><td>并发 GEMM 拖慢交换，比串行还慢</td></tr>
+  <tr class="sub"><td>7</td><td>回退</td><td>A2AGemm 按 head piece 推送</td><td class="num" colspan="5">fwd o 271–287 / 415</td><td>256 B 行段推得慢；逐段等 flag 清空 MMA 流水</td></tr>
+  <tr class="sub"><td>8</td><td>回退</td><td>GemmA2A 在 epilogue 里直接写远端</td><td class="num" colspan="5">fwd QKV 286–326 / 518–569</td><td>64 B epilogue 写跨 XGMI 远慢于 16 B/lane 行拷贝</td></tr>
+  <tr class="hl"><td>9</td><td><span class="tag p">保留</span></td><td>两个 wgrad 都进融合 kernel（variable-K tile），去掉 side stream（<code>789d51d1</code>）</td><td class="num">255 / 462</td><td class="num">238 / 410</td><td class="num">227 / 416</td><td class="num">323 / 556</td><td class="num">2,887</td><td>生产 variable-K tile 在 kernel 内比 tn tile 快约 3 倍；R5 失败是 tile 的问题</td></tr>
+  <tr class="hl"><td>10</td><td><span class="tag p">保留</span></td><td>bwd QKV 有 wgrad 时 push block 32 → 16（<code>5d3e68e6</code>）</td><td class="num">256 / 471</td><td class="num">236 / 410</td><td class="num">240 / 412</td><td class="num">302 / 514</td><td class="num"><b>2,841</b></td><td>wgrad 进来后受计算限制，16 个 pusher 仍能占满链路</td></tr>
+  <tr class="sub"><td>11</td><td>回退</td><td>bwd QKV 末尾 dgrad tile 按来源 split-K + 固定顺序归约</td><td class="num" colspan="5">bwd QKV 330–411 / 570–637</td><td>负载下部分和走显存只有约 10–15 GB/s/CU</td></tr>
+  <tr class="sub"><td>12</td><td>回退</td><td>20–80 个 wgrad tile 排在 dgrad 之后</td><td class="num" colspan="5">bwd QKV 352–357 / 661–688</td><td>dgrad 不再积压，但后置 wgrad tile 要 115–134 µs</td></tr>
+  <tr class="sub"><td>13</td><td>回退</td><td>bwd QKV block 内错位来源 + 按到达走 K</td><td class="num" colspan="5">bwd QKV 304–380 / 518–531</td><td>受 CU 预算限制：约 10% 的 dgrad tile 在最后一次 push 时才拿到 CU</td></tr>
+</table>
+
+<h3>评估后未采用</h3>
+<table>
+  <tr><th style="width:250px">方向</th><th>结论</th></tr>
+  <tr><td>MegaAttn（GEMM + 交换 + attention 一个 kernel）</td><td>条带切分、持久化 attention、QKV GemmA2A + attention 合并、O tile 直推 owner 共 5 轮，前向整层只省 85 / 270 µs（约 2%）。原因：GEMM 和 attention 都受计算限制不能互相重叠，能藏的只有交换，而前向两段已贴着链路时间；修正后的上限是 13.2%（16K）/ 7.9%（32K）。已暂停，代码在 <code>feat/mega-attn</code></td></tr>
+  <tr><td>SDMA / copy engine 做交换</td><td>3 个 stream 的 peer copy 205 µs（123 GB/s），比 push 实现慢</td></tr>
+  <tr><td>XCD remap / GROUP_M、epilogue cache modifier、main 上的 dense tile</td><td>都在 265–275 µs，没有差别</td></tr>
+  <tr><td>按到达顺序累加（<code>deterministic=False</code>）</td><td>关键 rank 上各阶段已不含等待，只能缩短非关键 rank 的等待，不缩短整层</td></tr>
+  <tr><td>DeepSeek-V3 / MLA</td><td>up-proj 输入很窄、a2a 量约为 GEMM 的 8 倍，照搬收益很小；更好的做法是对 latent 做 all-gather（通信约降到 1/30），需单独立项</td></tr>
+</table>
+
+<!-- ================= 效果 ================= -->
+<h2><span class="n">4</span>最后的效果</h2>
+
+<h3>端到端训练：Qwen3-30B-A3B（完整 48 层，主线）</h3>
+<table>
+  <tr><th>长度</th><th class="num">base ms/iter</th><th class="num">fused ms/iter</th><th class="num">fused / base</th><th class="num">第 12 步 loss（base / fused）</th></tr>
+  <tr class="hl"><td>16K</td><td class="num">3,157.1</td><td class="num"><b>2,814.6</b></td><td class="num green"><b>−10.8%</b></td><td class="num">11.6226 / 11.6244</td></tr>
+  <tr class="hl"><td>32K</td><td class="num">6,581.1</td><td class="num"><b>5,978.6</b></td><td class="num green"><b>−9.2%</b></td><td class="num">11.6143 / 11.6124</td></tr>
+  <tr class="hl"><td>64K</td><td class="num">17,349.9</td><td class="num"><b>16,003.6</b></td><td class="num green"><b>−7.8%</b></td><td class="num">11.6006 / 11.6007</td></tr>
+  <tr class="hl"><td>128K</td><td class="num">55,941.8</td><td class="num"><b>53,004.7</b></td><td class="num green"><b>−5.3%</b></td><td class="num">11.6040 / 11.6042</td></tr>
+</table>
+<p class="note">8× MI355X，TP1 / CP4（Ulysses）/ EP8 / DP2，MBS 1，GBS 16，mock 数据，12 步，取第 4–12 步中位数；Turbo <code>50d6c80a</code>，Primus <code>feat/ulysses-fused-a2a</code>，不用 CUDA graph。kernel 每层每 micro-batch 省 0.64 / 1.30 / 2.60 / 4.89 ms（16K / 32K / 64K / 128K），48 层 × 8 个 micro-batch 合计约 246 / 498 / 997 / 1,878 ms；实测每步省 343 / 603 / 1,346 / 2,937 ms，多出的部分主要来自 patch 路径换用的 FlyDSL attention（在这个形状上比 AITER 快）。序列越长 attention（随长度平方增长）占比越大，相对收益下降。128K 显存 fused 254.6 GB、base 255.0 GB。</p>
+
+<h3>扩展到其它模型（同一份最终代码，单节点）</h3>
+<table>
+  <tr><th>模型</th><th>CP / EP</th><th class="num">16K base → fused ms</th><th class="num">16K</th><th class="num">32K base → fused ms</th><th class="num">32K</th></tr>
+  <tr class="hl"><td>Qwen3-30B-A3B（完整 48 层）</td><td>4 / 8</td><td class="num">3,157 → 2,815</td><td class="num green"><b>−10.8%</b></td><td class="num">6,581 → 5,979</td><td class="num green"><b>−9.2%</b></td></tr>
+  <tr><td>Qwen3-235B-A22B 4 层 proxy</td><td>4 / 8</td><td class="num">631 → 594</td><td class="num green">−5.9%</td><td class="num">1,321 → 1,234</td><td class="num green">−6.6%</td></tr>
+  <tr><td>GLM-4.7 4 层 proxy</td><td>4 / 8</td><td class="num">1,081 → 1,008</td><td class="num green">−6.7%</td><td class="num">2,133 → 2,001</td><td class="num green">−6.2%</td></tr>
+  <tr><td>MiniMax-M2.5 4 层 proxy</td><td>4 / 8</td><td class="num">625 → 595</td><td class="num green">−4.8%</td><td class="num">1,190 → 1,128</td><td class="num green">−5.2%</td></tr>
+  <tr><td>Llama3.1-8B（完整 32 层，attention 用 AITER）</td><td>4 / 1</td><td class="num">2,332 → 2,231</td><td class="num green">−4.3%</td><td class="num">5,342 → 5,150</td><td class="num green">−3.6%</td></tr>
+  <tr><td>GLM-4.7 4 层 proxy</td><td>8 / 8</td><td class="num">1,390 → 1,363</td><td class="num green">−1.9%</td><td class="num">2,402 → 2,312</td><td class="num green">−3.7%</td></tr>
+</table>
+<ul class="dot">
+  <li>4 层 proxy 里 embedding / 输出层 / 优化器的占比比完整模型高，完整模型的相对收益会更大（之前用 4 层 + 8 层拟合推算，完整模型比 proxy 高约 1–1.5 个百分点）。</li>
+  <li>GLM-4.7 和 MiniMax-M2.5 的两条路径都用 AITER attention，收益全部来自融合 kernel。</li>
+  <li>Llama3.1-8B 默认配置下，patch 路径的 <code>flash_attn_func</code> 给这个形状（每 rank 8 个 q 头 / 2 个 kv 头）选了更慢的 FlyDSL attention，16K 反而慢 5.6%；这和融合无关，表中 fused 侧用 <code>PRIMUS_TURBO_ATTN_BACKEND=AITER</code> 与 base 对齐。32K 两种 attention 结果相同。</li>
+  <li>CP8 时 RCCL 带宽约为 CP4 的 2 倍，交换本身变快，融合能省的空间小。</li>
+  <li>所有运行都确认 patch 已应用、没有回退到原路径；第 12 步 loss 与 base 相差 ≤ 2e-3（Llama 16K 为 5.3e-2，是 dense 模型在 mock 数据上的训练动态放大，base 只改 CP 大小就差 0.1 以上）。</li>
+</ul>
+
+<h3>适用范围与发布建议</h3>
+<ul class="dot">
+  <li>TP=1、CP 组在单节点内（CP ≤ 8，Megatron 默认顺序下 CP 组就是连续 rank）、head 数能被 CP 整除、head_dim 64 / 128。跨节点的 DP / EP / PP 走 RCCL，不受影响。</li>
+  <li>收益最大：交换占比高（hidden 小、attention 投影相对 MLP 重）的细粒度 MoE，CP4，序列 16K–32K。</li>
+  <li>不适用（自动回退原路径）：MLA（DeepSeek-V3、Kimi-K2）、GDN 混合（Qwen3-Next）、attention sink / 滑窗（gpt-oss）、chunked attention（Llama4）。</li>
+</ul>
+
+<h3>遗留问题与下一步</h3>
+<div class="grid2">
+  <div class="panel" style="margin:0">
+    <b class="amber">遗留问题</b>
+    <ul class="dot">
+      <li>GEMM tile（mega bf16 tile）在同形状上比 hipBLASLt 慢约 15%；tile 固定 256×256，没有 autotune。</li>
+      <li>bwd QKV 尾巴受 CU 预算限制（第 11–13 轮都回退）：需要负载下更便宜的 dgrad tile，或不占空闲 CU 的 wgrad tile。</li>
+      <li>FlyDSL variable-K wgrad tile 比 hipBLASLt 慢 2–36%，wgrad tile 数在 1–2 波之间的形状（MiniMax-M2.5 bwd QKV）放进 kernel 反而变慢。</li>
+      <li><code>main_grad</code> / gradient_accumulation_fusion 未支持；FlyDSL 磁盘缓存 key 不含类体，曾加载到旧 kernel（建议上游修）。</li>
+    </ul>
+  </div>
+  <div class="panel" style="margin:0">
+    <b class="red">下一步</b>
+    <ul class="dot">
+      <li>CP8：A2AGemm 在 n=8、16K 下的参数，收益上限约 1–2 个百分点，排在 CP4 发布之后。</li>
+      <li>按形状选择融合 wgrad 还是独立 hipBLASLt wgrad，或做跨 rank 一致的 autotune。</li>
+      <li>MegaAttn 反向：能拿的只剩串行的 QKV wgrad（已由第 9 轮在 A2AGemm 内解决），不建议重启。</li>
+      <li>MLA 模型：对 latent 做 all-gather 的算法改动单独立项。</li>
+    </ul>
+  </div>
+</div>
+
+<h3>提交清单（Primus-Turbo <code>feat/ulysses-gemm-a2a</code>）</h3>
+<table>
+  <tr><th>commit</th><th>内容</th><th class="num">日期</th></tr>
+  <tr><td><code>3fd085a2</code></td><td>feat(flydsl): Ulysses fused QKV GEMM + all-to-all forward (GemmA2A)</td><td class="num">11-06</td></tr>
+  <tr><td><code>2ffa6317</code></td><td>A2AGemm o_proj forward with fp32 residual epilogue, fused o_proj dgrad via GemmA2A</td><td class="num">11-06</td></tr>
+  <tr><td><code>a7925bfe</code></td><td>QKV backward as A2AGemm, layer / stream tests, A/B benchmark</td><td class="num">11-06</td></tr>
+  <tr><td><code>63c6c077</code></td><td>o_proj wgrad beside the GemmA2A dgrad, serial / overlap / roofline bench, buffer-poisoning test</td><td class="num">11-06</td></tr>
+  <tr><td><code>94d83cca</code></td><td>A2AGemm: staggered sub-tile pushes + progressive K walk in arrival order（第 3 轮）</td><td class="num">11-06</td></tr>
+  <tr><td><code>29ee6148</code></td><td>128-row tiles where they shorten the critical path（第 4 轮）</td><td class="num">11-06</td></tr>
+  <tr><td><code>402171e4</code></td><td>end-to-end Qwen3-30B-A3B training results, 2-node e2e prompt, optimization tips</td><td class="num">11-06</td></tr>
+  <tr><td><code>60687e12</code></td><td>single-node multi-model proxy e2e prompt</td><td class="num">11-06</td></tr>
+  <tr><td><code>183450cc</code></td><td>single-node multi-model proxy e2e report</td><td class="num">11-07</td></tr>
+  <tr><td><code>92f7e98f</code></td><td>docs: wgrad overlap status（第 5、6 轮结果）</td><td class="num">11-07</td></tr>
+  <tr><td><code>789d51d1</code></td><td>both wgrads inside the fused kernels (variable-K tiles, no side stream)（第 9 轮）</td><td class="num">11-07</td></tr>
+  <tr><td><code>5d3e68e6</code></td><td>bwd QKV A2AGemm uses 16 push blocks with in-kernel wgrad（第 10 轮）</td><td class="num">11-07</td></tr>
+  <tr><td><code>935d9ca0</code></td><td>rounds 11-12 rolled back, analysis of the in-step tail</td><td class="num">11-07</td></tr>
+  <tr><td><code>69991df7</code></td><td>round 13 rolled back, CU-budget analysis</td><td class="num">11-07</td></tr>
+  <tr><td><code>50d6c80a</code></td><td>wgrad tile order by count（GLM-4.7 宽形状）</td><td class="num">11-07</td></tr>
+</table>
+<p class="note">另有 Primus <code>feat/ulysses-fused-a2a</code> 的 patch（<code>ulysses_fused_a2a_patches.py</code>，含 <code>f9a298a49</code> pre-hook 修复），以及 MegaAttn 分支 <code>feat/mega-attn</code>。</p>
+
+<footer>
+  数据来源（本目录 <code>data/</code>）：kernel 为 <code>bench_ulysses_overlap.py</code> 的结果（<code>data/kernel/overlap_round-*.txt</code>、<code>overlap_final_64k_128k.txt</code>，逐轮记录 <code>performance_trend.md</code> / <code>optimize.md</code>）；端到端为 Turbo <code>50d6c80a</code> + Primus <code>feat/ulysses-fused-a2a</code> 在同一节点上的 base / fused 运行（<code>data/e2e/*_fix_*.log</code>，汇总 <code>parsed_all.txt</code>）；设计见 Primus-Turbo <code>docs/ulysses_gemm_a2a.md</code>，MegaAttn 见 <code>feat/mega-attn:docs/mega_attn.md</code>。
+</footer>
+</div>
+
+<script>
+const fmt = n => n.toLocaleString('en-US');
+const ladder = [
+  ['不融合（pack + RCCL a2a）', 4778, '', null],
+  ['R1 首版融合（pull + push）', 3270, '−31.6%', ['p','63c6c077']],
+  ['R3 错位 push + 按到达走 K', 3223, '−1.4%', ['t','94d83cca']],
+  ['R4 按形状选 BM 128', 3072, '−4.7%', ['t','29ee6148']],
+  ['R9 wgrad 进融合 kernel', 2887, '−6.0%', ['t','789d51d1']],
+  ['R10 bwd QKV 16 个 push', 2841, '−1.6%', ['t','5d3e68e6']],
+];
+const lo = 0, hi = 4800, pct = v => (v - lo) / (hi - lo) * 100;
+document.getElementById('ladder').innerHTML = ladder.map(([nm, v, d, tag], i) => {
+  const prev = i ? ladder[i - 1][1] : v;
+  const t = tag ? ` <span class="tag ${tag[0]}">${tag[1]}</span>` : '';
+  return `<div class="lrow"><div>${nm}${t}</div>
+    <div class="track">
+      <i style="left:0;width:${pct(v)}%;background:var(--gray)"></i>
+      ${i ? `<i style="left:${pct(v)}%;width:${pct(prev) - pct(v)}%;background:var(--red)"></i>` : ''}
+    </div>
+    <div class="v">${fmt(v)}</div><div class="d">${d}</div></div>`;
+}).join('');
+</script>
+</body>
+</html>

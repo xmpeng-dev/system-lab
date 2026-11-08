@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Ulysses GemmA2A / A2AGemm on MI355X — 工作总结图</title>
+<style>
+:root{
+  --bg:#17181b; --panel:#1f2125; --panel2:#25282d; --line:#30343a;
+  --text:#ecebe8; --muted:#9ca0a8; --dim:#686d75;
+  --red:#e2353d; --gray:#7d766e; --green:#5ccb8f; --amber:#f2a64a; --blue:#79aef7;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0d0e10}
+body{font-family:"Segoe UI","Microsoft YaHei","PingFang SC","Noto Sans CJK SC","WenQuanYi Micro Hei",sans-serif;color:var(--text)}
+.slide{width:1920px;height:1080px;background:var(--bg);padding:28px 44px 20px;display:flex;flex-direction:column;gap:16px;overflow:hidden}
+header{display:flex;justify-content:space-between;align-items:flex-end;position:relative;padding-top:16px}
+header:before{content:"";position:absolute;top:0;left:0;width:160px;height:3px;background:var(--red)}
+h1{font-family:Cambria,"Noto Serif","DejaVu Serif","Microsoft YaHei","WenQuanYi Micro Hei",serif;font-size:40px;font-weight:700}
+h1 small{font-family:"Segoe UI","Microsoft YaHei","WenQuanYi Micro Hei",sans-serif;font-size:29px;font-weight:700;margin-left:6px}
+.meta{text-align:right;color:var(--muted);font-size:17px;line-height:1.45}
+.meta i{font-style:italic}
+.meta b{color:var(--text);letter-spacing:1.5px;font-size:15px}
+main{flex:1;display:grid;grid-template-columns:470px 1fr 540px;gap:18px;min-height:0}
+.col{display:flex;flex-direction:column;gap:16px;min-height:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px 20px;display:flex;flex-direction:column;min-height:0}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px}
+.ph h2{font-size:20px;font-weight:700;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.ph h3{font-size:16.5px;font-weight:700;white-space:nowrap}
+.ph .note{font-size:13px;color:var(--muted);text-align:right;line-height:1.4}
+.step{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;border-radius:50%;background:var(--red);color:#fff;font-size:15px;font-weight:800}
+.red{color:var(--red)} .green{color:var(--green)} .amber{color:var(--amber)} .muted{color:var(--muted)} .dim{color:var(--dim)}
+.tag{display:inline-block;font-size:11.5px;line-height:1;padding:3px 6px;border-radius:4px;border:1px solid;white-space:nowrap}
+.tag.t{color:#ff8a8f;border-color:#7a2a2f;background:#2a1719}
+.tag.p{color:var(--blue);border-color:#2f4a6e;background:#17202c}
+.tag.n{color:var(--dim);border-color:#3a3e45;background:transparent}
+
+.goal{display:flex;align-items:center;gap:16px;margin:2px 0 8px}
+.goal .num{font-size:38px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums}
+.goal .cap{font-size:13px;color:var(--muted);margin-top:2px}
+.goal .arrow{font-size:28px;color:var(--dim)}
+.sub{font-size:13.5px;color:var(--muted);line-height:1.55}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chips span{font-size:12px;color:#c9c7c3;background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:3px 7px}
+.rules{list-style:none;display:flex;flex-direction:column;gap:7px;font-size:13.5px;color:#d6d4d0;line-height:1.4}
+.rules li{padding-left:16px;position:relative}
+.rules li:before{content:"";position:absolute;left:0;top:7px;width:7px;height:7px;background:var(--red)}
+
+/* grouped bars: A/B */
+.ab{display:flex;flex-direction:column;gap:16px;flex:1;justify-content:center}
+.abrow{display:grid;grid-template-columns:92px 1fr 58px;gap:10px;align-items:center;font-size:13px}
+.abrow .nm{color:#d8d6d2;white-space:nowrap;line-height:1.25}
+.abrow .nm small{display:block;color:var(--dim);font-size:11.5px}
+.abrow .bars{display:flex;flex-direction:column;gap:3px}
+.abrow .bars div{height:15px;border-radius:2px;position:relative}
+.abrow .bars div span{position:absolute;left:calc(100% + 6px);top:0;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.abrow .d{text-align:right;color:var(--red);font-weight:700}
+.lg{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:4px}
+.lg .sw{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* middle */
+.headline{display:flex;align-items:center;gap:22px;margin:0 0 4px 4px}
+.headline .big{font-size:44px;font-weight:800;color:var(--red);line-height:1}
+.headline .l1{font-size:19px;font-weight:700}
+.headline .l2{font-size:13.5px;white-space:nowrap;color:var(--muted);margin-top:3px}
+.sweep{display:flex;flex-direction:column;gap:11px;flex:1;justify-content:center;margin-top:6px}
+.srow{display:grid;grid-template-columns:340px 1fr 64px;gap:12px;align-items:center;font-size:14px}
+.srow .nm{color:#d8d6d2;white-space:nowrap}
+.srow .nm code{font-family:Consolas,"DejaVu Sans Mono",monospace;font-size:12px;color:#e6d3b3}
+.srow .track{height:24px;position:relative;background:#22252a;border-radius:2px}
+.srow .track i{position:absolute;left:0;top:0;bottom:0;border-radius:2px}
+.srow .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.ref{position:absolute;top:-4px;bottom:-4px;border-left:1.5px dashed var(--amber)}
+.legend{display:flex;gap:16px;align-items:center;font-size:12.5px;color:var(--muted);margin-top:8px}
+.legend .sw{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.caption{font-size:12px;color:var(--dim);margin-top:5px;line-height:1.5}
+
+.mech{display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1}
+.mech .box{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:7px}
+.mech .ttl{font-size:14px;font-weight:700}
+.lane{display:grid;grid-template-columns:62px 1fr;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+.lane .tr{height:22px;position:relative;background:#1a1c1f;border-radius:3px}
+.lane .tr i{position:absolute;top:0;bottom:0;border-radius:3px;font-style:normal;font-size:11.5px;color:#111;display:flex;align-items:center;justify-content:center;font-weight:700;white-space:nowrap;overflow:hidden}
+.mech .why{font-size:12.5px;color:#cfcdc9;line-height:1.45}
+
+/* right */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 13px}
+.kpi .k{font-size:28px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.4}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.tbl th{color:var(--muted);font-weight:600;font-size:12px;text-align:right;padding:4px 6px;border-bottom:1px solid #3a3e45;white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td{padding:3.5px 6px;border-bottom:1px solid #2a2d32;text-align:right;white-space:nowrap}
+.tbl td.g{color:var(--green);font-weight:700}
+.tbl td.r{color:var(--red);font-weight:700}
+.tbl tr.grp td{color:var(--dim);font-size:11.5px;padding-top:6px;border-bottom:none}
+.list{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;color:#d6d4d0;line-height:1.42}
+.list li{padding-left:15px;position:relative}
+.list li:before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;background:var(--red)}
+.list.warn li:before{background:var(--amber)}
+.sec{font-size:13px;font-weight:700;color:var(--muted);margin:2px 0 6px;letter-spacing:.5px}
+footer{display:flex;justify-content:space-between;font-size:12.5px;color:var(--dim);border-top:1px solid #26292e;padding-top:8px}
+</style>
+<style>
+.chart{position:relative;min-height:0;margin:6px 0 0}
+.pipe{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:12px;margin:8px 0 2px}
+.pipe span{background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:3px 6px;white-space:nowrap;color:#d8d6d2}
+.pipe span.c{border-color:#7a2a2f;color:#ff8a8f;background:#2a1719}
+.pipe em{color:var(--dim);font-style:normal}
+.tgt{display:flex;flex-direction:column;gap:16px;flex:1;justify-content:center}
+.trow{display:grid;grid-template-columns:150px 1fr 118px;gap:10px;align-items:center;font-size:13px}
+.trow .nm{color:#d8d6d2;line-height:1.25;white-space:nowrap}
+.trow .nm small{display:block;color:var(--dim);font-size:11.5px}
+.trow .bars{display:flex;flex-direction:column;gap:3px;position:relative}
+.trow .bars i{display:block;height:14px;border-radius:2px}
+.trow .bars .tl{position:absolute;top:-3px;bottom:-3px;border-left:1.5px dashed var(--amber)}
+.trow .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.trow .v b{color:var(--text)}
+.impl{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.impl .box{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 13px}
+.impl .ttl{font-size:15px;font-weight:700;margin-bottom:4px}
+.impl .ttl .tag{margin-left:6px;vertical-align:2px}
+.impl ul{list-style:none;font-size:12.5px;color:#cfcdc9;line-height:1.5}
+.impl li{padding-left:12px;position:relative}
+.impl li:before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;background:var(--red)}
+.design{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.design span{font-size:12px;color:#c9c7c3;background:#1b1d21;border:1px solid var(--line);border-radius:4px;padding:3px 7px}
+.rb{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;font-size:12px;color:var(--dim);align-items:center}
+.mdl2{display:flex;flex-direction:column;gap:7px;flex:1;justify-content:space-evenly}
+.mrow2{display:grid;grid-template-columns:168px 1fr 1fr;gap:8px;align-items:center;font-size:12.5px}
+.mrow2 .nm{color:#d8d6d2;white-space:nowrap;line-height:1.2}
+.mrow2 .nm small{display:block;color:var(--dim);font-size:11px}
+.mrow2 .cell{display:flex;align-items:center;gap:6px}
+.mrow2 .cell .track{flex:1;height:11px;background:#22252a;border-radius:2px;position:relative}
+.mrow2 .cell .track i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--red)}
+.mrow2 .cell .track i.neg{background:#6a6e75}
+.mrow2 .cell b{width:46px;text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px}
+.mhead{display:grid;grid-template-columns:168px 1fr 1fr;gap:8px;font-size:11.5px;color:var(--muted)}
+</style>
+</head>
+<style>
+.stk{display:flex;flex-direction:column;gap:13px;flex:1;justify-content:center}
+.srw{display:grid;grid-template-columns:118px 1fr 52px;gap:10px;align-items:center;font-size:13px}
+.srw .nm{color:#d8d6d2;line-height:1.25;white-space:nowrap}
+.srw .nm small{display:block;color:var(--dim);font-size:11.5px}
+.srw .tr{height:22px;position:relative}
+.srw .tr i{position:absolute;top:0;bottom:0}
+.srw .tr .ov{position:absolute;top:-4px;bottom:-4px;border-left:1.5px dashed var(--amber)}
+.srw .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--text);font-weight:600}
+.big2{display:flex;align-items:baseline;gap:12px;margin:2px 0 6px}
+.big2 .n{font-size:46px;font-weight:800;line-height:1;color:var(--red);font-variant-numeric:tabular-nums}
+.big2 .c{font-size:13.5px;color:var(--muted);line-height:1.45}
+.ops{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+.ops .o{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 11px}
+.ops .t{font-size:13px;font-weight:700}
+.ops .t small{font-weight:400;color:var(--dim);font-size:11.5px;margin-left:4px}
+.ops .r{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+.ops .r b{color:var(--green)}
+.e2e{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.e2e .kpi{padding:9px 10px}
+.e2e .kpi .k{font-size:27px}
+.e2e .kpi .l{font-size:13px;font-weight:700;color:#d8d6d2;margin-bottom:2px}
+.chain{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.chain span{background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:4px 8px;white-space:nowrap}
+.chain span b{color:var(--text)}
+.chain em{font-style:normal;color:var(--dim)}
+</style>
+<body>
+<div class="slide">
+  <header>
+    <h1>Ulysses GemmA2A / A2AGemm on MI355X <span class="dim" style="font-weight:400">—</span><small>融合 kernel 工作总结</small></h1>
+    <div class="meta"><i>8× MI355X (gfx950) · FlyDSL · bf16 · Primus Megatron + Primus-Turbo</i><br><span>主线模型 Qwen3-30B-A3B · CP4 / EP8 · 最终代码 50d6c80a</span> &nbsp; <b>AMD</b></div>
+  </header>
+
+  <main>
+    <!-- ① 出发点 -->
+    <div class="col">
+      <div class="panel">
+        <div class="ph"><h2><span class="step">1</span>出发点</h2><span class="note">Ulysses CP（cp_comm_type=a2a）<br>每层 attention 前后各一次 a2a</span></div>
+        <div class="pipe">
+          <span>QKV GEMM</span><em>→</em><span class="c">pack</span><em>→</em><span class="c">RCCL a2a</span><em>→</em><span class="c">unpack</span><em>→</em><span>attention</span><em>→</em><span class="c">pack</span><em>→</em><span class="c">RCCL a2a</span><em>→</em><span class="c">unpack</span><em>→</em><span>o_proj</span>
+        </div>
+        <div class="sub" style="margin-top:6px">现有路径 GEMM 与交换全部串行，反向再来一遍。在 Qwen3-30B-A3B CP4 上，这四个位置不融合时：</div>
+        <div class="goal" style="margin-top:8px">
+          <div><div class="num red">70%</div><div class="cap">时间花在交换（pack + RCCL a2a）<br>16K 1,186 / 1,675 µs · 32K 2,159 / 3,103 µs</div></div>
+        </div>
+        <div class="sub">目标：GEMM tile 算完直接写进目标 rank、按 a2a 之后的布局落地，去掉 pack / unpack，并把交换藏到 GEMM 后面。</div>
+      </div>
+
+      <div class="panel" style="flex:1">
+        <div class="ph"><h3>不融合时四个位置的耗时构成</h3><span class="note">Qwen3-30B-A3B CP4 16K · µs<br>各 rank 最大值</span></div>
+        <div class="lg"><span><i class="sw" style="background:#8a837a"></i>GEMM</span><span><i class="sw" style="background:#5d5852"></i>wgrad</span><span><i class="sw" style="background:#a8484d"></i>pack / unpack</span><span><i class="sw" style="background:var(--red)"></i>RCCL a2a</span><span><i class="sw" style="background:transparent;border:1px dashed var(--amber)"></i>完全重叠下限</span></div>
+        <div class="stk" id="stk"></div>
+        <div class="caption">完全重叠下限 = max(GEMM + wgrad, a2a)，即交换全部藏到计算后面时的耗时；四项合计 928 µs，不融合 1,675 µs。</div>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><h3>约束</h3><span class="note">任务要求 + 过程中追加</span></div>
+        <ul class="rules">
+          <li>op 返回后无常驻 / 自旋 kernel；无全局 barrier、无 D2H 同步</li>
+          <li>不用 CUDA graph；不用多 stream，参考 MegaMoE 单 launch 分角色</li>
+          <li>每轮单变量 A/B，全验证集 + 正确性，失败即回退</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ② 实现 · 优化 -->
+    <div class="col">
+      <div class="panel">
+        <div class="ph"><h2><span class="step">2</span>实现 · 两个 kernel 覆盖四个位置</h2><span class="note">FlyDSL，一次 launch 内 GEMM / 通信 / wgrad block 分角色</span></div>
+        <div class="impl">
+          <div class="box">
+            <div class="ttl">GemmA2A<span class="tag p">pull</span></div>
+            <ul>
+              <li>前向 QKV：tile 写本地对称 staging + flag，对端按 (m_tile, src) 轮转拉取，直接写成 a2a 后的 q / k / v</li>
+              <li>反向 o_proj：dgrad + dW_o（variable-K wgrad tile）同一 kernel</li>
+            </ul>
+          </div>
+          <div class="box">
+            <div class="ttl">A2AGemm<span class="tag t">push</span></div>
+            <ul>
+              <li>前向 o_proj：按 flash-attn 原生布局原地读 O 推到 owner，K 按到达顺序走，epilogue 里 fp32 加 residual</li>
+              <li>反向 QKV：dq / dk / dv 推进 recv bank，dgrad + dW_qkv 同一 kernel</li>
+            </ul>
+          </div>
+        </div>
+        <div class="design">
+          <span>epoch 单调 flag + 双 bank，无 barrier</span><span>对称内存只放临时数据</span><span>交给 attention 的是普通张量</span><span>GQA · 交错 / concat 权重</span><span>正确性 n = 2 / 4 / 8 全过</span>
+        </div>
+      </div>
+
+      <div class="panel" style="flex:1">
+        <div class="ph"><h3>Kernel 收益 · 四个位置 16K + 32K 耗时之和</h3><span class="note">Qwen3-30B-A3B CP4 · µs，越低越好<br>13 轮优化，保留 5 轮</span></div>
+        <div class="headline">
+          <div class="big">1.68×</div>
+          <div><div class="l1">不融合 4,778 → 融合 2,841 µs（−40.5%）</div><div class="l2">首版融合 −31.6%，之后逐轮优化再 −13.1%；64K / 128K 为 1.78× / 1.74×，已贴近 roofline</div></div>
+        </div>
+        <div class="chart" id="ladder" style="flex:1 1 0;min-height:0"></div>
+        <div class="ops" id="ops"></div>
+        <div class="rb"><span>回退的 8 轮：</span><span class="tag n">split-K</span><span class="tag n">tn wgrad tile</span><span class="tag n">side-stream wgrad</span><span class="tag n">head-piece push</span><span class="tag n">epilogue 直写远端</span><span class="tag n">split-K 归约</span><span class="tag n">wgrad 后置</span><span class="tag n">block 内错位</span></div>
+      </div>
+    </div>
+
+    <!-- ③ 效果 -->
+    <div class="col">
+      <div class="panel">
+        <div class="ph"><h2><span class="step">3</span>端到端 · Qwen3-30B-A3B</h2><span class="note">完整 48 层 · CP4 / EP8 · 12 步<br>fused 对 base · 不用 CUDA graph</span></div>
+        <div class="e2e">
+          <div class="kpi"><div class="l">16K</div><div class="k red">−10.8%</div><div class="d">3,157 → 2,815</div></div>
+          <div class="kpi"><div class="l">32K</div><div class="k red">−9.2%</div><div class="d">6,581 → 5,979</div></div>
+          <div class="kpi"><div class="l">64K</div><div class="k red">−7.8%</div><div class="d">17,350 → 16,004</div></div>
+          <div class="kpi"><div class="l">128K</div><div class="k red">−5.3%</div><div class="d">55,942 → 53,005</div></div>
+        </div>
+        <div class="chain"><span>kernel <b>1.62–1.78×</b></span><em>→</em><span>每步省 <b>342 / 603 / 1,346 / 2,937 ms</b></span></div>
+        <div class="caption">ms/iter。序列越长 attention（随长度平方增长）占比越大，相对收益下降，但每步省下的绝对时间持续增长。128K 显存 fused 与 base 相同。第 12 步 loss 相差 ≤ 2e-3；端到端里含 patch 路径换用 FlyDSL attention 的一部分收益。</div>
+      </div>
+
+      <div class="panel" style="flex:1">
+        <div class="ph"><h3>扩展到其它模型 · 端到端每步耗时变化</h3><span class="note">同一份最终代码 · fused 对 base</span></div>
+        <div class="mhead"><span>模型 · CP</span><span>16K</span><span>32K</span></div>
+        <div class="mdl2" id="mdl"></div>
+        <div class="caption" id="mcap"></div>
+      </div>
+
+      <div class="panel">
+        <div class="sec">适用范围 · 遗留</div>
+        <ul class="list">
+          <li>CP 组须在单节点内（TP=1、CP ≤ 8），跨节点的 DP / EP / PP 不受影响；MLA 模型不适用</li>
+          <li>CP8 交换本身更快，融合收益较小；GEMM tile 比 hipBLASLt 慢约 15%</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <span>来源：Primus-Turbo feat/ulysses-gemm-a2a（50d6c80a）· Primus feat/ulysses-fused-a2a · 数据见 data/kernel/（bench_ulysses_overlap.py）、data/e2e/（端到端日志）</span>
+    <span>Ulysses fused GEMM + all-to-all campaign</span>
+  </footer>
+</div>
+
+<script>
+const fmt = n => n.toLocaleString('en-US');
+// ① unfused breakdown, Qwen3-30B CP4 16K (gemm, wgrad, pack, a2a, unfused, overlap)
+const sk = [
+  ['前向 QKV', 'GEMM → a2a', 86, 0, 110, 249, 439, 249],
+  ['前向 o_proj', 'a2a → GEMM', 76, 0, 37, 215, 319, 215],
+  ['反向 o_proj', 'GEMM → a2a', 67, 78, 37, 212, 386, 212],
+  ['反向 QKV', 'a2a → GEMM', 88, 85, 74, 252, 531, 252],
+];
+const smax = 560;
+document.getElementById('stk').innerHTML = sk.map(([nm, k, g, w, p, a, u, ov]) => {
+  const tot = g + w + p + a, sc = u / tot / smax * 100;
+  let x = 0, segs = '';
+  for (const [v, c] of [[g, '#8a837a'], [w, '#5d5852'], [p, '#a8484d'], [a, 'var(--red)']]) {
+    if (v) segs += `<i style="left:${x}%;width:${v * sc}%;background:${c}"></i>`;
+    x += v * sc;
+  }
+  return `<div class="srw"><div class="nm">${nm}<small>${k}</small></div>
+    <div class="tr">${segs}<div class="ov" style="left:${ov / smax * 100}%"></div></div><div class="v">${u}</div></div>`;
+}).join('');
+
+// ② per-op final speedup (unfused -> fused, 16K / 32K)
+const ops = [
+  ['前向 QKV', 'GemmA2A', [[439, 256], [829, 471], [1573, 867], [3057, 1821]]],
+  ['前向 o_proj', 'A2AGemm', [[319, 236], [579, 410], [1112, 731], [2163, 1391]]],
+  ['反向 o_proj', 'GemmA2A', [[386, 240], [714, 412], [1341, 781], [2552, 1558]]],
+  ['反向 QKV', 'A2AGemm', [[531, 302], [981, 514], [1901, 951], [3717, 1828]]],
+];
+const lens = ['16K', '32K', '64K', '128K'];
+document.getElementById('ops').innerHTML = ops.map(([nm, k, v]) =>
+  `<div class="o"><div class="t">${nm}<small>${k}</small></div>` +
+  v.map(([a, b], i) => `<div class="r"><span>${lens[i]} ${fmt(a)} → ${fmt(b)}</span><b>${(a / b).toFixed(2)}×</b></div>`).join('') + '</div>').join('');
+
+// ② ladder (sum of 8 times: 4 ops x 16K/32K)
+const ladder = [
+  ['不融合', 'pack + RCCL', 4778, '', null, 'base'],
+  ['首版融合', 'pull + push', 3270, '−31.6%', ['p', '63c6c077']],
+  ['R3', '错位 push', 3223, '−1.4%', ['t', '94d83cca']],
+  ['R4', 'BM 128', 3072, '−4.7%', ['t', '29ee6148']],
+  ['R9', 'wgrad 进 kernel', 2887, '−6.0%', ['t', '789d51d1']],
+  ['R10', '16 个 push', 2841, '−1.6%', ['t', '5d3e68e6']],
+];
+(function drawLadder() {
+  const el = document.getElementById('ladder');
+  const W = el.clientWidth, H = el.clientHeight;
+  const left = 50, right = 8, top = 30, bottom = 62;
+  const lo = 0, hi = 5000, ch = H - top - bottom, cw = W - left - right;
+  const y = v => top + ch - (v - lo) / (hi - lo) * ch;
+  let html = '';
+  for (const g of [0, 1000, 2000, 3000, 4000, 5000]) {
+    html += `<div style="position:absolute;left:${left}px;right:${right}px;top:${y(g)}px;border-top:1px solid ${g === lo ? '#4a4e55' : '#2a2d32'}"></div>`;
+    html += `<div style="position:absolute;left:0;width:${left - 8}px;text-align:right;top:${y(g) - 8}px;font-size:11.5px;color:var(--dim)">${fmt(g)}</div>`;
+  }
+  const slot = cw / ladder.length, bw = Math.min(64, slot * 0.5);
+  ladder.forEach(([l1, l2, v, d, tag, base], i) => {
+    const cx = left + slot * i + slot / 2, x = cx - bw / 2;
+    const prev = i ? ladder[i - 1][2] : v;
+    const last = i === ladder.length - 1;
+    html += `<div style="position:absolute;left:${x}px;width:${bw}px;top:${y(v)}px;height:${y(lo) - y(v)}px;background:${base ? '#5d5852' : 'var(--gray)'}"></div>`;
+    if (i) html += `<div style="position:absolute;left:${x}px;width:${bw}px;top:${y(prev)}px;height:${y(v) - y(prev)}px;background:var(--red);opacity:.9"></div>`;
+    html += `<div style="position:absolute;left:${cx - slot / 2}px;width:${slot}px;text-align:center;top:${y(prev) - (d ? 36 : 20)}px;line-height:1.25">
+      ${d ? `<div style="font-size:12.5px;color:var(--green);font-weight:700">${d}</div>` : ''}
+      <div style="font-size:${last ? 14 : 13}px;font-weight:${last ? 800 : 600};color:${last ? 'var(--text)' : '#d8d6d2'}">${fmt(v)}</div></div>`;
+    html += `<div style="position:absolute;left:${cx - slot / 2}px;width:${slot}px;text-align:center;top:${y(lo) + 7}px;line-height:1.3">
+      <div style="font-size:12.5px;font-weight:700;color:#dcdad6;white-space:nowrap">${l1}</div>
+      <div style="font-size:11.5px;color:var(--muted);white-space:nowrap">${l2}</div>
+      ${tag ? `<div style="margin-top:3px"><span class="tag ${tag[0]}">${tag[1]}</span></div>` : ''}</div>`;
+  });
+  html += `<div style="position:absolute;right:${right + 4}px;top:${top - 26}px;font-size:12px;color:var(--dim)">红色 = 这一步减少的时间</div>`;
+  el.innerHTML = html;
+})();
+
+// ③ models (same final code)
+const mdl = [["Qwen3-30B-A3B", "CP4 · 完整 48 层（主线）", -10.8, -9.2], ["Qwen3-235B-A22B", "CP4 · 4 层 proxy", -5.9, -6.6], ["GLM-4.7", "CP4 · 4 层 proxy", -6.7, -6.2], ["MiniMax-M2.5", "CP4 · 4 层 proxy", -4.8, -5.2], ["Llama3.1-8B", "CP4 · 完整 32 层 · attention 用 AITER", -4.3, -3.6], ["GLM-4.7", "CP8 · 4 层 proxy", -1.9, -3.7]];
+const mmax = 12;
+const cell = v => v === null ? '<div class="cell"><span class="dim">—</span></div>' :
+  `<div class="cell"><div class="track"><i class="${v > 0 ? 'neg' : ''}" style="width:${Math.min(Math.abs(v), mmax) / mmax * 100}%"></i></div><b class="${v < 0 ? 'green' : 'dim'}">${v > 0 ? '+' : ''}${v.toFixed(1)}%</b></div>`;
+document.getElementById('mdl').innerHTML = mdl.map(([nm, sub, a, b]) =>
+  `<div class="mrow2"><div class="nm">${nm}<small>${sub}</small></div>${cell(a)}${cell(b)}</div>`).join('');
+document.getElementById('mcap').innerHTML = "CP4 的 MoE 模型每步快 4.8–6.7%。4 层 proxy 里 embedding / 输出层 / 优化器占比更高，完整模型收益会更大。Llama 默认配置下 patch 路径给这个形状选了更慢的 FlyDSL attention（16K +5.6%），与融合无关，表中两侧都用 AITER。CP8 交换本身快约一倍，融合可省的空间小。";
+</script>
+</body>
+</html>

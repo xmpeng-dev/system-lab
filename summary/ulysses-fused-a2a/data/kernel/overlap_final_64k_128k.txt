@@ -1,0 +1,15 @@
+### commit=fix np=4 args=overlap --model qwen3-30b-a3b --seq 65536 131072 env: 
+peaks: GEMM 1241 TFLOP/s (hipBLASLt 8192^3), link 145 GB/s per rank off-rank (RCCL 1 GiB a2a)
+== qwen3-30b-a3b seq=65536 ulysses=4 mbs=1  (us, max over ranks)
+  op                               gemm    wgrad      a2a     pack   serial  unfused  overlap    fused roofline  hidden fused/roof
+  fwd QKV (GemmA2A)                 294        0      901      402     1195     1573      901      867      866   112%      1.00x
+  fwd o_proj (A2AGemm)              261        0      732      121      993     1112      732      731      693   100%      1.06x
+  bwd o_proj (GemmA2A+wgrad)        245      248      731      121     1225     1341      731      781      693    90%      1.13x
+  bwd QKV (A2AGemm+wgrad)           286      299      901      284     1486     1901      901      951      866    92%      1.10x
+== qwen3-30b-a3b seq=131072 ulysses=4 mbs=1  (us, max over ranks)
+  op                               gemm    wgrad      a2a     pack   serial  unfused  overlap    fused roofline  hidden fused/roof
+  fwd QKV (GemmA2A)                 575        0     1766      769     2341     3057     1766     1821     1732    91%      1.05x
+  fwd o_proj (A2AGemm)              507        0     1425      234     1931     2163     1425     1391     1385   107%      1.00x
+  bwd o_proj (GemmA2A+wgrad)        477      444     1420      234     2341     2552     1420     1558     1385    85%      1.12x
+  bwd QKV (A2AGemm+wgrad)           566      626     1763      534     2955     3717     1763     1828     1732    95%      1.06x
+### exit=0
