@@ -12,8 +12,8 @@ Megatron / Primus / 现有 attention kernel；未提交。
   （O 相对误差 0.0016–0.0020，LSE 最大绝对误差 0.0046–0.0051）。
 - **收益全部来自频率，周期数反而变多。** B1 S16K 持续运行：round 15 1927–1933 MHz → round 16 2025–2040 MHz（round 16 那一批），
   round 16 2003–2048 MHz → round 17 2127–2141 MHz（round 17 这一批）；整卡功耗基本不变，都在 1.33–1.39 kW。同批次
-  GRBM_GUI_ACTIVE round 16 +2.9%、round 17 +4.2%，`SQ_VALU_MFMA_BUSY_CYCLES` 两轮都没变（1.136e10）。功耗在 1400 W PWR_CAP
-  之下，这个节点上限制频率的是什么没有查明（MFMA 功耗探针同样没顶到 1400 W）。
+  GRBM_GUI_ACTIVE round 16 +2.9%、round 17 +4.2%，`SQ_VALU_MFMA_BUSY_CYCLES` 两轮都没变（1.136e10）。采样功耗在 1400 W
+  PWR_CAP 之下，但 `amd-smi metric -v` 的 PPT 计数显示 round 17 运行时 68% 的时间处于功耗限频（见下文"上限分析"）。
 - **PV 直接吃 QK 的原始 16x16 输出，不做布局转换。** QK 用 A 操作数 kv 顺序 [0, 8, 4, 12] + r % 4 之后，QK^T 的 16x16 D 块
   正好是 O^T = V^T P^T 的 B 操作数。round 16 为了保留 32x32 的 S 布局，每 tile 要 16 条 `v_permlane16_swap`；round 17 去掉之后
   主循环每 2 tile 34 → 8 条（剩下的在很少走的 rebase 分支里）。
@@ -120,6 +120,30 @@ B[8 (l // 16) + e][l % 16]，D 持有 D[4 (l // 16) + e][l % 16]。
   写侧不花代价（冲突 8.1e8 → 0）。V 的 tr 读同理，奇数行 chunk ^ 2，冲突为 0。
 - `ds_read_b64_tr_b16` 的 phase 规则没有测；V 的 swizzle 按 32 lane phase 设计，若实际是 16 lane 也无害。
 
+## 上限分析：对 aiter 还能拉开多少（B1 S16K，round 17 之后）
+
+同一节点、同一批次实测（持续 14 s；PPT 限频 = 运行期间 PPT_ACCUMULATED 增量 / ACCUMULATION_COUNTER 增量）：
+
+| 运行 | TFLOPS | GFX 频率 (MHz) | 整卡功耗 (W) | PPT 限频 | TFLOPS / MHz |
+|---|---|---|---|---|---|
+| round 17 | 1317–1322 | 2140–2154 | 1357–1371 | 68% | 0.615 |
+| aiter（opus gqa_d192，32x32x16） | 1270.5 | 1633–1637 | 1361–1367 | 54–59% | 0.778 |
+| MFMA 探针 16x16x32 | 2015 | 2080–2085 | 1275–1286 | 3–6% | 0.967 |
+| 全部 SIMD 只发 `s_nop` | — | 2396 | 346 | 0 | — |
+| 空闲 | — | 156 | 231 | — | — |
+
+- **aiter 并不低效，它的周期效率反而高。** 同批次 GRBM 周期 round 17 比 aiter 多 32%；以 MFMA 探针标定，MFMA 管线忙碌约
+  67%（round 17）vs 约 86.5%（aiter）。round 17 的非 MFMA 指令更少（VALU 0.69e9 vs 1.22e9，exp 数相同，L2 命中 0.79 vs
+  0.65），但等待更多（`SQ_WAIT_INST_ANY` 3.88e9 vs 2.11e9）。aiter 的每 wave tile 与我们相同（32 行 q、KV 64、8 wave），
+  慢在每 FLOP 能耗更高，被功耗压到 1634 MHz。
+- **功耗限频下，省周期本身几乎不值钱。** 占满 SIMD 但不做事只比空闲多约 115 W（2396 MHz），所以决定吞吐的是每 FLOP 的工作能耗。
+- **故意算错的上界变体（与 round 17 交替各 2 次）：** exp2 换成一条 fma +6.7%（频率 +8%，周期效率不变）；主循环不做 K/V DMA
+  +11.1%；两者都去掉 +16.7%（1533.5），此时频率顶到 2400 MHz 上限、功耗降到约 1325 W，变成纯周期受限（0.641 TFLOPS/MHz）。
+- **推断（估算，非直接测量）：** 1.4x aiter（B1 S16K 1779 TFLOPS）需要周期效率 ≥ 0.741 TFLOPS/MHz（2400 MHz 封顶），同时在约
+  1364 W 下每 FLOP 工作能耗 ≤ 约 0.58 pJ（现在约 0.78，纯 MFMA 约 0.47），即非 MFMA 能耗砍掉约 70%。把 exp 和主循环 K/V 流量
+  整个去掉也只到 1.21x aiter，现有已知手段到不了 1.4x；纯 MFMA 上限是 2015 TFLOPS（1.59x aiter）。
+- MFMA 探针不被 PPT 限频，却停在约 2083 MHz（16x16x32）/ 1880 MHz（32x32x16），`amd-smi` 报告的计数里没有对应的限频原因。
+
 ## 环境与方法
 
 - 节点 smci355-ccs-aus-n02-25；容器 `xiaoming-dev`；ROCm 10.1.0、torch 2.14.0+rocm10.1.0；HIP 设备 0（`amd-smi` GPU 3）。
@@ -141,7 +165,10 @@ campaign 目录 `Primus-Turbo/agent/workspace/flash_attn_fwd_mla_flydsl_gfx950_2
 
 ## 下一步
 
-1. 回收周期而不丢频率：两轮累计周期多约 7%（同批次 GRBM 比值相乘），频率多约 10%。PV 的调度 hint 还是按 32x32x16
-   （每 tile 16 条）写的，现在是 32 条更短的 MFMA，重调后实测（round 16 重调 QK hint 是 -0.3%）。
-2. rebase 分支与每 tile 触发共用两棵 16 值 max 树，热路径多一条 `v_max`，分支变短。
-3. B1 S8K 仍为 aiter 的 0.998；B = 2 的 batch 顺序（TUNE 2 下一步第 2 条）还没做。
+按上限分析，功耗限频下要砍的是每 FLOP 的工作能耗，而不是周期：
+
+1. K/V 流量（上界 +11%）：先用"固定读同一个 L2 常驻 tile"的假变体拆开 L2→LDS 与 HBM 两部分，再决定做 L2 局部性还是加大每 CTA 的
+   q 行数。
+2. exp 能耗（上界 +6.7%）：找更省能的 exp 实现并实测（需微基准）。
+3. LDS 读与 VALU（剩余部分）：每 wave 64 行 q 可把 LDS 字节 / FLOP 减半，但要 1 wave / SIMD，放弃跨 wave 的 ping-pong，属大改。
+4. B1 S8K 仍为 aiter 的 0.998；B = 2 的 batch 顺序（TUNE 2 下一步第 2 条）还没做。
