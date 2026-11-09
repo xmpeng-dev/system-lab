@@ -1,0 +1,25 @@
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 4096, "causal": 1, "ms": 0.8521274924278259, "tflops": 806.6428388099667, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 4}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 8192, "causal": 1, "ms": 2.9132269620895386, "tflops": 943.6664734793517, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 4}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 16384, "causal": 1, "ms": 10.712318897247314, "tflops": 1026.4619147237604, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 4}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 32768, "causal": 1, "ms": 40.992422103881836, "tflops": 1072.9253123141284, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 4}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 65536, "causal": 1, "ms": 160.99685668945312, "tflops": 1092.720369926606, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 4}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 4096, "causal": 1, "ms": 0.8796480000019073, "tflops": 781.4063574503774, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 6}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 8192, "causal": 1, "ms": 3.0330289602279663, "tflops": 906.3924709618905, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 6}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 16384, "causal": 1, "ms": 11.214245796203613, "tflops": 980.5195611213045, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 6}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 32768, "causal": 1, "ms": 41.943796157836914, "tflops": 1048.589095817983, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 6}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 65536, "causal": 1, "ms": 164.2541046142578, "tflops": 1071.051132706057, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 6}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 4096, "causal": 1, "ms": 0.8537879884243011, "tflops": 805.0740334126206, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 8192, "causal": 1, "ms": 3.376471996307373, "tflops": 814.1973683674934, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 16384, "causal": 1, "ms": 12.984742164611816, "tflops": 846.8236971518428, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 32768, "causal": 1, "ms": 51.09632110595703, "tflops": 860.7626994733366, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 65536, "causal": 1, "ms": 202.95790100097656, "tflops": 866.8031346947835, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null}
+{"mode": "bench", "impl": "aiter", "heads": [128, 128, 192, 128], "b": 1, "s": 4096, "causal": 1, "ms": 0.7145065069198608, "tflops": 962.0101886589182}
+{"mode": "bench", "impl": "te", "heads": [128, 128, 192, 128], "b": 1, "s": 4096, "causal": 1, "ms": 0.7770869731903076, "tflops": 884.537462644694}
+{"mode": "bench", "impl": "aiter", "heads": [128, 128, 192, 128], "b": 1, "s": 8192, "causal": 1, "ms": 2.5103434324264526, "tflops": 1095.1149465245699}
+{"mode": "bench", "impl": "te", "heads": [128, 128, 192, 128], "b": 1, "s": 8192, "causal": 1, "ms": 2.6951454877853394, "tflops": 1020.024568699261}
+{"mode": "bench", "impl": "aiter", "heads": [128, 128, 192, 128], "b": 1, "s": 16384, "causal": 1, "ms": 9.321366786956787, "tflops": 1179.632517174005}
+{"mode": "bench", "impl": "te", "heads": [128, 128, 192, 128], "b": 1, "s": 16384, "causal": 1, "ms": 9.789812088012695, "tflops": 1123.186764724931}
+{"mode": "bench", "impl": "aiter", "heads": [128, 128, 192, 128], "b": 1, "s": 32768, "causal": 1, "ms": 36.31433868408203, "tflops": 1211.1416284058319}
+{"mode": "bench", "impl": "te", "heads": [128, 128, 192, 128], "b": 1, "s": 32768, "causal": 1, "ms": 38.682559967041016, "tflops": 1136.9931908796664}
+{"mode": "bench", "impl": "aiter", "heads": [128, 128, 192, 128], "b": 1, "s": 65536, "causal": 1, "ms": 143.27281188964844, "tflops": 1227.8990164178572}
+{"mode": "bench", "impl": "te", "heads": [128, 128, 192, 128], "b": 1, "s": 65536, "causal": 1, "ms": 153.85389709472656, "tflops": 1143.4519899772492}

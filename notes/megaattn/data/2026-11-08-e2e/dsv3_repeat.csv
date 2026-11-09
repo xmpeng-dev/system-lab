@@ -1,0 +1,7 @@
+model,cp,seqlen,mode,n_iters_logged,n_steady,step_ms_median,step_ms_min,step_ms_max,tflops_per_gpu,tokens_per_s_per_gpu,mem_used_GB_max,serial_hook_stderr_lines,serial_hook_ranks,serial_hook_calls_min,serial_hook_calls_max,error
+dsv3,2,32768,overlap,15,12,1150.7,1148.3,1152.4,703.1,14238.3,168.82,0,0,0,0,
+dsv3,2,32768,serial,15,12,1438.75,1437.0,1440.7,562.3499999999999,11387.7,167.63,1,8,225,225,
+dsv3,4,131072,overlap,15,12,5819.85,5815.7,8708.6,618.1500000000001,5630.4,224.57,0,0,0,0,
+dsv3,4,131072,serial,15,12,8322.15,8319.7,11161.6,432.3,3937.45,224.57,1,8,525,525,
+dsv3,8,32768,overlap,15,12,1478.35,1477.5,1481.8,136.8,2770.6499999999996,126.98,0,0,0,0,
+dsv3,8,32768,serial,15,12,1580.65,1579.7,1582.1,128.0,2591.35,126.98,1,8,1125,1125,

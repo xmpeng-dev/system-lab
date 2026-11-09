@@ -1,0 +1,6 @@
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 4096, "causal": 1, "ms": 0.8559874892234802, "tflops": 803.0053571735606, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null}
+{"mode": "bench", "impl": "aiter", "heads": [128, 128, 192, 128], "b": 1, "s": 4096, "causal": 1, "ms": 0.7249464988708496, "tflops": 948.1562302743871}
+{"mode": "bench", "impl": "te", "heads": [128, 128, 192, 128], "b": 1, "s": 4096, "causal": 1, "ms": 0.7849870026111603, "tflops": 875.6355675107679}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 16384, "causal": 1, "ms": 12.973815441131592, "tflops": 847.536903564965, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null}
+{"mode": "bench", "impl": "aiter", "heads": [128, 128, 192, 128], "b": 1, "s": 16384, "causal": 1, "ms": 9.801027297973633, "tflops": 1121.9015142089631}
+{"mode": "bench", "impl": "te", "heads": [128, 128, 192, 128], "b": 1, "s": 16384, "causal": 1, "ms": 10.526372909545898, "tflops": 1044.594131415239}

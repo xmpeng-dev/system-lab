@@ -1,0 +1,15 @@
+W1109 00:32:45.467000 3066 torch/_opaque_base.py:6] torch._opaque_base is deprecated, use torch._custom_class_base instead
+W1109 00:32:45.597000 3066 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:32:45.597000 3066 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+W1109 00:32:45.597000 3066 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:32:45.597000 3066 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+W1109 00:32:45.597000 3066 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:32:45.597000 3066 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+/opt/venv/lib/python3.12/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+warning: <unknown>:0:0: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in 'flash_attn_dualwave_swp_gfx950_kernel_0': desired occupancy was 2, final occupancy is 1
+warning: <unknown>:0:0: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in 'flash_attn_dualwave_swp_gfx950_kernel_0': desired occupancy was 2, final occupancy is 1
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] import [module_fmha_fwd_bf16_opus] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_fwd_bf16_opus.so
+{"mode": "check", "heads": [128, 128, 192, 128], "b": 1, "s": 4096, "causal": 0, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null, "finite": true, "o_rel_fp32": 0.15180067718029022, "o_max_fp32": 0.05935046076774597, "lse_max_fp32": 0.03728008270263672, "o_rel_aiter": 0.15202847123146057, "aiter_rel_fp32": 0.0023352866992354393}
+{"mode": "check", "heads": [128, 128, 192, 128], "b": 1, "s": 16384, "causal": 0, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null, "finite": true, "o_rel_fp32": 0.0761774554848671, "o_max_fp32": 0.019650783389806747, "lse_max_fp32": 0.009980201721191406, "o_rel_aiter": 0.07659231871366501, "aiter_rel_fp32": 0.002343106782063842}

@@ -1,0 +1,18 @@
+W1109 00:32:45.449000 3062 torch/_opaque_base.py:6] torch._opaque_base is deprecated, use torch._custom_class_base instead
+W1109 00:32:45.551000 3062 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:32:45.552000 3062 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+W1109 00:32:45.552000 3062 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:32:45.552000 3062 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+W1109 00:32:45.552000 3062 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:32:45.552000 3062 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+/opt/venv/lib/python3.12/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+warning: <unknown>:0:0: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in 'flash_attn_dualwave_swp_gfx950_kernel_0': desired occupancy was 2, final occupancy is 1
+warning: <unknown>:0:0: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in 'flash_attn_dualwave_swp_gfx950_kernel_0': desired occupancy was 2, final occupancy is 1
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] import [module_fmha_fwd_bf16_opus] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_fwd_bf16_opus.so
+{"mode": "check", "heads": [128, 128, 192, 128], "b": 1, "s": 4096, "causal": 1, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null, "finite": true, "o_rel_fp32": 0.0019680557306855917, "o_max_fp32": 0.00994420051574707, "lse_max_fp32": 0.005338311195373535, "o_rel_aiter": 0.0031213555485010147, "aiter_rel_fp32": 0.0016715956153348088}
+{"mode": "check", "heads": [128, 128, 192, 128], "b": 1, "s": 8192, "causal": 1, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null, "finite": true, "o_rel_fp32": 0.0018206756794825196, "o_max_fp32": 0.011327743530273438, "lse_max_fp32": 0.005469679832458496, "o_rel_aiter": 0.003171808086335659, "aiter_rel_fp32": 0.0015413835644721985}
+{"mode": "check", "heads": [128, 128, 192, 128], "b": 1, "s": 16384, "causal": 1, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null, "finite": true, "o_rel_fp32": 0.0017480978276580572, "o_max_fp32": 0.009713411331176758, "lse_max_fp32": 0.0048143863677978516, "o_rel_aiter": 0.003190521849319339, "aiter_rel_fp32": 0.0014984323643147945}
+{"mode": "check", "heads": [128, 128, 192, 128], "b": 1, "s": 32768, "causal": 1, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null, "finite": true, "o_rel_fp32": 0.0016435235738754272, "o_max_fp32": 0.009061574935913086, "lse_max_fp32": 0.0039499253034591675, "o_rel_aiter": 0.0032288876827806234, "aiter_rel_fp32": 0.0013966085389256477}
+{"mode": "check", "heads": [128, 128, 192, 128], "b": 1, "s": 65536, "causal": 1, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null, "finite": true, "o_rel_fp32": 0.0015598104801028967, "o_max_fp32": 0.009274959564208984, "lse_max_fp32": 0.00450974702835083, "o_rel_aiter": 0.0032582527492195368, "aiter_rel_fp32": 0.0013435666915029287}

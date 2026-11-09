@@ -1,0 +1,14 @@
+W1109 00:37:11.002000 6027 torch/_opaque_base.py:6] torch._opaque_base is deprecated, use torch._custom_class_base instead
+W1109 00:37:11.155000 6027 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:37:11.155000 6027 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+W1109 00:37:11.155000 6027 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:37:11.155000 6027 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+W1109 00:37:11.155000 6027 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:37:11.155000 6027 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+/opt/venv/lib/python3.12/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 4096, "causal": 1, "ms": 0.8796480000019073, "tflops": 781.4063574503774, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 6}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 8192, "causal": 1, "ms": 3.0330289602279663, "tflops": 906.3924709618905, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 6}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 16384, "causal": 1, "ms": 11.214245796203613, "tflops": 980.5195611213045, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 6}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 32768, "causal": 1, "ms": 41.943796157836914, "tflops": 1048.589095817983, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 6}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 65536, "causal": 1, "ms": 164.2541046142578, "tflops": 1071.051132706057, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 6}

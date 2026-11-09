@@ -1,0 +1,20 @@
+W1109 00:39:59.797000 7979 torch/_opaque_base.py:6] torch._opaque_base is deprecated, use torch._custom_class_base instead
+W1109 00:39:59.887000 7979 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:39:59.887000 7979 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+W1109 00:39:59.887000 7979 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:39:59.887000 7979 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+W1109 00:39:59.887000 7979 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:39:59.887000 7979 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+/opt/venv/lib/python3.12/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/opt/venv/lib/python3.12/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 2, "s": 4096, "causal": 1, "ms": 1.6747959852218628, "tflops": 820.8313676234948, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 4}
+[aiter] import [module_aiter_core] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_aiter_core.so
+[aiter] import [module_fmha_fwd_bf16_opus] under /opt/venv/lib/python3.12/site-packages/aiter/jit/module_fmha_fwd_bf16_opus.so
+{"mode": "bench", "impl": "aiter", "heads": [128, 128, 192, 128], "b": 2, "s": 4096, "causal": 1, "ms": 1.289532482624054, "tflops": 1066.064715363035}
+[aiter] LoadKernel: _ZN5aiter32fmha_fwd_hd192_hd128_bf16_causalE hsaco: [embedded] hsa/gfx950/fmha_v3_fwd/fwd_hd192_hd128_bf16_causal.co
+{"mode": "bench", "impl": "te", "heads": [128, 128, 192, 128], "b": 2, "s": 4096, "causal": 1, "ms": 1.430473506450653, "tflops": 961.0279902708731}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 2, "s": 16384, "causal": 1, "ms": 21.495803833007812, "tflops": 1023.0636129564463, "block_m": 256, "waves_per_eu": 2, "stagger": false, "k_head": 4}
+{"mode": "bench", "impl": "aiter", "heads": [128, 128, 192, 128], "b": 2, "s": 16384, "causal": 1, "ms": 18.460535049438477, "tflops": 1191.2750455989049}
+{"mode": "bench", "impl": "te", "heads": [128, 128, 192, 128], "b": 2, "s": 16384, "causal": 1, "ms": 19.886587142944336, "tflops": 1105.849614854729}

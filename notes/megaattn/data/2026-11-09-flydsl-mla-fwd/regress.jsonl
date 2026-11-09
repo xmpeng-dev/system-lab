@@ -1,0 +1,12 @@
+{"mode": "regress", "hq": 32, "hkv": 32, "b": 1, "s": 4096, "o_bitwise": true, "lse_bitwise": true, "o_maxdiff": 0.0}
+{"mode": "regress", "hq": 32, "hkv": 32, "b": 1, "s": 16384, "o_bitwise": true, "lse_bitwise": true, "o_maxdiff": 0.0}
+{"mode": "regress", "hq": 32, "hkv": 32, "b": 2, "s": 4096, "o_bitwise": true, "lse_bitwise": true, "o_maxdiff": 0.0}
+{"mode": "regress", "hq": 32, "hkv": 32, "b": 2, "s": 16384, "o_bitwise": true, "lse_bitwise": true, "o_maxdiff": 0.0}
+{"mode": "regress", "hq": 32, "hkv": 8, "b": 1, "s": 4096, "o_bitwise": true, "lse_bitwise": true, "o_maxdiff": 0.0}
+{"mode": "regress", "hq": 32, "hkv": 8, "b": 1, "s": 16384, "o_bitwise": true, "lse_bitwise": true, "o_maxdiff": 0.0}
+{"mode": "regress", "hq": 32, "hkv": 8, "b": 2, "s": 4096, "o_bitwise": true, "lse_bitwise": true, "o_maxdiff": 0.0}
+{"mode": "regress", "hq": 32, "hkv": 8, "b": 2, "s": 16384, "o_bitwise": true, "lse_bitwise": true, "o_maxdiff": 0.0}
+{"mode": "regress", "hq": 64, "hkv": 8, "b": 1, "s": 4096, "o_bitwise": true, "lse_bitwise": true, "o_maxdiff": 0.0}
+{"mode": "regress", "hq": 64, "hkv": 8, "b": 1, "s": 16384, "o_bitwise": true, "lse_bitwise": true, "o_maxdiff": 0.0}
+{"mode": "regress", "hq": 64, "hkv": 8, "b": 2, "s": 4096, "o_bitwise": true, "lse_bitwise": true, "o_maxdiff": 0.0}
+{"mode": "regress", "hq": 64, "hkv": 8, "b": 2, "s": 16384, "o_bitwise": true, "lse_bitwise": true, "o_maxdiff": 0.0}

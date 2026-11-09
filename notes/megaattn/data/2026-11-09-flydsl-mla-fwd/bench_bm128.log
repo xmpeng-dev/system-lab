@@ -1,0 +1,16 @@
+W1109 00:37:10.987000 6029 torch/_opaque_base.py:6] torch._opaque_base is deprecated, use torch._custom_class_base instead
+W1109 00:37:11.140000 6029 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:37:11.140000 6029 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+W1109 00:37:11.140000 6029 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:37:11.140000 6029 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+W1109 00:37:11.140000 6029 torch/_library/opaque_object.py:288] register_opaque_type is deprecated, use register_custom_class instead
+W1109 00:37:11.140000 6029 torch/_library/opaque_object.py:211] typ='value' is deprecated, use typ='constant' instead
+/opt/venv/lib/python3.12/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+warning: <unknown>:0:0: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in 'flash_attn_dualwave_swp_gfx950_kernel_0': desired occupancy was 2, final occupancy is 1
+warning: <unknown>:0:0: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in 'flash_attn_dualwave_swp_gfx950_kernel_0': desired occupancy was 2, final occupancy is 1
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 4096, "causal": 1, "ms": 0.8537879884243011, "tflops": 805.0740334126206, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 8192, "causal": 1, "ms": 3.376471996307373, "tflops": 814.1973683674934, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 16384, "causal": 1, "ms": 12.984742164611816, "tflops": 846.8236971518428, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 32768, "causal": 1, "ms": 51.09632110595703, "tflops": 860.7626994733366, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null}
+{"mode": "bench", "impl": "proto", "heads": [128, 128, 192, 128], "b": 1, "s": 65536, "causal": 1, "ms": 202.95790100097656, "tflops": 866.8031346947835, "block_m": 128, "waves_per_eu": 2, "stagger": false, "k_head": null}

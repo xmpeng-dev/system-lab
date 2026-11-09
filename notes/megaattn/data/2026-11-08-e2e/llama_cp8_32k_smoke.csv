@@ -1,0 +1,3 @@
+model,cp,seqlen,mode,n_iters_logged,n_steady,step_ms_median,step_ms_min,step_ms_max,tflops_per_gpu,tokens_per_s_per_gpu,mem_used_GB_max,serial_hook_stderr_lines,serial_hook_ranks,serial_hook_calls_min,serial_hook_calls_max,error
+llama,8,32768,overlap,20,17,744.3,743.9,744.8,389.6,5503.2,93.51,0,0,0,0,
+llama,8,32768,serial,20,17,878.1,877.1,879.9,330.3,4664.6,93.51,1,8,9600,9600,
