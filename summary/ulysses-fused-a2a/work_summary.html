@@ -166,7 +166,7 @@ footer{margin-top:50px;padding-top:14px;border-top:1px solid #2a2d32;font-size:1
   <tr><th style="width:320px">接口</th><th>说明</th></tr>
   <tr><td><code>ulysses_qkv_gemm_a2a(x, w_qkv, hq, hkv, d, group, qkv_format)</code></td><td>返回本地 head、完整序列的 q / k / v；反向是 A2AGemm（dx + dW_qkv 同一 kernel）</td></tr>
   <tr><td><code>ulysses_a2a_o_gemm(o, w_o, residual, group, qkv_format)</code></td><td>返回本地序列、全部 hidden 的 y；反向是 GemmA2A（dO + dW_o 同一 kernel）</td></tr>
-  <tr><td>Primus <code>ulysses_fused_a2a_patches.py</code></td><td><code>PRIMUS_ULYSSES_FUSED_A2A=1</code> 开启：CP 切分改为 contiguous，RoPE 放到 a2a 之后按全长序列做，attention 用本地 <code>flash_attn_func</code>；不满足条件时回退原路径。<code>PRIMUS_ULYSSES_FUSED_A2A_IMPL=serial</code> 为同路径串行对照</td></tr>
+  <tr><td>Primus <code>ulysses_fused_a2a_patches.py</code></td><td><code>turbo_ulysses_fused_a2a: 1</code> 开启：CP 切分改为 contiguous，RoPE 放到 a2a 之后按全长序列做，attention 用本地 <code>flash_attn_func</code>；不满足条件时回退原路径。设为 <code>-1</code> 为同路径串行对照；kernel launch 参数按形状自动选择，Turbo op 的 <code>fwd_tuning</code> / <code>bwd_tuning</code> 可覆盖（供 benchmark 扫参）</td></tr>
 </table>
 <p>支持范围：bf16，n ∈ {2, 4, 8}，sbhd / bshd，b ≥ 1，GQA / MHA，d 64 / 128，交错 / concat 权重。</p>
 

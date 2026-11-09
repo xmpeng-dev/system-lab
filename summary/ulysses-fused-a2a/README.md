@@ -1,6 +1,6 @@
 # Ulysses GemmA2A / A2AGemm on MI355X — 融合 kernel 工作总结
 
-用 FlyDSL 把 Ulysses attention 前后两次 all-to-all 与投影 GEMM 融合成 GemmA2A / A2AGemm 两个 kernel，覆盖前向和反向四个位置。代码在 Primus-Turbo `feat/ulysses-gemm-a2a`（最终提交 `50d6c80a`），训练接入在 Primus `feat/ulysses-fused-a2a`（`PRIMUS_ULYSSES_FUSED_A2A=1`）。
+用 FlyDSL 把 Ulysses attention 前后两次 all-to-all 与投影 GEMM 融合成 GemmA2A / A2AGemm 两个 kernel，覆盖前向和反向四个位置。代码在 Primus-Turbo `feat/ulysses-gemm-a2a`（最终提交 `50d6c80a`），训练接入在 Primus `feat/ulysses-fused-a2a`（`turbo_ulysses_fused_a2a: 1`，-1 为串行对照；数据采集时用的是当时的环境变量 `PRIMUS_ULYSSES_FUSED_A2A=1`）。
 
 主线模型 Qwen3-30B-A3B，CP4 / EP8，单节点 8× MI355X：
 
