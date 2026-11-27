@@ -2,6 +2,10 @@
 
 Personal knowledge base for AI systems research and engineering.
 
+## Featured research
+
+[CCO Research Workspace](research/cco/README.md) — roadmap, architecture, experiments and publication planning.
+
 ## Start here
 
 | Area | Purpose |
