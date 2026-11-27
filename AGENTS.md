@@ -154,3 +154,5 @@ Project application code follows the project's own style.
 ## 8. Knowledge navigation and publication boundary
 
 Use `knowledge/research-index.md` for cross-project discovery and `knowledge/repository-guide.md` for maintenance. Preserve existing paths until references and symlinks are validated. This repository is public; do not add internal or unpublished material without authorization.
+
+`research/cco/` is the public CCO research workspace. Keep Markdown canonical, synchronize the HTML planning view, and retain historical project paths. Only approved public material belongs here.
