@@ -150,3 +150,7 @@ Project application code follows the project's own style.
 - Do not edit the symlinked `.cursor/rules/` or `.cursor/skills/` files
   from inside a sibling project — they resolve into slab and any edit
   affects every project. Edit them in slab itself.
+
+## 8. Knowledge navigation and publication boundary
+
+Use `knowledge/research-index.md` for cross-project discovery and `knowledge/repository-guide.md` for maintenance. Preserve existing paths until references and symlinks are validated. This repository is public; do not add internal or unpublished material without authorization.
