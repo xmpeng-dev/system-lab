@@ -22,6 +22,7 @@ weekly/
 
 | 周期 | 主题 | 文件 |
 |---|---|---|
+| 2026-11-23 → 2026-11-29 | MI455X v6 merged (11-25); Kimi K3.1 Pro +15%, MiniMax-M3 +54% (single GPU); FlyDSL GG 6 shapes ≥85% MAIDAS | [`2026/2026-11-27_team_weekly_report_1123_1129_EN.md`](./2026/2026-11-27_team_weekly_report_1123_1129_EN.md) |
 
 ## 个人周报清单
 
