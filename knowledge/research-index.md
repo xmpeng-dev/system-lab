@@ -1,5 +1,7 @@
 # Research navigation
 
+[CCO research workspace](../research/cco/README.md) — public research roadmap and experiment registry.
+
 This index groups existing records by research topic without moving source files. Project indexes are historical records, not necessarily current status.
 
 | Topic | Existing entry points |
