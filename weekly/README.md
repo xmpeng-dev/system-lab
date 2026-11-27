@@ -14,7 +14,16 @@ weekly/
 
 按年份分桶,文件名沿用既有约定: 周末日期 + 起止月日 + 可选语言后缀。
 
-## 周报清单
+团队周报(由 Peng, Xiaoming 汇总全组进展)与个人周报同目录,文件名加 `team_` 前缀:
+`YYYY-MM-DD_team_weekly_report_<MMDD>_<MMDD>_EN.md`。格式见
+`.cursor/skills/team-weekly-report/SKILL.md`。
+
+## 团队周报清单
+
+| 周期 | 主题 | 文件 |
+|---|---|---|
+
+## 个人周报清单
 
 | 周期 | 主题 | 状态摘要 | 文件 |
 |---|---|---|---|
